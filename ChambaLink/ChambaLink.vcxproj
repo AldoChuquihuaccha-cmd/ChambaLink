@@ -123,16 +123,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Accion.cpp" />
     <ClCompile Include="ChambaLink.cpp" />
-    <ClCompile Include="Usuario.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Comentario.h" />
-    <ClInclude Include="Empresa.h" />
-    <ClInclude Include="Habilidad.h" />
-    <ClInclude Include="Notificacion.h" />
-    <ClInclude Include="Publicacion.h" />
-    <ClInclude Include="Recomendacion.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

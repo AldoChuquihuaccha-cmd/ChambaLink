@@ -21,24 +21,39 @@
     <ClCompile Include="Usuario.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Habilidad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ExperienciaLaboral.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SolicitudConexion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Accion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Nodo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Lista.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Usuario.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Habilidad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Notificacion.h">
+    <ClInclude Include="ExperienciaLaboral.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Comentario.h">
+    <ClInclude Include="SolicitudConexion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Recomendacion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Empresa.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Publicacion.h">
+    <ClInclude Include="Accion.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
