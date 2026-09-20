@@ -18,5 +18,25 @@
     <ClCompile Include="ChambaLink.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Usuario.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Habilidad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Notificacion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Comentario.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Recomendacion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Empresa.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
