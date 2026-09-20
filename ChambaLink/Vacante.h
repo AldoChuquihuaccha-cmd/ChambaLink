@@ -8,25 +8,44 @@ private:
     std::string titulo;
     std::string descripcion;
     std::string requisitos;
-    std::string modalidad; // Remoto, Presencial, Hibrido
+    std::string modalidad;
     bool activa;
 
 public:
-    Vacante();
+
+    Vacante()
+        : id(0), idEmpresa(0), titulo(""), descripcion(""),
+          requisitos(""), modalidad(""), activa(true) {}
 
     Vacante(int pId, int pIdEmpresa, std::string pTitulo,
             std::string pDescripcion, std::string pRequisitos,
-            std::string pModalidad);
+            std::string pModalidad)
+        : id(pId), idEmpresa(pIdEmpresa), titulo(pTitulo),
+          descripcion(pDescripcion), requisitos(pRequisitos),
+          modalidad(pModalidad), activa(true) {}
 
-    int getId() const;
-    int getIdEmpresa() const;
-    std::string getTitulo() const;
-    std::string getDescripcion() const;
-    std::string getRequisitos() const;
-    std::string getModalidad() const;
-    bool estaActiva() const;
 
-    void cerrarVacante();
+    int getId() const { return id; }
 
-    bool mismoId(const Vacante& otra) const;
+    int getIdEmpresa() const { return idEmpresa; }
+
+    std::string getTitulo() const { return titulo; }
+
+    std::string getDescripcion() const { return descripcion; }
+
+    std::string getRequisitos() const { return requisitos; }
+
+    std::string getModalidad() const { return modalidad; }
+
+    bool estaActiva() const { return activa; }
+
+
+    void cerrarVacante() {
+        activa = false;
+    }
+
+
+    bool mismoId(const Vacante& otra) const {
+        return id == otra.id;
+    }
 };
