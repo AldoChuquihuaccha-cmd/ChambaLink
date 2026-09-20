@@ -123,8 +123,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Accion.cpp" />
     <ClCompile Include="ChambaLink.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Accion.h" />
+    <ClInclude Include="Comentario.h" />
+    <ClInclude Include="Empresa.h" />
+    <ClInclude Include="ExperienciaLaboral.h" />
+    <ClInclude Include="Habilidad.h" />
+    <ClInclude Include="Lista.h" />
+    <ClInclude Include="Nodo.h" />
+    <ClInclude Include="Notificacion.h" />
+    <ClInclude Include="Publicacion.h" />
+    <ClInclude Include="Recomendacion.h" />
+    <ClInclude Include="SolicitudConexion.h" />
+    <ClInclude Include="Usuario.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
