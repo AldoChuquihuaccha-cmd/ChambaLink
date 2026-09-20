@@ -131,6 +131,7 @@
     <ClInclude Include="Empresa.h" />
     <ClInclude Include="Habilidad.h" />
     <ClInclude Include="Notificacion.h" />
+    <ClInclude Include="Publicacion.h" />
     <ClInclude Include="Recomendacion.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
