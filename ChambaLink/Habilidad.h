@@ -1,50 +1,43 @@
 #pragma once
 #include <string>
 
-// Nivel de dominio que el usuario declara para una habilidad propia.
+// Nivel de dominio que el usuario declara para una habilidad.
+// Al guardarlo en archivo conviene escribirlo como numero con (int)nivel
+// y leerlo de vuelta con (NivelHabilidad)numero.
 enum class NivelHabilidad { Basico, Intermedio, Avanzado, Experto };
 
+// Forma parte del perfil del usuario: no existe fuera de el.
 class Habilidad {
 private:
     std::string nombre;
     NivelHabilidad nivel;
 
 public:
-    Habilidad();
-    Habilidad(std::string pNombre, NivelHabilidad pNivel);
-
-    std::string getNombre() const;
-    NivelHabilidad getNivel() const;
-    void setNivel(NivelHabilidad pNivel);
-
-    std::string nivelToString() const;
-
-    // Comparador por nombre; se usa como predicado lambda al buscar
-    // en Lista<Habilidad> (evita depender de operator== de fuera).
-    bool mismoNombre(const Habilidad& otra) const;
-};
-Habilidad::Habilidad() : nombre(""), nivel(NivelHabilidad::Basico) {}
-
-Habilidad::Habilidad(std::string pNombre, NivelHabilidad pNivel)
-    : nombre(pNombre), nivel(pNivel) {
-}
-
-std::string Habilidad::getNombre() const { return nombre; }
-
-NivelHabilidad Habilidad::getNivel() const { return nivel; }
-
-void Habilidad::setNivel(NivelHabilidad pNivel) { nivel = pNivel; }
-
-std::string Habilidad::nivelToString() const {
-    switch (nivel) {
-    case NivelHabilidad::Basico:     return "Basico";
-    case NivelHabilidad::Intermedio: return "Intermedio";
-    case NivelHabilidad::Avanzado:   return "Avanzado";
-    case NivelHabilidad::Experto:    return "Experto";
+    Habilidad() {
+        nombre = "";
+        nivel = NivelHabilidad::Basico;
     }
-    return "Desconocido";
-}
 
-bool Habilidad::mismoNombre(const Habilidad& otra) const {
-    return nombre == otra.nombre;
-}
+    Habilidad(std::string pNombre, NivelHabilidad pNivel) {
+        nombre = pNombre;
+        nivel = pNivel;
+    }
+
+    std::string getNombre() const { return nombre; }
+    NivelHabilidad getNivel() const { return nivel; }
+    void setNivel(NivelHabilidad pNivel) { nivel = pNivel; }
+
+    std::string nivelToString() const {
+        switch (nivel) {
+        case NivelHabilidad::Basico:     return "Basico";
+        case NivelHabilidad::Intermedio: return "Intermedio";
+        case NivelHabilidad::Avanzado:   return "Avanzado";
+        case NivelHabilidad::Experto:    return "Experto";
+        }
+        return "Desconocido";
+    }
+
+    // Se usan como condicion en las lambdas al buscar en la lista.
+    bool mismoNombre(const Habilidad& otra) const { return nombre == otra.nombre; }
+    bool tieneNombre(std::string pNombre) const { return nombre == pNombre; }
+};

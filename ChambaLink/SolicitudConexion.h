@@ -3,48 +3,55 @@
 
 enum class EstadoSolicitud { Pendiente, Aceptada, Rechazada };
 
+// Solicitud de conexion entre dos usuarios.
+// Mientras esta pendiente espera en la cola de solicitudes del receptor.
 class SolicitudConexion {
 private:
-    std::string codigoEmisor;
-    std::string codigoReceptor;
+    int id;
+    int idEmisor;
+    int idReceptor;
     std::string mensaje;
+    std::string fecha;
     EstadoSolicitud estado;
 
 public:
-    SolicitudConexion();
-    SolicitudConexion(std::string pEmisor, std::string pReceptor, std::string pMensaje);
+    SolicitudConexion() {
+        id = 0;
+        idEmisor = 0;
+        idReceptor = 0;
+        mensaje = "";
+        fecha = "";
+        estado = EstadoSolicitud::Pendiente;
+    }
 
-    std::string getCodigoEmisor() const;
-    std::string getCodigoReceptor() const;
-    std::string getMensaje() const;
-    EstadoSolicitud getEstado() const;
+    SolicitudConexion(int pId, int pIdEmisor, int pIdReceptor, std::string pMensaje, std::string pFecha) {
+        id = pId;
+        idEmisor = pIdEmisor;
+        idReceptor = pIdReceptor;
+        mensaje = pMensaje;
+        fecha = pFecha;
+        estado = EstadoSolicitud::Pendiente;
+    }
 
-    void aceptar();
-    void rechazar();
-    bool estaPendiente() const;
+    int getId() const { return id; }
+    int getIdEmisor() const { return idEmisor; }
+    int getIdReceptor() const { return idReceptor; }
+    std::string getMensaje() const { return mensaje; }
+    std::string getFecha() const { return fecha; }
+    EstadoSolicitud getEstado() const { return estado; }
+
+    void aceptar() { estado = EstadoSolicitud::Aceptada; }
+    void rechazar() { estado = EstadoSolicitud::Rechazada; }
+
+    bool estaPendiente() const { return estado == EstadoSolicitud::Pendiente; }
+    bool esDe(int pIdEmisor) const { return idEmisor == pIdEmisor; }
+
+    std::string estadoToString() const {
+        switch (estado) {
+        case EstadoSolicitud::Pendiente: return "Pendiente";
+        case EstadoSolicitud::Aceptada:  return "Aceptada";
+        case EstadoSolicitud::Rechazada: return "Rechazada";
+        }
+        return "Desconocido";
+    }
 };
-
-
-
-
-
-
-SolicitudConexion::SolicitudConexion()
-    : codigoEmisor(""), codigoReceptor(""), mensaje(""),
-    estado(EstadoSolicitud::Pendiente) {
-}
-
-SolicitudConexion::SolicitudConexion(std::string pEmisor, std::string pReceptor, std::string pMensaje)
-    : codigoEmisor(pEmisor), codigoReceptor(pReceptor), mensaje(pMensaje),
-    estado(EstadoSolicitud::Pendiente) {
-}
-
-std::string SolicitudConexion::getCodigoEmisor() const { return codigoEmisor; }
-std::string SolicitudConexion::getCodigoReceptor() const { return codigoReceptor; }
-std::string SolicitudConexion::getMensaje() const { return mensaje; }
-EstadoSolicitud SolicitudConexion::getEstado() const { return estado; }
-
-void SolicitudConexion::aceptar() { estado = EstadoSolicitud::Aceptada; }
-void SolicitudConexion::rechazar() { estado = EstadoSolicitud::Rechazada; }
-bool SolicitudConexion::estaPendiente() const { return estado == EstadoSolicitud::Pendiente; }
-

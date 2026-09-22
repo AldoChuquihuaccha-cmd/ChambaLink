@@ -1,75 +1,59 @@
 #pragma once
 #include <string>
+#include <functional>
+#include "Lista.h"
 
-
+// Grupo de interes profesional. Guarda los ids de sus miembros en una lista,
+// no solo un contador, para poder saber quienes son.
 class GrupoProfesional {
-
 private:
-
     int id;
     std::string nombre;
     std::string descripcion;
     std::string especialidad;
-    int cantidadMiembros;
-
+    Lista<int> miembros;
 
 public:
-
-
-    GrupoProfesional()
-        : id(0), nombre(""), descripcion(""),
-          especialidad(""), cantidadMiembros(0) {}
-
-
-    GrupoProfesional(int pId, std::string pNombre,
-                     std::string pDescripcion,
-                     std::string pEspecialidad)
-        : id(pId),
-          nombre(pNombre),
-          descripcion(pDescripcion),
-          especialidad(pEspecialidad),
-          cantidadMiembros(0) {}
-
-
-
-    int getId() const {
-        return id;
+    GrupoProfesional() {
+        id = 0;
+        nombre = "";
+        descripcion = "";
+        especialidad = "";
     }
 
-
-    std::string getNombre() const {
-        return nombre;
+    GrupoProfesional(int pId, std::string pNombre, std::string pDescripcion, std::string pEspecialidad) {
+        id = pId;
+        nombre = pNombre;
+        descripcion = pDescripcion;
+        especialidad = pEspecialidad;
     }
 
+    int getId() const { return id; }
+    std::string getNombre() const { return nombre; }
+    std::string getDescripcion() const { return descripcion; }
+    std::string getEspecialidad() const { return especialidad; }
+    uint getCantidadMiembros() const { return miembros.longitud(); }
 
-    std::string getDescripcion() const {
-        return descripcion;
+    void setDescripcion(std::string pDescripcion) { descripcion = pDescripcion; }
+
+    bool esMiembro(int idUsuario) const {
+        return miembros.existe([idUsuario](const int& id) { return id == idUsuario; });
     }
 
-
-    std::string getEspecialidad() const {
-        return especialidad;
+    // Devuelve false si el usuario ya era miembro.
+    bool agregarMiembro(int idUsuario) {
+        if (esMiembro(idUsuario)) return false;
+        miembros.agregaFinal(idUsuario);
+        return true;
     }
 
-
-    int getCantidadMiembros() const {
-        return cantidadMiembros;
+    bool eliminarMiembro(int idUsuario) {
+        return miembros.eliminaSi([idUsuario](const int& id) { return id == idUsuario; });
     }
 
-
-    void agregarMiembro() {
-        cantidadMiembros++;
+    void paraCadaMiembro(std::function<void(const int&)> accion) const {
+        miembros.paraCada(accion);
     }
 
-
-    void eliminarMiembro() {
-
-        if(cantidadMiembros > 0)
-            cantidadMiembros--;
-    }
-
-
-    bool mismoId(const GrupoProfesional& otro) const {
-        return id == otro.id;
-    }
+    bool mismoId(const GrupoProfesional& otro) const { return id == otro.id; }
 };

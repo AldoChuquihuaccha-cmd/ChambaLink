@@ -1,73 +1,46 @@
 #pragma once
 #include <string>
+#include "Contenido.h"
 
-
-class Mensaje {
-
+// Mensaje directo entre dos usuarios conectados.
+// El autor heredado es el emisor.
+class Mensaje : public Contenido {
 private:
-
-    int id;
-    int idEmisor;
     int idReceptor;
-    std::string contenido;
-    std::string fecha;
     bool leido;
 
-
 public:
-
-
-    Mensaje()
-        : id(0), idEmisor(0), idReceptor(0),
-          contenido(""), fecha(""), leido(false) {}
-
-
-    Mensaje(int pId, int pEmisor, int pReceptor,
-            std::string pContenido, std::string pFecha)
-        : id(pId), idEmisor(pEmisor),
-          idReceptor(pReceptor),
-          contenido(pContenido),
-          fecha(pFecha),
-          leido(false) {}
-
-
-
-    int getId() const {
-        return id;
+    Mensaje() : Contenido(0, 0, "", "") {
+        idReceptor = 0;
+        leido = false;
     }
 
-
-    int getIdEmisor() const {
-        return idEmisor;
+    Mensaje(int pId, int pIdEmisor, int pIdReceptor, std::string pTexto, std::string pFecha)
+        : Contenido(pId, pIdEmisor, pTexto, pFecha) {
+        idReceptor = pIdReceptor;
+        leido = false;
     }
 
+    int getIdEmisor() const { return getIdAutor(); }
+    int getIdReceptor() const { return idReceptor; }
 
-    int getIdReceptor() const {
-        return idReceptor;
+    bool fueLeido() const { return leido; }
+    void marcarLeido() { leido = true; }
+
+    bool perteneceA(int idUsuario) const {
+        return getIdAutor() == idUsuario || idReceptor == idUsuario;
     }
 
-
-    std::string getContenido() const {
-        return contenido;
+    // Sirve para los dos sentidos de la conversacion.
+    bool esConversacionEntre(int idA, int idB) const {
+        return (getIdAutor() == idA && idReceptor == idB)
+            || (getIdAutor() == idB && idReceptor == idA);
     }
 
+    std::string tipo() const { return "Mensaje"; }
 
-    std::string getFecha() const {
-        return fecha;
-    }
-
-
-    bool fueLeido() const {
-        return leido;
-    }
-
-
-    void marcarLeido() {
-        leido = true;
-    }
-
-
-    bool perteneceA(int usuario) const {
-        return idEmisor == usuario || idReceptor == usuario;
+    std::string resumen() const {
+        if (leido) return Contenido::resumen() + " (leido)";
+        return Contenido::resumen() + " (no leido)";
     }
 };

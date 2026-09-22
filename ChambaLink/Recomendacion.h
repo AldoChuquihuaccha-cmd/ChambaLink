@@ -1,44 +1,32 @@
 #pragma once
 #include <string>
+#include "Contenido.h"
 
-// Recomendacion que un usuario escribe sobre otro (estilo LinkedIn).
-class Recomendacion {
+// Recomendacion que un usuario escribe sobre otro, como en LinkedIn.
+// El autor heredado es quien recomienda y idReceptor es el recomendado.
+// No confundir con la sugerencia de conexion (contactos en comun).
+class Recomendacion : public Contenido {
 private:
-    int id;
-    int idEmisor;           // id del Usuario que recomienda
-    int idReceptor;         // id del Usuario recomendado
-    std::string texto;
-    std::string fecha;      // formato "dd/mm/aaaa"
+    int idReceptor;
 
 public:
-    Recomendacion();
-    Recomendacion(int pId, int pIdEmisor, int pIdReceptor, std::string pTexto, std::string pFecha);
+    Recomendacion() : Contenido(0, 0, "", "") {
+        idReceptor = 0;
+    }
 
-    int getId() const;
-    int getIdEmisor() const;
-    int getIdReceptor() const;
-    std::string getTexto() const;
-    std::string getFecha() const;
+    Recomendacion(int pId, int pIdEmisor, int pIdReceptor, std::string pTexto, std::string pFecha)
+        : Contenido(pId, pIdEmisor, pTexto, pFecha) {
+        idReceptor = pIdReceptor;
+    }
 
-    void setTexto(std::string pTexto);
+    int getIdEmisor() const { return getIdAutor(); }
+    int getIdReceptor() const { return idReceptor; }
 
-    // Comparadores; se usan como predicado lambda al buscar en Lista<Recomendacion>.
-    bool mismoId(const Recomendacion& otra) const;
-    bool esPara(int pIdReceptor) const;
+    bool esPara(int pIdReceptor) const { return idReceptor == pIdReceptor; }
+
+    std::string tipo() const { return "Recomendacion"; }
+
+    std::string resumen() const {
+        return Contenido::resumen() + " (para el usuario " + std::to_string(idReceptor) + ")";
+    }
 };
-Recomendacion::Recomendacion() : id(0), idEmisor(0), idReceptor(0), texto(""), fecha("") {}
-
-Recomendacion::Recomendacion(int pId, int pIdEmisor, int pIdReceptor, std::string pTexto, std::string pFecha)
-    : id(pId), idEmisor(pIdEmisor), idReceptor(pIdReceptor), texto(pTexto), fecha(pFecha) {
-}
-
-int Recomendacion::getId() const { return id; }
-int Recomendacion::getIdEmisor() const { return idEmisor; }
-int Recomendacion::getIdReceptor() const { return idReceptor; }
-std::string Recomendacion::getTexto() const { return texto; }
-std::string Recomendacion::getFecha() const { return fecha; }
-
-void Recomendacion::setTexto(std::string pTexto) { texto = pTexto; }
-
-bool Recomendacion::mismoId(const Recomendacion& otra) const { return id == otra.id; }
-bool Recomendacion::esPara(int pIdReceptor) const { return idReceptor == pIdReceptor; }
