@@ -2,6 +2,7 @@
 #include <string>
 #include <ctime>
 #include <functional>
+#include <cctype>
 #include "Lista.h"
 #include "Usuario.h"
 #include "Empresa.h"
@@ -121,10 +122,63 @@ private:
         return comentarios.buscarPtr([idComentario](const Comentario& c) { return c.getId() == idComentario; });
     }
 
+    // ---------- Validacion de cuentas ----------
+
+    // El correo se guarda y se compara en minusculas: Ana@Mail.com y
+    // ana@mail.com son la misma cuenta.
+    static std::string aMinusculas(std::string texto) {
+        for (size_t i = 0; i < texto.length(); i++)
+            texto[i] = (char)tolower((unsigned char)texto[i]);
+        return texto;
+    }
+
+    // Reglas comunes a todos los campos del registro:
+    //   - obligatorio o no,
+    //   - sin comas, porque la coma separa las columnas del CSV,
+    //   - largo maximo, para que quepa en pantalla y en un futuro archivo binario.
+    bool validarCampo(const std::string& valor, const std::string& nombreCampo,
+        int largoMaximo, bool obligatorio) {
+        if (obligatorio && valor == "") return fallar("El campo " + nombreCampo + " es obligatorio");
+        if (valor.find(',') != std::string::npos) return fallar("No se permiten comas");
+        if ((int)valor.length() > largoMaximo)
+            return fallar("El campo " + nombreCampo + " admite como maximo "
+                + std::to_string(largoMaximo) + " caracteres");
+        return true;
+    }
+
+    // Un correo no puede usarse en dos cuentas, sea de individuo o de empresa.
+    bool correoEnUso(const std::string& correo) const {
+        bool enUsuarios = usuarios.existe([&correo](const Usuario& u) { return u.tieneCorreo(correo); });
+        bool enEmpresas = empresas.existe([&correo](const Empresa& e) { return e.tieneCorreo(correo); });
+        return enUsuarios || enEmpresas;
+    }
+
+    // El correo ya debe venir en minusculas.
+    bool validarCredenciales(const std::string& correo, const std::string& contrasena) {
+        if (!validarCampo(correo, "correo", MAX_CORREO, true)) return false;
+        if (!validarCampo(contrasena, "contrasena", MAX_CONTRASENA, true)) return false;
+        if (correo.find('@') == std::string::npos || correo.find(' ') != std::string::npos)
+            return fallar("El correo no es valido");
+        if (correoEnUso(correo)) return fallar("Ese correo ya esta registrado");
+        return true;
+    }
+
 public:
+    // Largos maximos de los campos de registro. Login los usa para no dejar
+    // escribir mas de la cuenta y RedProfesional para validar.
+    static const int MAX_NOMBRE = 30;
+    static const int MAX_APELLIDO = 30;
+    static const int MAX_TITULAR = 50;
+    static const int MAX_UBICACION = 30;
+    static const int MAX_CORREO = 50;
+    static const int MAX_CONTRASENA = 20;
+    static const int MAX_NOMBRE_EMPRESA = 50;
+    static const int MAX_SECTOR = 30;
+
     RedProfesional() {
-        sigUsuario = 1;
-        sigEmpresa = 1;
+        // Las cuentas empiezan en 1000 para que su id siempre tenga 4 cifras.
+        sigUsuario = 1000;
+        sigEmpresa = 1000;
         sigVacante = 1;
         sigPostulacion = 1;
         sigGrupo = 1;
@@ -160,17 +214,35 @@ public:
 
     // ==================== Usuarios ====================
 
-    // Devuelve el id del nuevo usuario, o -1 si los datos no son validos.
-    int registrarUsuario(std::string nombre, std::string apellido,
-        std::string titular, std::string ubicacion) {
-        if (nombre == "" || apellido == "") {
-            fallar("El nombre y el apellido son obligatorios");
-            return -1;
-        }
+    // Devuelve el id del nuevo usuario, o -1 si los datos no son validos
+    // (el motivo queda en getUltimoError). Titular y distrito son opcionales.
+    int registrarUsuario(std::string nombre, std::string apellido, std::string titular,
+        std::string ubicacion, std::string correo, std::string contrasena) {
+        correo = aMinusculas(correo);
+        if (!validarCampo(nombre, "nombre", MAX_NOMBRE, true)) return -1;
+        if (!validarCampo(apellido, "apellido", MAX_APELLIDO, true)) return -1;
+        if (!validarCampo(titular, "titular", MAX_TITULAR, false)) return -1;
+        if (!validarCampo(ubicacion, "distrito", MAX_UBICACION, false)) return -1;
+        if (!validarCredenciales(correo, contrasena)) return -1;
+
         int id = sigUsuario;
         sigUsuario++;
-        usuarios.agregaFinal(Usuario(id, nombre, apellido, titular, ubicacion));
+        usuarios.agregaFinal(Usuario(id, nombre, apellido, titular, ubicacion, correo, contrasena));
         return id;
+    }
+
+    // Busqueda lineal O(n) en la lista de usuarios.
+    // Devuelve el id del usuario, o -1 si el correo o la contrasena no coinciden.
+    // El mensaje es el mismo en los dos casos para no revelar que correos existen.
+    int iniciarSesionUsuario(std::string correo, std::string contrasena) {
+        correo = aMinusculas(correo);
+        if (correo == "" || contrasena == "") { fallar("Ingrese su correo y su contrasena"); return -1; }
+        const Usuario* u = usuarios.buscarPtr([&correo](const Usuario& x) { return x.tieneCorreo(correo); });
+        if (u == nullptr || !u->contrasenaCorrecta(contrasena)) {
+            fallar("Correo o contrasena incorrectos");
+            return -1;
+        }
+        return u->getId();
     }
 
     Usuario* buscarUsuario(int idUsuario) {
@@ -398,14 +470,33 @@ public:
 
     // ==================== Empleo y grupos (Piero) ====================
 
-    int registrarEmpresa(std::string nombre, std::string sector, std::string ubicacion) {
-        if (nombre == "") { fallar("El nombre de la empresa es obligatorio"); return -1; }
+    // Sector y distrito son opcionales.
+    int registrarEmpresa(std::string nombre, std::string sector, std::string ubicacion,
+        std::string correo, std::string contrasena) {
+        correo = aMinusculas(correo);
+        if (!validarCampo(nombre, "nombre", MAX_NOMBRE_EMPRESA, true)) return -1;
         bool repetida = empresas.existe([nombre](const Empresa& e) { return e.getNombre() == nombre; });
         if (repetida) { fallar("Ya existe una empresa con ese nombre"); return -1; }
+        if (!validarCampo(sector, "sector", MAX_SECTOR, false)) return -1;
+        if (!validarCampo(ubicacion, "distrito", MAX_UBICACION, false)) return -1;
+        if (!validarCredenciales(correo, contrasena)) return -1;
+
         int id = sigEmpresa;
         sigEmpresa++;
-        empresas.agregaFinal(Empresa(id, nombre, sector, ubicacion));
+        empresas.agregaFinal(Empresa(id, nombre, sector, ubicacion, correo, contrasena));
         return id;
+    }
+
+    // Igual que iniciarSesionUsuario, pero busca en la lista de empresas.
+    int iniciarSesionEmpresa(std::string correo, std::string contrasena) {
+        correo = aMinusculas(correo);
+        if (correo == "" || contrasena == "") { fallar("Ingrese su correo y su contrasena"); return -1; }
+        const Empresa* e = empresas.buscarPtr([&correo](const Empresa& x) { return x.tieneCorreo(correo); });
+        if (e == nullptr || !e->contrasenaCorrecta(contrasena)) {
+            fallar("Correo o contrasena incorrectos");
+            return -1;
+        }
+        return e->getId();
     }
 
     int publicarVacante(int idEmpresa, std::string titulo, std::string descripcion,

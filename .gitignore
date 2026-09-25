@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Datos que genera ChambaLink al ejecutarse (cuentas y demas catalogos)
+*.csv
+*.txt

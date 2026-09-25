@@ -33,6 +33,8 @@ private:
     std::string apellido;
     std::string titular;
     std::string ubicacion;
+    std::string correo;       // con el que inicia sesion (se guarda en minusculas)
+    std::string contrasena;
 
     Lista<Habilidad> habilidades;
     Lista<Certificacion> certificaciones;
@@ -49,15 +51,20 @@ public:
         apellido = "";
         titular = "";
         ubicacion = "";
+        correo = "";
+        contrasena = "";
     }
 
     Usuario(int pId, std::string pNombre, std::string pApellido,
-        std::string pTitular, std::string pUbicacion) {
+        std::string pTitular, std::string pUbicacion,
+        std::string pCorreo, std::string pContrasena) {
         id = pId;
         nombre = pNombre;
         apellido = pApellido;
         titular = pTitular;
         ubicacion = pUbicacion;
+        correo = pCorreo;
+        contrasena = pContrasena;
     }
 
     // ---------- Datos basicos ----------
@@ -67,11 +74,19 @@ public:
     std::string getNombreCompleto() const { return nombre + " " + apellido; }
     std::string getTitular() const { return titular; }
     std::string getUbicacion() const { return ubicacion; }
+    std::string getCorreo() const { return correo; }
+
+    // Solo la usa GestorArchivos para guardar la cuenta en usuarios.csv.
+    std::string getContrasena() const { return contrasena; }
 
     void setTitular(std::string pTitular) { titular = pTitular; }
     void setUbicacion(std::string pUbicacion) { ubicacion = pUbicacion; }
 
     bool mismoId(const Usuario& otro) const { return id == otro.id; }
+
+    // ---------- Cuenta ----------
+    bool tieneCorreo(std::string pCorreo) const { return correo == pCorreo; }
+    bool contrasenaCorrecta(std::string pContrasena) const { return contrasena == pContrasena; }
 
     // ---------- Habilidades ----------
     bool tieneHabilidad(std::string nombreHabilidad) const {

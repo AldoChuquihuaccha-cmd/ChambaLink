@@ -130,6 +130,7 @@
     <ClInclude Include="Certificacion.h" />
     <ClInclude Include="Cola.h" />
     <ClInclude Include="Comentario.h" />
+    <ClInclude Include="Consola.h" />
     <ClInclude Include="Contenido.h" />
     <ClInclude Include="Empresa.h" />
     <ClInclude Include="ExperienciaLaboral.h" />
@@ -138,6 +139,7 @@
     <ClInclude Include="Habilidad.h" />
     <ClInclude Include="Lista.h" />
     <ClInclude Include="ListaDoble.h" />
+    <ClInclude Include="Login.h" />
     <ClInclude Include="Mensaje.h" />
     <ClInclude Include="Nodo.h" />
     <ClInclude Include="NodoDoble.h" />

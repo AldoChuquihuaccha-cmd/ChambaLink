@@ -1,14 +1,17 @@
 #pragma once
 #include <string>
 #include <fstream>
-#include <sstream>
 #include "RedProfesional.h"
 
 // Guarda y carga toda la informacion de ChambaLink en archivos de texto.
 //
-// Formato: un archivo por clase principal y un archivo por relacion, con los
-// campos separados por el caracter '|'. Ejemplo de usuarios.txt:
-//     1|Ana|Torres|Ingeniera de Software|Lima
+// Formato:
+//   - Cuentas (usuarios.csv y empresas.csv): CSV separado por comas. El registro
+//     no permite comas en ningun campo, asi que nunca rompen las columnas.
+//       usuarios.csv: id,correo,contrasena,nombre,apellido,titular,distrito
+//       empresas.csv: id,correo,contrasena,nombre,sector,distrito
+//   - Lo demas: un archivo .txt por clase o relacion con los campos separados
+//     por '|', porque los textos libres (publicaciones, mensajes) si llevan comas.
 // Los enum se guardan como numero y los bool como 0 o 1.
 //
 // Las listas que estan dentro de un objeto no caben en la misma linea, por eso
@@ -23,10 +26,10 @@ class GestorArchivos {
 private:
     // ---------- Apoyo para escribir ----------
 
-    // Quita el separador del texto para que no rompa la linea.
-    static std::string limpiar(std::string texto) {
+    // Quita el separador y los saltos de linea del texto para que no rompan la linea.
+    static std::string limpiar(std::string texto, char separador = '|') {
         for (uint i = 0; i < texto.length(); i++)
-            if (texto[i] == '|') texto[i] = ' ';
+            if (texto[i] == separador || texto[i] == '\n' || texto[i] == '\r') texto[i] = ' ';
         return texto;
     }
 
@@ -39,13 +42,17 @@ private:
 
     // ---------- Apoyo para leer ----------
 
-    // Separa una linea por '|' y devuelve los campos en una lista.
-    static Lista<std::string> partir(std::string linea) {
+    // Separa una linea por el separador y devuelve los campos en una lista.
+    // Se recorre caracter por caracter (y no con getline) para no perder el
+    // ultimo campo cuando esta vacio: "1|Ana|" debe dar 3 campos, no 2.
+    static Lista<std::string> partir(std::string linea, char separador = '|') {
         Lista<std::string> campos;
-        std::stringstream flujo(linea);
         std::string campo;
-        while (std::getline(flujo, campo, '|'))
-            campos.agregaFinal(campo);
+        for (char ch : linea) {
+            if (ch == separador) { campos.agregaFinal(campo); campo = ""; }
+            else if (ch != '\r') campo += ch;
+        }
+        campos.agregaFinal(campo);
         return campos;
     }
 
@@ -66,7 +73,7 @@ public:
     //  Guardar
     // ============================================================
     static bool guardarTodo(const RedProfesional& red) {
-        std::ofstream usuarios("usuarios.txt");
+        std::ofstream usuarios("usuarios.csv");
         std::ofstream contactos("contactos.txt");
         std::ofstream habilidades("habilidades.txt");
         std::ofstream experiencias("experiencias.txt");
@@ -78,9 +85,10 @@ public:
 
         red.usuarios.paraCada([&](const Usuario& u) {
             int idUsuario = u.getId();
-            usuarios << idUsuario << "|" << limpiar(u.getNombre()) << "|"
-                << limpiar(u.getApellido()) << "|" << limpiar(u.getTitular()) << "|"
-                << limpiar(u.getUbicacion()) << "\n";
+            usuarios << idUsuario << "," << limpiar(u.getCorreo(), ',') << ","
+                << limpiar(u.getContrasena(), ',') << "," << limpiar(u.getNombre(), ',') << ","
+                << limpiar(u.getApellido(), ',') << "," << limpiar(u.getTitular(), ',') << ","
+                << limpiar(u.getUbicacion(), ',') << "\n";
 
             u.paraCadaContacto([&](const int& idContacto) {
                 contactos << idUsuario << "|" << idContacto << "\n";
@@ -119,10 +127,11 @@ public:
                 });
             });
 
-        std::ofstream empresas("empresas.txt");
+        std::ofstream empresas("empresas.csv");
         red.empresas.paraCada([&](const Empresa& e) {
-            empresas << e.getId() << "|" << limpiar(e.getNombre()) << "|"
-                << limpiar(e.getSector()) << "|" << limpiar(e.getUbicacion()) << "\n";
+            empresas << e.getId() << "," << limpiar(e.getCorreo(), ',') << ","
+                << limpiar(e.getContrasena(), ',') << "," << limpiar(e.getNombre(), ',') << ","
+                << limpiar(e.getSector(), ',') << "," << limpiar(e.getUbicacion(), ',') << "\n";
             });
 
         std::ofstream vacantes("vacantes.txt");
@@ -189,30 +198,37 @@ public:
     // ============================================================
     //  Cargar
     // ============================================================
-    // Devuelve false si no existe usuarios.txt (primera ejecucion).
+    // Carga cada archivo que exista; si alguno falta (por ejemplo en la primera
+    // ejecucion) simplemente no carga nada de el.
+    // Devuelve true si encontro al menos una cuenta (usuarios.csv o empresas.csv).
     // El orden importa: primero los objetos y despues las relaciones.
+    // Debe llamarse ANTES de registrar a nadie, para que los contadores de ids
+    // queden despues del id mas alto guardado.
     static bool cargarTodo(RedProfesional& red) {
-        std::ifstream usuarios("usuarios.txt");
-        if (!usuarios.is_open()) return false;
+        std::ifstream usuarios("usuarios.csv");
+        std::ifstream empresas("empresas.csv");
+        bool hayCuentas = usuarios.is_open() || empresas.is_open();
 
+        // usuarios.csv: id,correo,contrasena,nombre,apellido,titular,distrito
         std::string linea;
         while (std::getline(usuarios, linea)) {
             if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 5) continue;
+            Lista<std::string> c = partir(linea, ',');
+            if (c.longitud() < 7) continue;
             int id = aEntero(c.obtenerPos(0));
-            red.usuarios.agregaFinal(Usuario(id, c.obtenerPos(1), c.obtenerPos(2),
-                c.obtenerPos(3), c.obtenerPos(4)));
+            red.usuarios.agregaFinal(Usuario(id, c.obtenerPos(3), c.obtenerPos(4),
+                c.obtenerPos(5), c.obtenerPos(6), c.obtenerPos(1), c.obtenerPos(2)));
             actualizarContador(red.sigUsuario, id);
         }
 
-        std::ifstream empresas("empresas.txt");
+        // empresas.csv: id,correo,contrasena,nombre,sector,distrito
         while (std::getline(empresas, linea)) {
             if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 4) continue;
+            Lista<std::string> c = partir(linea, ',');
+            if (c.longitud() < 6) continue;
             int id = aEntero(c.obtenerPos(0));
-            red.empresas.agregaFinal(Empresa(id, c.obtenerPos(1), c.obtenerPos(2), c.obtenerPos(3)));
+            red.empresas.agregaFinal(Empresa(id, c.obtenerPos(3), c.obtenerPos(4),
+                c.obtenerPos(5), c.obtenerPos(1), c.obtenerPos(2)));
             actualizarContador(red.sigEmpresa, id);
         }
 
@@ -401,6 +417,6 @@ public:
             if (v != nullptr) v->recibirPostulacion(aEntero(c.obtenerPos(1)));
         }
 
-        return true;
+        return hayCuentas;
     }
 };

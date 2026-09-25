@@ -95,5 +95,11 @@
     <ClInclude Include="GestorArchivos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Consola.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Login.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
