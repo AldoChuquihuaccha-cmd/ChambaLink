@@ -88,4 +88,29 @@ public:
         for (Nodo<T>* aux = cima; aux != nullptr; aux = aux->get_Sgte())
             accion(aux->get_Elem());
     }
+
+    int contarSi(std::function<bool(const T&)> criterio) const
+    {
+        int c = 0;
+        for (Nodo<T>* aux = cima; aux; aux = aux->get_Sgte())
+            if (criterio(aux->get_Elem())) c++;
+        return c;
+    }
+
+
+    void invertir()
+    {
+        Nodo<T>* ant = nullptr;
+        Nodo<T>* act = cima;
+
+        while (act)
+        {
+            Nodo<T>* sig = act->get_Sgte();
+            act->set_Sgte(ant);
+            ant = act;
+            act = sig;
+        }
+
+        cima = ant;
+    }
 };
