@@ -205,7 +205,7 @@ public:
     void paraCadaAccion(std::function<void(const Accion&)> accion) const {
         historialAcciones.paraCada(accion);
     }
-
+    int contarAccionesEjecutadas() { return historialAcciones.contarSi([](const Accion& a) { return a.fueEjecutada(); }); }
     // ---------- Notificaciones ----------
     void recibirNotificacion(const Notificacion& n) { notificaciones.encolar(n); }
 
