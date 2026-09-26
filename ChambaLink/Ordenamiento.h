@@ -1,5 +1,6 @@
 #pragma once
 #include <functional>
+#include <algorithm>
 #include "Lista.h"
 
 // Algoritmos de ordenamiento para Lista<T>.
@@ -113,13 +114,168 @@ Lista<T> quickSort(const Lista<T>& lista, std::function<bool(const T&, const T&)
 // template <class T>
 // Lista<T> mergeSort(const Lista<T>& lista, std::function<bool(const T&, const T&)> antesQue);
 
-// ---------- HeapSort (pendiente: Piero) ----------
+
+
+
+
+
+// ---------- HeapSort (Piero) ----------
 // Idea: construir un monticulo con el arreglo, sacar la raiz una por una
 // y volver a acomodar. Siempre O(n log n) y sin memoria extra sobre el arreglo.
 //
-// template <class T>
-// void hundir(T* arreglo, int tamanio, int posicion,
-//     std::function<bool(const T&, const T&)> antesQue);
+// HeapSort trabaja sobre el arreglo temporal generado desde Lista<T>.
+// Primero construye un monticulo maximo y luego coloca los elementos mayores
+// al final del arreglo. El criterio antesQue permite reutilizar el algoritmo
+// para diferentes tipos de datos.
 //
-// template <class T>
-// Lista<T> heapSort(const Lista<T>& lista, std::function<bool(const T&, const T&)> antesQue);
+// Complejidad:
+// Construccion del monticulo: O(n)
+// Ordenamiento completo: O(n log n)
+// Memoria adicional: O(1) sobre el arreglo temporal.
+
+
+/*
+    Mantiene la propiedad del monticulo.
+
+    tamanio representa la cantidad de elementos considerados dentro
+    del heap y posicion es el nodo que se debe acomodar.
+
+    Caso base:
+    Cuando los hijos de la posicion ya no existen o no hay intercambio,
+    termina la ejecucion.
+
+    Costo: O(log n)
+*/
+template <class T>
+void hundir(
+    T* arreglo,
+    int tamanio,
+    int posicion,
+    std::function<bool(const T&, const T&)> antesQue
+)
+{
+    int mayor = posicion;
+
+    int hijoIzquierdo = 2 * posicion + 1;
+    int hijoDerecho = 2 * posicion + 2;
+
+
+    // Si el hijo izquierdo debe estar antes que el padre,
+    // se convierte en el mayor candidato.
+    if (hijoIzquierdo < tamanio &&
+        antesQue(arreglo[mayor], arreglo[hijoIzquierdo]))
+    {
+        mayor = hijoIzquierdo;
+    }
+
+
+    // Si el hijo derecho es mayor, se actualiza.
+    if (hijoDerecho < tamanio &&
+        antesQue(arreglo[mayor], arreglo[hijoDerecho]))
+    {
+        mayor = hijoDerecho;
+    }
+
+
+    // Si el mayor no es la posicion actual,
+    // se intercambian y se continua hacia abajo.
+    if (mayor != posicion)
+    {
+        intercambiar(
+            arreglo[posicion],
+            arreglo[mayor]
+        );
+
+
+        hundir(
+            arreglo,
+            tamanio,
+            mayor,
+            antesQue
+        );
+    }
+}
+
+
+
+/*
+    Ordena una Lista<T> utilizando HeapSort.
+
+    Pasos:
+    1. Copia los elementos de la lista a un arreglo.
+    2. Construye un monticulo maximo.
+    3. Extrae el elemento mayor y lo coloca al final.
+    4. Convierte nuevamente el arreglo ordenado en Lista<T>.
+
+    Complejidad:
+    Mejor caso: O(n log n)
+    Caso promedio: O(n log n)
+    Peor caso: O(n log n)
+*/
+template <class T>
+Lista<T> heapSort(
+    const Lista<T>& lista,
+    std::function<bool(const T&, const T&)> antesQue
+)
+{
+    uint cantidad = lista.longitud();
+
+    if (cantidad < 2)
+        return lista;
+
+
+    T* arreglo = listaAArreglo(lista);
+
+
+
+    // Construccion inicial del monticulo.
+    // Los nodos hoja no necesitan ser acomodados.
+    for (int i = (int)cantidad / 2 - 1;
+        i >= 0;
+        i--)
+    {
+        hundir(
+            arreglo,
+            cantidad,
+            i,
+            antesQue
+        );
+    }
+
+
+
+    // Extraer elementos del monticulo.
+    for (int i = cantidad - 1;
+        i > 0;
+        i--)
+    {
+
+        // El elemento mayor pasa al final.
+        intercambiar(
+            arreglo[0],
+            arreglo[i]
+        );
+
+
+        // Se vuelve a acomodar el heap restante.
+        hundir(
+            arreglo,
+            i,
+            0,
+            antesQue
+        );
+    }
+
+
+
+    Lista<T> resultado =
+        arregloALista(
+            arreglo,
+            cantidad
+        );
+
+
+    delete[] arreglo;
+
+    return resultado;
+}
