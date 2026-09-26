@@ -54,7 +54,7 @@ public:
     void recibirPostulacion(int idPostulacion) { postulacionesPorRevisar.encolar(idPostulacion); }
     bool tienePostulacionesPorRevisar() const { return !postulacionesPorRevisar.esVacia(); }
     uint cantidadPorRevisar() const { return postulacionesPorRevisar.longitud(); }
-
+    void rotarPostulaciones() { postulacionesPorRevisar.rotar(); }
     // Retira de la cola la postulacion mas antigua y devuelve su id.
     int siguientePostulacionPorRevisar() { return postulacionesPorRevisar.desencolar(); }
 
