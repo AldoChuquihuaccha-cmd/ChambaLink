@@ -3,8 +3,10 @@
 #include <ctime>
 #include <functional>
 #include <cctype>
+#include <sstream>
 #include "Lista.h"
 #include "Usuario.h"
+#include "Ordenamiento.h"
 #include "Empresa.h"
 #include "Vacante.h"
 #include "Postulacion.h"
@@ -67,6 +69,88 @@ private:
     int sigCertificacion;
 
     std::string ultimoError;
+
+    // Convierte el texto de requisitos de una vacante en una lista.
+    // Ejemplo:
+    // "C++,SQL,Java"
+    // se convierte en:
+    // ["C++","SQL","Java"]
+
+    Lista<std::string> separarRequisitos(std::string texto)
+    {
+        Lista<std::string> resultado;
+
+        std::stringstream ss(texto);
+
+        std::string requisito;
+
+
+        while (getline(ss, requisito, ','))
+        {
+            // quitar espacios iniciales
+            while (requisito.size() > 0 &&
+                requisito[0] == ' ')
+            {
+                requisito.erase(0, 1);
+            }
+
+
+            if (requisito != "")
+            {
+                resultado.agregaFinal(requisito);
+            }
+        }
+
+
+        return resultado;
+    }
+
+    // Compara recursivamente los requisitos de una vacante
+    // con las habilidades del usuario.
+    //
+    // Caso base:
+    // ya no quedan requisitos.
+    //
+    // Caso recursivo:
+    // revisa un requisito y continúa con el siguiente.
+
+    int compararRequisitosRec(
+        const Lista<std::string>& requisitos,
+        const Usuario& usuario,
+        uint posicion
+    )
+    {
+
+        // Caso base
+        if (posicion >= requisitos.longitud())
+        {
+            return 0;
+        }
+
+
+        int encontrado = 0;
+
+
+        std::string requisitoActual =
+            requisitos.obtenerPos(posicion);
+
+
+
+        if (usuario.tieneHabilidad(requisitoActual))
+        {
+            encontrado = 1;
+        }
+
+
+
+        return encontrado +
+            compararRequisitosRec(
+                requisitos,
+                usuario,
+                posicion + 1
+            );
+    }
+
 
     // Guarda el motivo del error y devuelve false, para escribir una sola
     // linea en cada validacion.
@@ -549,7 +633,14 @@ public:
         vacante->cerrar();
         return true;
     }
-
+    bool rotarPostulacionesVacante(int idVacante)
+    {
+        Vacante* v = buscarVacante(idVacante);
+        if (v == nullptr) return fallar("La vacante no existe");
+        if (!v->tienePostulacionesPorRevisar()) return fallar("No hay postulaciones pendientes");
+        v->rotarPostulaciones();
+        return true;
+    }
     int crearGrupo(std::string nombre, std::string descripcion, std::string especialidad) {
         if (nombre == "") { fallar("El nombre del grupo es obligatorio"); return -1; }
         int id = sigGrupo;
@@ -590,7 +681,16 @@ public:
             if (v.estaActiva()) accion(v);
             });
     }
+    void ordenarVacantesHeap()
+    {
+        std::function<bool(const Vacante&, const Vacante&)> criterio =
+            [](const Vacante& a, const Vacante& b)
+            {
+                return a.getTitulo() < b.getTitulo();
+            };
 
+        vacantes = heapSort(vacantes, criterio);
+    }
     void paraCadaPostulacionDe(int idUsuario, std::function<void(const Postulacion&)> accion) const {
         postulaciones.paraCada([idUsuario, &accion](const Postulacion& p) {
             if (p.esDeUsuario(idUsuario)) accion(p);
@@ -601,7 +701,31 @@ public:
         grupos.paraCada(accion);
     }
 
-    // Pendiente (Piero): comparar los requisitos de una vacante con las
-    // habilidades del usuario de forma recursiva, ordenar con HeapSort y
-    // guardar y cargar cada catalogo en archivos de texto.
+    // Calcula el porcentaje de compatibilidad entre
+    // las habilidades del usuario y los requisitos de una vacante.
+
+    int calcularCompatibilidad(int idUsuario, int idVacante)
+    {
+        Usuario* usuario = buscarUsuario(idUsuario);
+        Vacante* vacante = buscarVacante(idVacante);
+
+        if (usuario == nullptr || vacante == nullptr)
+            return 0;
+
+        Lista<std::string> requisitos = separarRequisitos(vacante->getRequisitos());
+
+        int coincidencias = compararRequisitosRec(requisitos, *usuario, 0);
+        int total = requisitos.longitud();
+
+        if (total == 0)
+            return 0;
+
+        return (coincidencias * 100) / total;
+    }
+
+
+    // Implementado:
+    // - Comparación recursiva de requisitos.
+    // - Ordenamiento HeapSort de vacantes.
+    // - Persistencia gestionada por GestorArchivos.
 };
