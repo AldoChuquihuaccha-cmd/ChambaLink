@@ -213,6 +213,55 @@ public:
         return true;
     }
 
+    
+
+// Inserta un elemento manteniendo el orden. O(n)
+void insertarOrdenado(const T& elem, std::function<bool(const T&, const T&)> antesQue)
+{
+    if (esVacia()) { agregaInicial(elem); return; }
+
+    if (antesQue(elem, obtenerInicial()))
+    {
+        agregaInicial(elem);
+        return;
+    }
+
+    Nodo<T>* actual = ini;
+
+    while (actual->get_Sgte() != nullptr &&
+        !antesQue(elem, actual->get_Sgte()->get_Elem()))
+    {
+        actual = actual->get_Sgte();
+    }
+
+    Nodo<T>* nuevo = new Nodo<T>(elem);
+    nuevo->set_Sgte(actual->get_Sgte());
+    actual->set_Sgte(nuevo);
+
+    if (nuevo->get_Sgte() == nullptr)
+        fin = nuevo;
+
+    lon++;
+}
+
+
+// Obtiene el elemento mayor según un criterio. O(n)
+T maximoSegun(std::function<int(const T&)> criterio) const
+{
+    if (esVacia())
+        throw std::out_of_range("Lista::maximoSegun - lista vacia");
+
+    T mayor = obtenerInicial();
+
+    for (Nodo<T>* aux = ini; aux != nullptr; aux = aux->get_Sgte())
+    {
+        if (criterio(aux->get_Elem()) > criterio(mayor))
+            mayor = aux->get_Elem();
+    }
+
+    return mayor;
+}
+
     Iterador begin() { return Iterador(ini); }
     Iterador end() { return Iterador(nullptr); }
 };
