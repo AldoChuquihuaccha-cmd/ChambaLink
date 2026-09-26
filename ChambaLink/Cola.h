@@ -91,4 +91,25 @@ public:
         for (Nodo<T>* aux = primero; aux != nullptr; aux = aux->get_Sgte())
             accion(aux->get_Elem());
     }
+
+    // Mueve el primer elemento al final de la cola. O(1)
+    void rotar()
+    {
+        if (esVacia() || lon == 1)
+            return;
+
+        T primeroElemento = desencolar();
+        encolar(primeroElemento);
+    }
+
+
+    // Transfiere todos los elementos a otra cola. O(n)
+    void transferirA(Cola<T>& destino)
+    {
+        while (!esVacia())
+        {
+            destino.encolar(desencolar());
+        }
+    }
+
 };
