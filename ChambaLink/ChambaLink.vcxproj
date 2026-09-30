@@ -133,7 +133,8 @@
     <ClInclude Include="Contenido.h" />
     <ClInclude Include="Empresa.h" />
     <ClInclude Include="ExperienciaLaboral.h" />
-    <ClInclude Include="FuncionesConsola.h" />
+    <ClInclude Include="FuncionesInicio.h" />
+    <ClInclude Include="FuncionesMenu.h" />
     <ClInclude Include="GestorArchivos.h" />
     <ClInclude Include="GrupoProfesional.h" />
     <ClInclude Include="Habilidad.h" />

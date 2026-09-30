@@ -201,6 +201,19 @@ private:
         return publicaciones.buscarPtr([idPublicacion](const Publicacion& p) { return p.getId() == idPublicacion; });
     }
 
+    // Recorre las respuestas de idPadre y, por cada una, sus propias respuestas (recursivo).
+    // idPadre = 0 significa "comentarios directos a la publicacion".
+    // No hay ciclos: un comentario solo puede responder a uno que ya existia.
+    void recorrerRespuestas(int idPublicacion, int idPadre, int nivel,
+        std::function<void(const Comentario&, int)>& accion) const {
+        comentarios.paraCada([this, idPublicacion, idPadre, nivel, &accion](const Comentario& c) {
+            if (c.esDePublicacion(idPublicacion) && c.esRespuestaA(idPadre)) {
+                accion(c, nivel);                                               // el comentario
+                recorrerRespuestas(idPublicacion, c.getId(), nivel + 1, accion); // sus respuestas
+            }
+            });
+    }
+
     Comentario* buscarComentario(int idComentario) {
         return comentarios.buscarPtr([idComentario](const Comentario& c) { return c.getId() == idComentario; });
     }
@@ -246,6 +259,11 @@ public:
     static const int MAX_CONTRASENA = 20;
     static const int MAX_NOMBRE_EMPRESA = 50;
     static const int MAX_SECTOR = 30;
+    static const int MAX_CERTIFICACION = 40;   // nombre de la certificacion
+    static const int MAX_INSTITUCION = 40;
+    static const int MAX_CODIGO = 30;
+    static const int MAX_PUBLICACION = 121;    // dos lineas de 60 en pantalla
+    static const int MAX_COMENTARIO = 60;
 
     RedProfesional() {
         // Las cuentas empiezan en 1000 para que su id siempre tenga 4 cifras.
@@ -325,6 +343,11 @@ public:
 
     bool existeUsuario(int idUsuario) const { return buscarUsuario(idUsuario) != nullptr; }
 
+    // Para leer los datos de una empresa sin poder modificarla (ej. encabezado del menu).
+    const Empresa* obtenerEmpresa(int idEmpresa) const {
+        return empresas.buscarPtr([idEmpresa](const Empresa& e) { return e.getId() == idEmpresa; });
+    }
+
     std::string nombreDe(int idUsuario) const {
         const Usuario* u = buscarUsuario(idUsuario);
         if (u == nullptr) return "(usuario desconocido)";
@@ -402,14 +425,47 @@ public:
         return true;
     }
 
+    // Revisa que la fecha tenga el formato aaaa/mm/dd, con mes y dia validos.
+    // Ese formato es el que permite ordenar las fechas comparandolas como texto.
+    static bool esFechaValida(const std::string& fecha) {
+        if (fecha.length() != 10 || fecha[4] != '/' || fecha[7] != '/') return false;
+        for (int i = 0; i < 10; i++) {
+            if (i == 4 || i == 7) continue;
+            if (fecha[i] < '0' || fecha[i] > '9') return false;
+        }
+        int mes = std::stoi(fecha.substr(5, 2));
+        int dia = std::stoi(fecha.substr(8, 2));
+        return mes >= 1 && mes <= 12 && dia >= 1 && dia <= 31;
+    }
+
+    // Nombre, institucion y fecha son obligatorios; el codigo es opcional.
     bool agregarCertificacion(int idUsuario, std::string nombre, std::string institucion,
         std::string fechaObtencion, std::string codigoCredencial) {
         Usuario* usuario = buscarUsuario(idUsuario);
         if (usuario == nullptr) return fallar("El usuario no existe");
+        if (nombre == "") return fallar("El nombre de la certificacion es obligatorio");
+        if (institucion == "") return fallar("La institucion es obligatoria");
+        if (!esFechaValida(fechaObtencion)) return fallar("La fecha debe tener el formato aaaa/mm/dd");
+        if (fechaObtencion > fechaHoy()) return fallar("La fecha no puede ser futura");
+
         usuario->agregarCertificacion(Certificacion(sigCertificacion, nombre, institucion,
             fechaObtencion, codigoCredencial));
         sigCertificacion++;
         return true;
+    }
+
+    // Certificaciones del usuario en orden cronologico (la mas antigua primero),
+    // ordenadas con MergeSort. Devuelve una COPIA ordenada: la lista del usuario
+    // y el archivo no cambian de orden.
+    // MergeSort es estable: si dos tienen la misma fecha, queda primero la que se agrego antes.
+    Lista<Certificacion> certificacionesOrdenadas(int idUsuario) const {
+        Lista<Certificacion> copia;
+        const Usuario* usuario = buscarUsuario(idUsuario);
+        if (usuario == nullptr) return copia;
+        usuario->paraCadaCertificacion([&copia](const Certificacion& c) { copia.agregaFinal(c); });
+        return mergeSort<Certificacion>(copia, [](const Certificacion& a, const Certificacion& b) {
+            return a.getFechaObtencion() < b.getFechaObtencion();
+            });
     }
 
     // Pendiente (Joao): busqueda recursiva de conexiones con control de visitados,
@@ -420,6 +476,7 @@ public:
     int publicar(int idAutor, std::string texto) {
         if (!existeUsuario(idAutor)) { fallar("El usuario no existe"); return -1; }
         if (texto == "") { fallar("La publicacion no puede estar vacia"); return -1; }
+        if ((int)texto.length() > MAX_PUBLICACION) { fallar("La publicacion es demasiado larga"); return -1; }
         int id = sigPublicacion;
         sigPublicacion++;
         publicaciones.agregaFinal(Publicacion(id, idAutor, texto, fechaHoy()));
@@ -429,14 +486,18 @@ public:
     // Si idComentarioPadre es distinto de 0, el comentario es una respuesta.
     int comentar(int idAutor, int idPublicacion, std::string texto, int idComentarioPadre = 0) {
         if (!existeUsuario(idAutor)) { fallar("El usuario no existe"); return -1; }
+        if (texto == "") { fallar("El comentario no puede estar vacio"); return -1; }
+        if ((int)texto.length() > MAX_COMENTARIO) { fallar("El comentario es demasiado largo"); return -1; }
         Publicacion* publicacion = buscarPublicacion(idPublicacion);
         if (publicacion == nullptr) { fallar("La publicacion no existe"); return -1; }
+        int idAutorPadre = 0;
         if (idComentarioPadre != 0) {
             Comentario* padre = buscarComentario(idComentarioPadre);
             if (padre == nullptr || !padre->esDePublicacion(idPublicacion)) {
                 fallar("El comentario al que respondes no pertenece a esta publicacion");
                 return -1;
             }
+            idAutorPadre = padre->getIdAutor();
         }
         int id = sigComentario;
         sigComentario++;
@@ -444,6 +505,10 @@ public:
         if (publicacion->getIdAutor() != idAutor)
             notificar(publicacion->getIdAutor(), TipoNotificacion::NuevoComentario,
                 nombreDe(idAutor) + " comento tu publicacion");
+        // Aviso al autor del comentario respondido (sin repetir avisos).
+        if (idAutorPadre != 0 && idAutorPadre != idAutor && idAutorPadre != publicacion->getIdAutor())
+            notificar(idAutorPadre, TipoNotificacion::NuevoComentario,
+                nombreDe(idAutor) + " respondio tu comentario");
         return id;
     }
 
@@ -456,6 +521,53 @@ public:
             notificar(publicacion->getIdAutor(), TipoNotificacion::MeGusta,
                 nombreDe(idUsuario) + " dio me gusta a tu publicacion");
         return true;
+    }
+
+    bool quitarMeGusta(int idUsuario, int idPublicacion) {
+        Publicacion* publicacion = buscarPublicacion(idPublicacion);
+        if (publicacion == nullptr) return fallar("La publicacion no existe");
+        if (!publicacion->quitarMeGusta(idUsuario)) return fallar("No habias dado me gusta");
+        return true;
+    }
+
+    // Para leer una publicacion sin poder modificarla (pantalla de detalle).
+    const Publicacion* obtenerPublicacion(int idPublicacion) const {
+        return publicaciones.buscarPtr([idPublicacion](const Publicacion& p) { return p.getId() == idPublicacion; });
+    }
+
+    // Cantidad de comentarios (incluidas las respuestas) de una publicacion. O(n)
+    int contarComentarios(int idPublicacion) const {
+        int total = 0;
+        comentarios.paraCada([idPublicacion, &total](const Comentario& c) {
+            if (c.esDePublicacion(idPublicacion)) total++;
+            });
+        return total;
+    }
+
+    // Feed con MergeSort: la publicacion mas reciente primero.
+    // A igual fecha, la de id mayor (se publico despues).
+    // Devuelve una COPIA ordenada: el catalogo y el archivo no cambian de orden.
+    Lista<Publicacion> feedPorFecha() const {
+        return mergeSort<Publicacion>(publicaciones, [](const Publicacion& a, const Publicacion& b) {
+            if (a.getFecha() != b.getFecha()) return a.getFecha() > b.getFecha();
+            return a.getId() > b.getId();
+            });
+    }
+
+    // Feed por cantidad de me gusta. Se ordena el feed por fecha y, como
+    // MergeSort es estable, a igual cantidad de me gusta se mantiene la mas reciente primero.
+    Lista<Publicacion> feedPorPopularidad() const {
+        return mergeSort<Publicacion>(feedPorFecha(), [](const Publicacion& a, const Publicacion& b) {
+            return a.getMeGusta() > b.getMeGusta();
+            });
+    }
+
+    // Recorre los comentarios de una publicacion en forma de hilo:
+    // cada comentario seguido de sus respuestas. La accion recibe tambien el
+    // nivel (0 = comentario directo, 1 = respuesta, 2 = respuesta a una respuesta...).
+    void paraCadaComentarioEnHilo(int idPublicacion,
+        std::function<void(const Comentario&, int)> accion) const {
+        recorrerRespuestas(idPublicacion, 0, 0, accion);
     }
 
     int recomendar(int idEmisor, int idReceptor, std::string texto) {

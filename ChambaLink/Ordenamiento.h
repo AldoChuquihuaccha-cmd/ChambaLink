@@ -279,3 +279,258 @@ Lista<T> heapSort(
 
     return resultado;
 }
+
+// MergeSort 
+// Idea: dividir el arreglo en dos mitades, ordenar cada una de forma
+// recursiva y mezclarlas comparando con antesQue.
+// Complejidad: O(n log n) en el mejor, promedio y peor caso.
+// Memoria extra: O(n) por el arreglo auxiliar.
+// Es ESTABLE: los elementos iguales conservan su orden original.
+
+// Mezcla dos mitades ya ordenadas: [inicio..medio] y [medio+1..final].
+// Va tomando el menor de los dos frentes y lo copia al auxiliar.
+// Si hay empate se toma el de la izquierda (por eso es estable).
+template <class T>
+void mezclar(T* arreglo, T* auxiliar, int inicio, int medio, int final,
+    std::function<bool(const T&, const T&)> antesQue) {
+    int i = inicio;       // frente de la mitad izquierda
+    int j = medio + 1;    // frente de la mitad derecha
+    int k = inicio;       // posicion en el auxiliar
+    while (i <= medio && j <= final) {
+        if (antesQue(arreglo[j], arreglo[i])) { auxiliar[k] = arreglo[j]; j++; }
+        else { auxiliar[k] = arreglo[i]; i++; }
+        k++;
+    }
+    // Lo que sobre de una de las mitades ya esta ordenado: se copia tal cual.
+    while (i <= medio) { auxiliar[k] = arreglo[i]; i++; k++; }
+    while (j <= final) { auxiliar[k] = arreglo[j]; j++; k++; }
+    // Se devuelve el tramo mezclado al arreglo original.
+    for (k = inicio; k <= final; k++) arreglo[k] = auxiliar[k];
+}
+
+template <class T>
+void mergeSortArreglo(T* arreglo, T* auxiliar, int inicio, int final,
+    std::function<bool(const T&, const T&)> antesQue) {
+    if (inicio >= final) return;                    // caso base: 0 o 1 elemento
+    int medio = inicio + (final - inicio) / 2;
+    mergeSortArreglo(arreglo, auxiliar, inicio, medio, antesQue);       // ordena la izquierda
+    mergeSortArreglo(arreglo, auxiliar, medio + 1, final, antesQue);    // ordena la derecha
+    mezclar(arreglo, auxiliar, inicio, medio, final, antesQue);         // las junta
+}
+
+// Devuelve una lista NUEVA ordenada; la original no cambia.
+// Uso: mergeSort<Publicacion>(publicaciones, [](const Publicacion& a, const Publicacion& b) {...});
+template <class T>
+Lista<T> mergeSort(const Lista<T>& lista, std::function<bool(const T&, const T&)> antesQue) {
+    uint cantidad = lista.longitud();
+    if (cantidad < 2) return lista;
+
+    T* arreglo = listaAArreglo(lista);
+    T* auxiliar = new T[cantidad];      // se reserva una sola vez para toda la recursion
+    mergeSortArreglo(arreglo, auxiliar, 0, (int)cantidad - 1, antesQue);
+    Lista<T> resultado = arregloALista(arreglo, cantidad);
+    delete[] auxiliar;
+    delete[] arreglo;
+    return resultado;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

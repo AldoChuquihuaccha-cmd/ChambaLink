@@ -11,7 +11,13 @@ using std::cout;
 using std::string;
 
 // Funciones de consola y pantallas de inicio de ChambaLink.
+// La consola es fija de 30 filas x 120 columnas: todas las posiciones son fijas.
+//   ubicar(x, y): x = columna (0 a 119), y = fila (0 a 29)
+//
+// Cada funcion esta escrita antes de la que la usa.
 
+// ======================= Teclas =======================
+// Las flechas usan numeros mayores a 1000 para no confundirse con letras.
 #define TECLA_IZQUIERDA 1001
 #define TECLA_DERECHA   1002
 #define TECLA_ARRIBA    1003
@@ -155,13 +161,13 @@ void dibujarFormulario(bool esEmpresa) {
     ubicar(46, 27); cout << "Presione ESC para retroceder";
 }
 
-// Lee un campo tecla por tecla en la columna 53 de la fila y.
+// Lee un campo tecla por tecla en la columna x de la fila y.
 // No deja escribir mas de maximo caracteres.
 // Devuelve true con ENTER y false con ESC.
-bool leerCampo(int y, int maximo, string& valor) {
+bool leerCampoEn(int x, int y, int maximo, string& valor) {
     valor = "";
     while (true) {
-        ubicar(53 + (int)valor.length(), y);
+        ubicar(x + (int)valor.length(), y);
         int tecla = leerTecla();
 
         if (tecla == TECLA_ENTER) return true;
@@ -169,7 +175,7 @@ bool leerCampo(int y, int maximo, string& valor) {
 
         if (tecla == TECLA_RETROCESO && valor != "") {
             valor.pop_back();
-            ubicar(53 + (int)valor.length(), y);
+            ubicar(x + (int)valor.length(), y);
             cout << ' ';
         }
         // Solo letras, numeros y signos comunes (sin tildes ni enie).
@@ -178,6 +184,11 @@ bool leerCampo(int y, int maximo, string& valor) {
             valor += (char)tecla;
         }
     }
+}
+
+// Version del login: los campos del login siempre van en la columna 53.
+bool leerCampo(int y, int maximo, string& valor) {
+    return leerCampoEn(53, y, maximo, valor);
 }
 
 // Muestra el error en rojo debajo del formulario y vuelve a blanco.

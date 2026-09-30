@@ -1,8 +1,8 @@
 // ChambaLink - punto de entrada.
 #include "RedProfesional.h"
 #include "GestorArchivos.h"
-#include "FuncionesConsola.h"
-#include "MenuPrincipal.h"
+#include "FuncionesInicio.h"
+#include "FuncionesMenu.h"
 
 int main() {
     configurarConsola();
@@ -10,13 +10,11 @@ int main() {
     RedProfesional red;
     GestorArchivos::cargarTodo(red);   // siempre antes de registrar a nadie
 
-    int idSesion;
-    bool esEmpresa;
+    int idSesion = -1;
+    bool esEmpresa = false;
     // mostrarLogin devuelve false cuando se presiona ESC en la pantalla inicial.
     while (mostrarLogin(red, idSesion, esEmpresa)) {
-        limpiarPantalla();
-        MenuPrincipal menu(red, idSesion, esEmpresa);
-        menu.mostrar();
+        mostrarMenu(red, idSesion, esEmpresa);   // Cerrar sesion vuelve aqui
         GestorArchivos::guardarTodo(red);
     }
 
