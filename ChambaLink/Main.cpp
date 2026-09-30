@@ -1,29 +1,22 @@
 // ChambaLink - punto de entrada.
-// main solo arranca: configura la consola, carga los datos y muestra el inicio.
-#include "Consola.h"
-#include "MenuPrincipal.h"
 #include "RedProfesional.h"
 #include "GestorArchivos.h"
-#include "Login.h"
+#include "FuncionesConsola.h"
+#include "MenuPrincipal.h"
 
 int main() {
-    Consola::configurar();
+    configurarConsola();
 
     RedProfesional red;
-    GestorArchivos::cargarTodo(red);   // siempre antes de registrar a nadie (ids desde el mayor guardado)
+    GestorArchivos::cargarTodo(red);   // siempre antes de registrar a nadie
 
-    Login login(red);
-    // mostrar() devuelve false cuando se presiona ESC en la pantalla inicial.
-    while (login.mostrar())
-    {
-        MenuPrincipal menu(
-            red,
-            login.getIdSesion(),
-            login.esEmpresa()
-        );
-
+    int idSesion;
+    bool esEmpresa;
+    // mostrarLogin devuelve false cuando se presiona ESC en la pantalla inicial.
+    while (mostrarLogin(red, idSesion, esEmpresa)) {
+        limpiarPantalla();
+        MenuPrincipal menu(red, idSesion, esEmpresa);
         menu.mostrar();
-
         GestorArchivos::guardarTodo(red);
     }
 

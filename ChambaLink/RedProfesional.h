@@ -2,7 +2,6 @@
 #include <string>
 #include <ctime>
 #include <functional>
-#include <cctype>
 #include <sstream>
 #include "Lista.h"
 #include "Usuario.h"
@@ -208,14 +207,6 @@ private:
 
     // ---------- Validacion de cuentas ----------
 
-    // El correo se guarda y se compara en minusculas: Ana@Mail.com y
-    // ana@mail.com son la misma cuenta.
-    static std::string aMinusculas(std::string texto) {
-        for (size_t i = 0; i < texto.length(); i++)
-            texto[i] = (char)tolower((unsigned char)texto[i]);
-        return texto;
-    }
-
     // Reglas comunes a todos los campos del registro:
     //   - obligatorio o no,
     //   - sin comas, porque la coma separa las columnas del CSV,
@@ -237,12 +228,9 @@ private:
         return enUsuarios || enEmpresas;
     }
 
-    // El correo ya debe venir en minusculas.
     bool validarCredenciales(const std::string& correo, const std::string& contrasena) {
         if (!validarCampo(correo, "correo", MAX_CORREO, true)) return false;
         if (!validarCampo(contrasena, "contrasena", MAX_CONTRASENA, true)) return false;
-        if (correo.find('@') == std::string::npos || correo.find(' ') != std::string::npos)
-            return fallar("El correo no es valido");
         if (correoEnUso(correo)) return fallar("Ese correo ya esta registrado");
         return true;
     }
@@ -302,7 +290,6 @@ public:
     // (el motivo queda en getUltimoError). Titular y distrito son opcionales.
     int registrarUsuario(std::string nombre, std::string apellido, std::string titular,
         std::string ubicacion, std::string correo, std::string contrasena) {
-        correo = aMinusculas(correo);
         if (!validarCampo(nombre, "nombre", MAX_NOMBRE, true)) return -1;
         if (!validarCampo(apellido, "apellido", MAX_APELLIDO, true)) return -1;
         if (!validarCampo(titular, "titular", MAX_TITULAR, false)) return -1;
@@ -319,7 +306,6 @@ public:
     // Devuelve el id del usuario, o -1 si el correo o la contrasena no coinciden.
     // El mensaje es el mismo en los dos casos para no revelar que correos existen.
     int iniciarSesionUsuario(std::string correo, std::string contrasena) {
-        correo = aMinusculas(correo);
         if (correo == "" || contrasena == "") { fallar("Ingrese su correo y su contrasena"); return -1; }
         const Usuario* u = usuarios.buscarPtr([&correo](const Usuario& x) { return x.tieneCorreo(correo); });
         if (u == nullptr || !u->contrasenaCorrecta(contrasena)) {
@@ -557,7 +543,6 @@ public:
     // Sector y distrito son opcionales.
     int registrarEmpresa(std::string nombre, std::string sector, std::string ubicacion,
         std::string correo, std::string contrasena) {
-        correo = aMinusculas(correo);
         if (!validarCampo(nombre, "nombre", MAX_NOMBRE_EMPRESA, true)) return -1;
         bool repetida = empresas.existe([nombre](const Empresa& e) { return e.getNombre() == nombre; });
         if (repetida) { fallar("Ya existe una empresa con ese nombre"); return -1; }
@@ -573,7 +558,6 @@ public:
 
     // Igual que iniciarSesionUsuario, pero busca en la lista de empresas.
     int iniciarSesionEmpresa(std::string correo, std::string contrasena) {
-        correo = aMinusculas(correo);
         if (correo == "" || contrasena == "") { fallar("Ingrese su correo y su contrasena"); return -1; }
         const Empresa* e = empresas.buscarPtr([&correo](const Empresa& x) { return x.tieneCorreo(correo); });
         if (e == nullptr || !e->contrasenaCorrecta(contrasena)) {
