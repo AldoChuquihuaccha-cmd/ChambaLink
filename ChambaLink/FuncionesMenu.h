@@ -67,29 +67,52 @@ bool mostrarErrorZona(string mensaje) {
 
 // ======================= Individuo: Mi perfil =======================
 
+// Si el texto no cabe en el ancho, lo corta y termina en "..."
+string recortar(string texto, int ancho) {
+    if ((int)texto.length() <= ancho) return texto;
+    return texto.substr(0, ancho - 3) + "...";
+}
+
 // Si un dato opcional esta vacio, se muestra "(no registrado)".
 string valorOVacio(string valor) {
     if (valor == "") return "(no registrado)";
     return valor;
 }
 
-// Datos que el usuario ingreso al registrarse. Solo lectura; ESC vuelve al menu.
-// La contrasena no se muestra.
-void seccionMiPerfil(RedProfesional& red, int idSesion) {
-    const Usuario* usuario = red.buscarUsuario(idSesion);
+// Habilidades del usuario en una sola linea: "C++, SQL, Python"
+string textoHabilidades(RedProfesional& red, int idUsuario) {
+    const Usuario* usuario = red.buscarUsuario(idUsuario);
+    if (usuario == nullptr) return "";
+    string texto = "";
+    usuario->paraCadaHabilidad([&texto](const Habilidad& h) {
+        if (texto != "") texto = texto + ", ";
+        texto = texto + h.getNombre();
+        });
+    return texto;
+}
+
+// Datos de un usuario. Solo lectura; ESC vuelve. La contrasena no se muestra.
+// La usan "Mi perfil" y la empresa al ver un profesional.
+void mostrarPerfil(RedProfesional& red, int idUsuario, string titulo) {
+    const Usuario* usuario = red.buscarUsuario(idUsuario);
     if (usuario == nullptr) return;
 
     limpiarZonaContenido();
-    ubicar(55, 11); cout << "MI PERFIL";
+    ubicar(55, 11); cout << titulo;
     ubicar(55, 12); cout << "----------------------------------------------------------------";
-    ubicar(55, 14); cout << "Nombre:";    ubicar(66, 14); cout << usuario->getNombre();
-    ubicar(55, 15); cout << "Apellido:";  ubicar(66, 15); cout << usuario->getApellido();
-    ubicar(55, 16); cout << "Titular:";   ubicar(66, 16); cout << valorOVacio(usuario->getTitular());
-    ubicar(55, 17); cout << "Distrito:";  ubicar(66, 17); cout << valorOVacio(usuario->getUbicacion());
-    ubicar(55, 18); cout << "Correo:";    ubicar(66, 18); cout << usuario->getCorreo();
-    ubicar(55, 19); cout << "ID:";        ubicar(66, 19); cout << usuario->getId();
+    ubicar(55, 14); cout << "Nombre:";      ubicar(68, 14); cout << usuario->getNombre();
+    ubicar(55, 15); cout << "Apellido:";    ubicar(68, 15); cout << usuario->getApellido();
+    ubicar(55, 16); cout << "Titular:";     ubicar(68, 16); cout << valorOVacio(usuario->getTitular());
+    ubicar(55, 17); cout << "Distrito:";    ubicar(68, 17); cout << valorOVacio(usuario->getUbicacion());
+    ubicar(55, 18); cout << "Correo:";      ubicar(68, 18); cout << usuario->getCorreo();
+    ubicar(55, 19); cout << "ID:";          ubicar(68, 19); cout << usuario->getId();
+    ubicar(55, 20); cout << "Habilidades:"; ubicar(68, 20); cout << recortar(valorOVacio(textoHabilidades(red, idUsuario)), 50);
 
     while (leerTecla() != TECLA_ESC) {}
+}
+
+void seccionMiPerfil(RedProfesional& red, int idSesion) {
+    mostrarPerfil(red, idSesion, "MI PERFIL");
 }
 
 // ======================= Individuo: Mis certificaciones =======================
@@ -167,12 +190,6 @@ void seccionMisCertificaciones(RedProfesional& red, int idSesion) {
 //   publicaciones.txt  id | idAutor | texto | fecha
 //   comentarios.txt    id | idAutor | idPublicacion | idPadre | texto | fecha
 //   me_gusta.txt       idPublicacion | idUsuario
-
-// Si el texto no cabe en el ancho, lo corta y termina en "..."
-string recortar(string texto, int ancho) {
-    if ((int)texto.length() <= ancho) return texto;
-    return texto.substr(0, ancho - 3) + "...";
-}
 
 // Escribe el texto de una publicacion en dos lineas.
 // Si no cabe en una, corta en el ultimo espacio antes de la columna 60
@@ -484,25 +501,365 @@ void dibujarEncabezadoEmpresa(RedProfesional& red, int idSesion) {
     ubicar(1, 9); cout << "------------------------------------------------";
 }
 
-void dibujarOpcionesEmpresa() {
-    ubicar(4, 11); cout << "Inicio";
-    ubicar(4, 12); cout << "Mis vacantes";
-    ubicar(4, 13); cout << "Publicar vacante";
-    ubicar(4, 14); cout << "Postulaciones";
-    ubicar(4, 16); cout << "Cerrar sesion";
+// Espera ENTER o ESC (para avisos que solo hay que leer).
+void esperarEnter() {
+    while (true) {
+        int tecla = leerTecla();
+        if (tecla == TECLA_ENTER || tecla == TECLA_ESC) return;
+    }
 }
 
-// 0 a 3 van de la fila 11 a la 14; Cerrar sesion (4) va en la 16.
+// Barra de compatibilidad: [######----] 60%
+string barraCompatibilidad(int porcentaje) {
+    int llenos = porcentaje / 10;
+    return "[" + string(llenos, '#') + string(10 - llenos, '-') + "] " + std::to_string(porcentaje) + "%";
+}
+
+// ---------- Publicar vacante ----------
+
+void formularioVacante(RedProfesional& red, int idSesion) {
+    string titulo, modalidad, descripcion1, descripcion2, requisitos;
+    while (true) {
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "PUBLICAR VACANTE";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 13); cout << "Titulo:";
+        ubicar(55, 15); cout << "Modalidad:";
+        ubicar(55, 17); cout << "Descripcion:";
+        ubicar(55, 20); cout << "Requisitos:";
+        ubicar(55, 21); cout << "(separados por comas, ej: C++, SQL, Git)";
+
+        if (!leerCampoEn(69, 13, 40, titulo)) return;
+        if (!leerCampoEn(69, 15, 20, modalidad)) return;
+        if (!leerCampoEn(69, 17, 48, descripcion1)) return;
+        if (!leerCampoEn(69, 18, 48, descripcion2)) return;
+        if (!leerCampoEn(69, 20, 48, requisitos)) return;
+
+        string descripcion = descripcion1;
+        if (descripcion2 != "") descripcion = descripcion + " " + descripcion2;
+
+        if (red.publicarVacante(idSesion, titulo, descripcion, requisitos, modalidad) != -1) {
+            GestorArchivos::guardarTodo(red);
+            ubicar(55, 23); cout << "Vacante publicada. Presione ENTER para continuar";
+            esperarEnter();
+            return;
+        }
+        if (!mostrarErrorZona(red.getUltimoError())) return;
+    }
+}
+
+// ---------- Revisar postulantes (cola de la vacante) ----------
+
+// Muestra al primero de la cola SIN sacarlo y la empresa decide:
+// Aceptar / Rechazar lo sacan de la cola; Revisar despues lo pasa al final (rotar).
+void revisarPostulantes(RedProfesional& red, int idSesion, int idVacante) {
+    int opcion = 0;
+    while (true) {
+        const Vacante* vacante = red.obtenerVacante(idVacante);
+        const Postulacion* postulacion = red.verSiguientePostulacion(idSesion, idVacante);
+
+        limpiarZonaContenido();
+        if (vacante == nullptr) return;
+        ubicar(55, 11); cout << recortar(vacante->getTitulo(), 40) << " - Por revisar: " << vacante->cantidadPorRevisar();
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (postulacion == nullptr) {
+            ubicar(55, 14); cout << "No hay postulantes por revisar";
+            while (leerTecla() != TECLA_ESC) {}
+            return;
+        }
+
+        int idUsuario = postulacion->getIdUsuario();
+        const Usuario* usuario = red.buscarUsuario(idUsuario);
+        if (usuario == nullptr) return;
+
+        ubicar(55, 14); cout << usuario->getNombreCompleto();
+        ubicar(96, 14); cout << "Postulo: " << postulacion->getFecha();
+        ubicar(55, 15); cout << recortar(valorOVacio(usuario->getTitular()) + " - " + valorOVacio(usuario->getUbicacion()), 64);
+        ubicar(55, 16); cout << "Habilidades: " << recortar(valorOVacio(textoHabilidades(red, idUsuario)), 51);
+        ubicar(55, 17); cout << "Compatibilidad: " << barraCompatibilidad(red.calcularCompatibilidad(idUsuario, idVacante));
+
+        ubicar(58, 19); cout << "Aceptar";
+        ubicar(58, 20); cout << "Rechazar";
+        ubicar(58, 21); cout << "Revisar despues";
+        ubicar(55, 19 + opcion); cout << "->";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && opcion > 0) opcion--;
+        else if (tecla == TECLA_ABAJO && opcion < 2) opcion++;
+        else if (tecla == TECLA_ENTER) {
+            if (opcion == 0) red.revisarSiguientePostulacion(idSesion, idVacante, true);
+            else if (opcion == 1) red.revisarSiguientePostulacion(idSesion, idVacante, false);
+            else red.rotarPostulacionesVacante(idVacante);
+            GestorArchivos::guardarTodo(red);
+            opcion = 0;
+        }
+    }
+}
+
+// ---------- Detalle de una vacante ----------
+
+void detalleVacante(RedProfesional& red, int idSesion, int idVacante) {
+    int opcion = 0;
+    while (true) {
+        const Vacante* vacante = red.obtenerVacante(idVacante);
+        if (vacante == nullptr) return;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << vacante->getTitulo();
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 13); cout << "Modalidad: " << valorOVacio(vacante->getModalidad())
+            << "     Estado: " << (vacante->estaActiva() ? "Activa" : "Cancelada");
+        escribirTextoPublicacion(vacante->getDescripcion(), 55, 14);
+        ubicar(55, 16); cout << "Requisitos: " << recortar(valorOVacio(vacante->getRequisitos()), 52);
+        ubicar(55, 17); cout << "Postulantes por revisar: " << vacante->cantidadPorRevisar();
+
+        // Una vacante cancelada solo se puede ver.
+        if (!vacante->estaActiva()) {
+            while (leerTecla() != TECLA_ESC) {}
+            return;
+        }
+
+        ubicar(58, 19); cout << "Revisar postulantes";
+        ubicar(58, 20); cout << "Cancelar vacante";
+        ubicar(55, 19 + opcion); cout << "->";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA) opcion = 0;
+        else if (tecla == TECLA_ABAJO) opcion = 1;
+        else if (tecla == TECLA_ENTER) {
+            if (opcion == 0) revisarPostulantes(red, idSesion, idVacante);
+            else {
+                ubicar(55, 22); cout << "Cancelar esta vacante?  ENTER: si     ESC: no";
+                if (leerTecla() == TECLA_ENTER) {
+                    red.cancelarVacante(idSesion, idVacante);
+                    GestorArchivos::guardarTodo(red);
+                }
+            }
+        }
+    }
+}
+
+// ---------- Mis vacantes (HeapSort por titulo) ----------
+
+void seccionMisVacantes(RedProfesional& red, int idSesion) {
+    int seleccion = 0;
+    int pagina = 0;
+    while (true) {
+        red.ordenarVacantesHeap();   // HeapSort de Piero, por titulo
+
+        Lista<Vacante> mias;
+        red.paraCadaVacanteDe(idSesion, [&mias](const Vacante& v) { mias.agregaFinal(v); });
+
+        int total = (int)mias.longitud();
+        int paginas = (total + 3) / 4;          // 4 vacantes por pagina
+        if (pagina >= paginas && paginas > 0) pagina = paginas - 1;
+        int enPagina = total - pagina * 4;
+        if (enPagina > 4) enPagina = 4;
+        if (seleccion >= enPagina) seleccion = enPagina - 1;
+        if (seleccion < 0) seleccion = 0;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "MIS VACANTES (" << total << ")";
+        if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(55, 14); cout << "Aun no has publicado vacantes";
+            while (leerTecla() != TECLA_ESC) {}
+            return;
+        }
+
+        // Cada vacante ocupa 2 filas y deja 1 libre: filas 14, 17, 20 y 23.
+        int idsPagina[4] = { 0, 0, 0, 0 };
+        int i = 0;
+        for (Vacante& v : mias) {
+            if (i >= pagina * 4 && i < pagina * 4 + 4) {
+                int posicion = i - pagina * 4;
+                int y = 14 + posicion * 3;
+                idsPagina[posicion] = v.getId();
+                ubicar(58, y);     cout << recortar(v.getTitulo(), 40);
+                ubicar(104, y);    cout << (v.estaActiva() ? "Activa" : "Cancelada");
+                ubicar(58, y + 1); cout << "Modalidad: " << recortar(valorOVacio(v.getModalidad()), 20)
+                    << "   Por revisar: " << v.cantidadPorRevisar();
+            }
+            i++;
+        }
+        ubicar(55, 14 + seleccion * 3); cout << "->";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER) detalleVacante(red, idSesion, idsPagina[seleccion]);
+    }
+}
+
+// ---------- Mis contrataciones ----------
+
+void seccionMisContrataciones(RedProfesional& red, int idSesion) {
+    int pagina = 0;
+    while (true) {
+        Lista<Postulacion> contratadas;
+        red.paraCadaContratacion(idSesion, [&contratadas](const Postulacion& p) { contratadas.agregaFinal(p); });
+
+        int total = (int)contratadas.longitud();
+        int paginas = (total + 3) / 4;          // 4 por pagina
+        if (pagina >= paginas && paginas > 0) pagina = paginas - 1;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "MIS CONTRATACIONES (" << total << ")";
+        if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        if (total == 0) { ubicar(55, 14); cout << "Aun no tienes contrataciones"; }
+
+        int i = 0;
+        for (Postulacion& p : contratadas) {
+            if (i >= pagina * 4 && i < pagina * 4 + 4) {
+                int y = 14 + (i - pagina * 4) * 3;
+                const Vacante* v = red.obtenerVacante(p.getIdVacante());
+                ubicar(55, y);     cout << red.nombreDe(p.getIdUsuario());
+                ubicar(57, y + 1); cout << recortar((v != nullptr ? v->getTitulo() : string("")) + " - Postulo: " + p.getFecha(), 62);
+            }
+            i++;
+        }
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) pagina--;
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) pagina++;
+    }
+}
+
+// ---------- Buscar profesionales ----------
+
+// Resultados de la busqueda (ya ordenados con HeapSort). ENTER ve el perfil.
+void mostrarResultadosBusqueda(RedProfesional& red, Lista<Coincidencia>& resultados, int totalPalabras) {
+    int seleccion = 0;
+    int pagina = 0;
+    int total = (int)resultados.longitud();
+    int paginas = (total + 2) / 3;              // 3 por pagina
+    while (true) {
+        int enPagina = total - pagina * 3;
+        if (enPagina > 3) enPagina = 3;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "RESULTADOS: " << total << " profesionales";
+        if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(55, 14); cout << "No se encontraron profesionales con esas palabras clave";
+            while (leerTecla() != TECLA_ESC) {}
+            return;
+        }
+
+        // Cada resultado ocupa 3 filas y deja 1 libre: filas 14, 18 y 22.
+        int idsPagina[3] = { 0, 0, 0 };
+        int i = 0;
+        for (Coincidencia& c : resultados) {
+            if (i >= pagina * 3 && i < pagina * 3 + 3) {
+                int posicion = i - pagina * 3;
+                int y = 14 + posicion * 4;
+                idsPagina[posicion] = c.idUsuario;
+                const Usuario* u = red.buscarUsuario(c.idUsuario);
+                if (u != nullptr) {
+                    ubicar(58, y);     cout << recortar(u->getNombreCompleto(), 40);
+                    ubicar(100, y);    cout << "Coincide: " << c.cantidad << " de " << totalPalabras;
+                    ubicar(60, y + 1); cout << recortar(valorOVacio(u->getTitular()) + " - " + valorOVacio(u->getUbicacion()), 58);
+                    ubicar(60, y + 2); cout << "Habilidades: " << recortar(valorOVacio(textoHabilidades(red, c.idUsuario)), 45);
+                }
+            }
+            i++;
+        }
+        ubicar(55, 14 + seleccion * 4); cout << "->";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER) mostrarPerfil(red, idsPagina[seleccion], "PERFIL DEL PROFESIONAL");
+    }
+}
+
+// Pide las palabras clave y muestra los resultados. ESC en los resultados
+// vuelve a pedir palabras; ESC en las palabras vuelve al menu.
+void seccionBuscarProfesionales(RedProfesional& red) {
+    string palabras;
+    while (true) {
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "BUSCAR PROFESIONALES";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 14); cout << "Palabras clave:";
+        ubicar(55, 15); cout << "(separadas por comas, ej: sql, python)";
+
+        if (!leerCampoEn(71, 14, 45, palabras)) return;
+
+        int totalPalabras = 0;
+        Lista<Coincidencia> resultados = red.buscarProfesionales(palabras, totalPalabras);
+        mostrarResultadosBusqueda(red, resultados, totalPalabras);
+    }
+}
+
+// ---------- Ver mi empresa ----------
+
+void seccionMiEmpresa(RedProfesional& red, int idSesion) {
+    const Empresa* empresa = red.obtenerEmpresa(idSesion);
+    if (empresa == nullptr) return;
+
+    int activas = 0, canceladas = 0, contrataciones = 0;
+    red.paraCadaVacanteDe(idSesion, [&activas, &canceladas](const Vacante& v) {
+        if (v.estaActiva()) activas++;
+        else canceladas++;
+        });
+    red.paraCadaContratacion(idSesion, [&contrataciones](const Postulacion& p) { contrataciones++; });
+
+    limpiarZonaContenido();
+    ubicar(55, 11); cout << "MI EMPRESA";
+    ubicar(55, 12); cout << "----------------------------------------------------------------";
+    ubicar(55, 14); cout << "Nombre:";    ubicar(67, 14); cout << empresa->getNombre();
+    ubicar(55, 15); cout << "Sector:";    ubicar(67, 15); cout << valorOVacio(empresa->getSector());
+    ubicar(55, 16); cout << "Distrito:";  ubicar(67, 16); cout << valorOVacio(empresa->getUbicacion());
+    ubicar(55, 17); cout << "Correo:";    ubicar(67, 17); cout << empresa->getCorreo();
+    ubicar(55, 18); cout << "ID:";        ubicar(67, 18); cout << empresa->getId();
+    ubicar(55, 20); cout << "Vacantes activas: " << activas << "     Canceladas: " << canceladas
+        << "     Contrataciones: " << contrataciones;
+
+    while (leerTecla() != TECLA_ESC) {}
+}
+
+// ---------- Menu de empresa ----------
+
+void dibujarOpcionesEmpresa() {
+    ubicar(4, 11); cout << "Publicar vacante";
+    ubicar(4, 12); cout << "Mis vacantes";
+    ubicar(4, 13); cout << "Mis contrataciones";
+    ubicar(4, 14); cout << "Buscar profesionales";
+    ubicar(4, 15); cout << "Ver mi empresa";
+    ubicar(4, 17); cout << "Cerrar sesion";
+}
+
+// 0 a 4 van de la fila 11 a la 15; Cerrar sesion (5) va en la 17.
 int filaOpcionEmpresa(int opcion) {
-    if (opcion == 4) return 16;
+    if (opcion == 5) return 17;
     return 11 + opcion;
 }
 
 void abrirSeccionEmpresa(RedProfesional& red, int idSesion, int opcion) {
-    if (opcion == 0) mostrarSeccionPendiente("Inicio");
-    else if (opcion == 1) mostrarSeccionPendiente("Mis vacantes");
-    else if (opcion == 2) mostrarSeccionPendiente("Publicar vacante");
-    else if (opcion == 3) mostrarSeccionPendiente("Postulaciones");
+    switch (opcion) {
+    case 0: formularioVacante(red, idSesion); break;
+    case 1: seccionMisVacantes(red, idSesion); break;
+    case 2: seccionMisContrataciones(red, idSesion); break;
+    case 3: seccionBuscarProfesionales(red); break;
+    case 4: seccionMiEmpresa(red, idSesion); break;
+    default: break;
+    }
 }
 
 void menuEmpresa(RedProfesional& red, int idSesion) {
@@ -522,14 +879,14 @@ void menuEmpresa(RedProfesional& red, int idSesion) {
 
             int anterior = opcion;
             if (tecla == TECLA_ARRIBA && opcion > 0) opcion--;
-            else if (tecla == TECLA_ABAJO && opcion < 4) opcion++;
+            else if (tecla == TECLA_ABAJO && opcion < 5) opcion++;
 
             if (opcion != anterior) {
                 ubicar(1, filaOpcionEmpresa(anterior)); cout << "  ";
             }
         }
 
-        if (opcion == 4) return;    // Cerrar sesion
+        if (opcion == 5) return;    // Cerrar sesion
         abrirSeccionEmpresa(red, idSesion, opcion);
     }
 }

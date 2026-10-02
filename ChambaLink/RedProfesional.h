@@ -2,6 +2,7 @@
 #include <string>
 #include <ctime>
 #include <functional>
+#include <cctype>
 #include <sstream>
 #include "Lista.h"
 #include "Usuario.h"
@@ -37,6 +38,12 @@
 // GestorArchivos necesita leer y escribir los catalogos directamente
 // para poder guardarlos y volver a cargarlos con sus ids originales.
 class GestorArchivos;
+
+// Resultado de buscarProfesionales: el usuario y cuantas palabras clave le coincidieron.
+struct Coincidencia {
+    int idUsuario = 0;
+    int cantidad = 0;
+};
 
 class RedProfesional {
     friend class GestorArchivos;
@@ -682,6 +689,7 @@ public:
     int publicarVacante(int idEmpresa, std::string titulo, std::string descripcion,
         std::string requisitos, std::string modalidad) {
         if (buscarEmpresa(idEmpresa) == nullptr) { fallar("La empresa no existe"); return -1; }
+        if (titulo == "") { fallar("El titulo es obligatorio"); return -1; }
         int id = sigVacante;
         sigVacante++;
         vacantes.agregaFinal(Vacante(id, idEmpresa, titulo, descripcion, requisitos, modalidad));
@@ -705,10 +713,10 @@ public:
         return id;
     }
 
-    // Revisa la postulacion mas antigua de la vacante y avisa al postulante.
-    bool revisarSiguientePostulacion(int idVacante, bool aceptar) {
+    // Revisa la postulacion mas antigua de la vacante (la primera de la cola) y avisa al postulante.
+    bool revisarSiguientePostulacion(int idEmpresa, int idVacante, bool aceptar) {
         Vacante* vacante = buscarVacante(idVacante);
-        if (vacante == nullptr) return fallar("La vacante no existe");
+        if (vacante == nullptr || !vacante->esDeEmpresa(idEmpresa)) return fallar("La vacante no es de esta empresa");
         if (!vacante->tienePostulacionesPorRevisar()) return fallar("No hay postulaciones por revisar");
 
         int idPostulacion = vacante->siguientePostulacionPorRevisar();
@@ -718,7 +726,51 @@ public:
         if (aceptar) postulacion->aceptar();
         else postulacion->rechazar();
         notificar(postulacion->getIdUsuario(), TipoNotificacion::EstadoPostulacion,
-            "Tu postulacion a " + vacante->getTitulo() + " fue " + postulacion->estadoToString());
+            "Tu postulacion a " + vacante->getTitulo() + " de " + nombreEmpresa(idEmpresa)
+            + " fue " + postulacion->estadoToString());
+        return true;
+    }
+
+    // Primera postulacion en la cola de la vacante, sin sacarla (frente de la cola).
+    // Devuelve nullptr si no hay postulantes o si la vacante no es de la empresa.
+    const Postulacion* verSiguientePostulacion(int idEmpresa, int idVacante) const {
+        const Vacante* vacante = obtenerVacante(idVacante);
+        if (vacante == nullptr || !vacante->esDeEmpresa(idEmpresa)) return nullptr;
+        if (!vacante->tienePostulacionesPorRevisar()) return nullptr;
+        int idPostulacion = vacante->verSiguientePostulacion();
+        return postulaciones.buscarPtr([idPostulacion](const Postulacion& p) { return p.getId() == idPostulacion; });
+    }
+
+    // Cierra la vacante por completo: los que seguian en la cola pasan a Rechazada
+    // y se avisa a ellos y a los aceptados.
+    bool cancelarVacante(int idEmpresa, int idVacante) {
+        Vacante* vacante = buscarVacante(idVacante);
+        if (vacante == nullptr || !vacante->esDeEmpresa(idEmpresa)) return fallar("La vacante no es de esta empresa");
+        if (!vacante->estaActiva()) return fallar("La vacante ya estaba cancelada");
+
+        vacante->cerrar();
+        std::string puesto = vacante->getTitulo() + " de " + nombreEmpresa(idEmpresa);
+
+        // Se vacia la cola: cada postulante pendiente queda rechazado.
+        while (vacante->tienePostulacionesPorRevisar()) {
+            Postulacion* p = buscarPostulacion(vacante->siguientePostulacionPorRevisar());
+            if (p == nullptr) continue;
+            p->rechazar();
+            notificar(p->getIdUsuario(), TipoNotificacion::EstadoPostulacion,
+                "Gracias por tu interes en " + puesto + " (" + vacante->getModalidad()
+                + "). La vacante fue cerrada y tu postulacion no continuara en el proceso.");
+        }
+
+        // A los aceptados se les avisa que su contratacion se mantiene.
+        Lista<int> aceptados;
+        postulaciones.paraCada([idVacante, &aceptados](const Postulacion& p) {
+            if (p.esDeVacante(idVacante) && p.getEstado() == EstadoPostulacion::Aceptada)
+                aceptados.agregaFinal(p.getIdUsuario());
+            });
+        aceptados.paraCada([this, &puesto](const int& idUsuario) {
+            notificar(idUsuario, TipoNotificacion::EstadoPostulacion,
+                "La vacante " + puesto + " fue cerrada. Tu contratacion se mantiene.");
+            });
         return true;
     }
 
@@ -776,6 +828,72 @@ public:
         vacantes.paraCada([&accion](const Vacante& v) {
             if (v.estaActiva()) accion(v);
             });
+    }
+
+    // Para leer una vacante sin poder modificarla.
+    const Vacante* obtenerVacante(int idVacante) const {
+        return vacantes.buscarPtr([idVacante](const Vacante& v) { return v.getId() == idVacante; });
+    }
+
+    // Todas las vacantes de una empresa (activas y canceladas), en el orden del catalogo.
+    void paraCadaVacanteDe(int idEmpresa, std::function<void(const Vacante&)> accion) const {
+        vacantes.paraCada([idEmpresa, &accion](const Vacante& v) {
+            if (v.esDeEmpresa(idEmpresa)) accion(v);
+            });
+    }
+
+    // Postulaciones aceptadas en las vacantes de la empresa.
+    void paraCadaContratacion(int idEmpresa, std::function<void(const Postulacion&)> accion) const {
+        postulaciones.paraCada([this, idEmpresa, &accion](const Postulacion& p) {
+            if (p.getEstado() != EstadoPostulacion::Aceptada) return;
+            const Vacante* v = obtenerVacante(p.getIdVacante());
+            if (v != nullptr && v->esDeEmpresa(idEmpresa)) accion(p);
+            });
+    }
+
+    // ---------- Buscar profesionales ----------
+
+    static std::string aMinusculas(std::string texto) {
+        for (size_t i = 0; i < texto.length(); i++)
+            texto[i] = (char)tolower((unsigned char)texto[i]);
+        return texto;
+    }
+
+    // Si la palabra aparece dentro del texto, sin importar mayusculas.
+    static bool contiene(const std::string& texto, const std::string& palabra) {
+        return aMinusculas(texto).find(aMinusculas(palabra)) != std::string::npos;
+    }
+
+    // Busqueda lineal: por cada usuario se revisa si cada palabra clave aparece en
+    // su titular o en alguna de sus habilidades. Entra si coincide al menos una.
+    // Los resultados se ordenan con HeapSort: mas coincidencias primero.
+    // Complejidad: O(u * k * h) la busqueda + O(r log r) el ordenamiento.
+    // En totalPalabras deja cuantas palabras clave se buscaron.
+    Lista<Coincidencia> buscarProfesionales(std::string palabrasClave, int& totalPalabras) {
+        Lista<std::string> palabras = separarRequisitos(palabrasClave);
+        totalPalabras = (int)palabras.longitud();
+
+        Lista<Coincidencia> resultados;
+        usuarios.paraCada([&palabras, &resultados](const Usuario& u) {
+            int cantidad = 0;
+            palabras.paraCada([&u, &cantidad](const std::string& palabra) {
+                bool encontrada = contiene(u.getTitular(), palabra);
+                u.paraCadaHabilidad([&palabra, &encontrada](const Habilidad& h) {
+                    if (contiene(h.getNombre(), palabra)) encontrada = true;
+                    });
+                if (encontrada) cantidad++;
+                });
+            if (cantidad > 0) {
+                Coincidencia c;
+                c.idUsuario = u.getId();
+                c.cantidad = cantidad;
+                resultados.agregaFinal(c);
+            }
+            });
+
+        std::function<bool(const Coincidencia&, const Coincidencia&)> criterio =
+            [](const Coincidencia& a, const Coincidencia& b) { return a.cantidad > b.cantidad; };
+        return heapSort(resultados, criterio);
     }
     void ordenarVacantesHeap()
     {

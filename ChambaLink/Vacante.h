@@ -58,6 +58,9 @@ public:
     // Retira de la cola la postulacion mas antigua y devuelve su id.
     int siguientePostulacionPorRevisar() { return postulacionesPorRevisar.desencolar(); }
 
+    // Id de la postulacion que esta primera en la cola, SIN sacarla.
+    int verSiguientePostulacion() const { return postulacionesPorRevisar.frente(); }
+
     // Recorre la cola sin retirar nada, en orden de llegada.
     void paraCadaPostulacionPorRevisar(std::function<void(const int&)> accion) const {
         postulacionesPorRevisar.paraCada(accion);
