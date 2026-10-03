@@ -1,0 +1,1081 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<mxfile host="app.diagrams.net">
+  <diagram name="UML ChambaLink v2" id="chambalink-v2">
+    <mxGraphModel dx="2000" dy="2000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0" background="#FFFFFF">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pkg-ui" parent="1" vertex="1" style="shape=folder;fontStyle=1;tabWidth=190;tabHeight=26;tabPosition=left;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=-2;fillColor=none;" value="Interfaz de consola">
+          <mxGeometry x="6644" y="1137" width="1656" height="1246" as="geometry" />
+        </mxCell>
+        <mxCell id="pkg-ed" parent="1" vertex="1" style="shape=folder;fontStyle=1;tabWidth=190;tabHeight=26;tabPosition=left;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=-2;fillColor=none;" value="Estructura de datos">
+          <mxGeometry x="0" y="3785" width="2360" height="1156" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GrupoProfesional" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class GrupoProfesional">
+          <mxGeometry x="0" y="401" width="658" height="328" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GrupoProfesional-a" parent="n-GrupoProfesional" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- id: int&lt;/div&gt;&lt;div&gt;- nombre: string&lt;/div&gt;&lt;div&gt;- descripcion: string&lt;/div&gt;&lt;div&gt;- especialidad: string&lt;/div&gt;&lt;div&gt;- miembros: Lista&amp;lt;int&amp;gt;&lt;/div&gt;">
+          <mxGeometry y="26" width="658" height="87" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GrupoProfesional-l" parent="n-GrupoProfesional" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="113" width="658" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GrupoProfesional-m" parent="n-GrupoProfesional" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ GrupoProfesional()&lt;/div&gt;&lt;div&gt;+ GrupoProfesional(pId: int, pNombre: string, pDescripcion: string, pEspecialidad: string)&lt;/div&gt;&lt;div&gt;+ getId(): int&lt;/div&gt;&lt;div&gt;+ getNombre(): string&lt;/div&gt;&lt;div&gt;+ getDescripcion(): string&lt;/div&gt;&lt;div&gt;+ getEspecialidad(): string&lt;/div&gt;&lt;div&gt;+ getCantidadMiembros(): uint&lt;/div&gt;&lt;div&gt;+ setDescripcion(pDescripcion: string): void&lt;/div&gt;&lt;div&gt;+ esMiembro(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ agregarMiembro(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ eliminarMiembro(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ paraCadaMiembro(accion: function): void&lt;/div&gt;&lt;div&gt;+ mismoId(otro: GrupoProfesional): bool&lt;/div&gt;">
+          <mxGeometry y="121" width="658" height="207" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Postulacion" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Postulacion">
+          <mxGeometry x="879" y="386" width="539" height="343" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Postulacion-a" parent="n-Postulacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- id: int&lt;/div&gt;&lt;div&gt;- idUsuario: int&lt;/div&gt;&lt;div&gt;- idVacante: int&lt;/div&gt;&lt;div&gt;- fecha: string&lt;/div&gt;&lt;div&gt;- estado: EstadoPostulacion&lt;/div&gt;">
+          <mxGeometry y="26" width="539" height="87" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Postulacion-l" parent="n-Postulacion" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="113" width="539" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Postulacion-m" parent="n-Postulacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Postulacion()&lt;/div&gt;&lt;div&gt;+ Postulacion(pId: int, pIdUsuario: int, pIdVacante: int, pFecha: string)&lt;/div&gt;&lt;div&gt;+ getId(): int&lt;/div&gt;&lt;div&gt;+ getIdUsuario(): int&lt;/div&gt;&lt;div&gt;+ getIdVacante(): int&lt;/div&gt;&lt;div&gt;+ getFecha(): string&lt;/div&gt;&lt;div&gt;+ getEstado(): EstadoPostulacion&lt;/div&gt;&lt;div&gt;+ revisar(): void&lt;/div&gt;&lt;div&gt;+ aceptar(): void&lt;/div&gt;&lt;div&gt;+ rechazar(): void&lt;/div&gt;&lt;div&gt;+ estaPendiente(): bool&lt;/div&gt;&lt;div&gt;+ estadoToString(): string&lt;/div&gt;&lt;div&gt;+ esDeUsuario(pIdUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ esDeVacante(pIdVacante: int): bool&lt;/div&gt;">
+          <mxGeometry y="121" width="539" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Vacante" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Vacante">
+          <mxGeometry x="1822" y="236" width="840" height="493" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Vacante-a" parent="n-Vacante" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- id: int&lt;/div&gt;&lt;div&gt;- idEmpresa: int&lt;/div&gt;&lt;div&gt;- titulo: string&lt;/div&gt;&lt;div&gt;- descripcion: string&lt;/div&gt;&lt;div&gt;- requisitos: string&lt;/div&gt;&lt;div&gt;- modalidad: string&lt;/div&gt;&lt;div&gt;- activa: bool&lt;/div&gt;&lt;div&gt;- postulacionesPorRevisar: Cola&amp;lt;int&amp;gt;&lt;/div&gt;">
+          <mxGeometry y="26" width="840" height="132" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Vacante-l" parent="n-Vacante" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="158" width="840" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Vacante-m" parent="n-Vacante" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Vacante()&lt;/div&gt;&lt;div&gt;+ Vacante(pId: int, pIdEmpresa: int, pTitulo: string, pDescripcion: string, pRequisitos: string, pModalidad: string)&lt;/div&gt;&lt;div&gt;+ getId(): int&lt;/div&gt;&lt;div&gt;+ getIdEmpresa(): int&lt;/div&gt;&lt;div&gt;+ getTitulo(): string&lt;/div&gt;&lt;div&gt;+ getDescripcion(): string&lt;/div&gt;&lt;div&gt;+ getRequisitos(): string&lt;/div&gt;&lt;div&gt;+ getModalidad(): string&lt;/div&gt;&lt;div&gt;+ estaActiva(): bool&lt;/div&gt;&lt;div&gt;+ setDescripcion(pDescripcion: string): void&lt;/div&gt;&lt;div&gt;+ setRequisitos(pRequisitos: string): void&lt;/div&gt;&lt;div&gt;+ cerrar(): void&lt;/div&gt;&lt;div&gt;+ recibirPostulacion(idPostulacion: int): void&lt;/div&gt;&lt;div&gt;+ tienePostulacionesPorRevisar(): bool&lt;/div&gt;&lt;div&gt;+ cantidadPorRevisar(): uint&lt;/div&gt;&lt;div&gt;+ rotarPostulaciones(): void&lt;/div&gt;&lt;div&gt;+ siguientePostulacionPorRevisar(): int&lt;/div&gt;&lt;div&gt;+ verSiguientePostulacion(): int&lt;/div&gt;&lt;div&gt;+ paraCadaPostulacionPorRevisar(accion: function): void&lt;/div&gt;&lt;div&gt;+ mismoId(otra: Vacante): bool&lt;/div&gt;&lt;div&gt;+ esDeEmpresa(pIdEmpresa: int): bool&lt;/div&gt;">
+          <mxGeometry y="166" width="840" height="327" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Empresa" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Empresa">
+          <mxGeometry x="2887" y="356" width="805" height="373" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Empresa-a" parent="n-Empresa" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- id: int&lt;/div&gt;&lt;div&gt;- nombre: string&lt;/div&gt;&lt;div&gt;- sector: string&lt;/div&gt;&lt;div&gt;- ubicacion: string&lt;/div&gt;&lt;div&gt;- correo: string&lt;/div&gt;&lt;div&gt;- contrasena: string&lt;/div&gt;">
+          <mxGeometry y="26" width="805" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Empresa-l" parent="n-Empresa" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="128" width="805" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Empresa-m" parent="n-Empresa" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Empresa()&lt;/div&gt;&lt;div&gt;+ Empresa(pId: int, pNombre: string, pSector: string, pUbicacion: string, pCorreo: string, pContrasena: string)&lt;/div&gt;&lt;div&gt;+ getId(): int&lt;/div&gt;&lt;div&gt;+ getNombre(): string&lt;/div&gt;&lt;div&gt;+ getSector(): string&lt;/div&gt;&lt;div&gt;+ getUbicacion(): string&lt;/div&gt;&lt;div&gt;+ getCorreo(): string&lt;/div&gt;&lt;div&gt;+ getContrasena(): string&lt;/div&gt;&lt;div&gt;+ setSector(pSector: string): void&lt;/div&gt;&lt;div&gt;+ setUbicacion(pUbicacion: string): void&lt;/div&gt;&lt;div&gt;+ mismoId(otra: Empresa): bool&lt;/div&gt;&lt;div&gt;+ mismoNombre(otra: Empresa): bool&lt;/div&gt;&lt;div&gt;+ esDelSector(pSector: string): bool&lt;/div&gt;&lt;div&gt;+ tieneCorreo(pCorreo: string): bool&lt;/div&gt;&lt;div&gt;+ contrasenaCorrecta(pContrasena: string): bool&lt;/div&gt;">
+          <mxGeometry y="136" width="805" height="237" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Notificacion" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Notificacion">
+          <mxGeometry x="3972" y="416" width="728" height="313" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Notificacion-a" parent="n-Notificacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- id: int&lt;/div&gt;&lt;div&gt;- idDestino: int&lt;/div&gt;&lt;div&gt;- tipo: TipoNotificacion&lt;/div&gt;&lt;div&gt;- mensaje: string&lt;/div&gt;&lt;div&gt;- fecha: string&lt;/div&gt;&lt;div&gt;- leida: bool&lt;/div&gt;">
+          <mxGeometry y="26" width="728" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Notificacion-l" parent="n-Notificacion" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="128" width="728" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Notificacion-m" parent="n-Notificacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Notificacion()&lt;/div&gt;&lt;div&gt;+ Notificacion(pId: int, pIdDestino: int, pTipo: TipoNotificacion, pMensaje: string, pFecha: string)&lt;/div&gt;&lt;div&gt;+ getId(): int&lt;/div&gt;&lt;div&gt;+ getIdDestino(): int&lt;/div&gt;&lt;div&gt;+ getTipo(): TipoNotificacion&lt;/div&gt;&lt;div&gt;+ getMensaje(): string&lt;/div&gt;&lt;div&gt;+ getFecha(): string&lt;/div&gt;&lt;div&gt;+ estaLeida(): bool&lt;/div&gt;&lt;div&gt;+ marcarLeida(): void&lt;/div&gt;&lt;div&gt;+ tipoToString(): string&lt;/div&gt;&lt;div&gt;+ esPara(pIdDestino: int): bool&lt;/div&gt;">
+          <mxGeometry y="136" width="728" height="177" as="geometry" />
+        </mxCell>
+        <mxCell id="n-EstadoPostulacion" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;span style=&quot;font-weight:normal&quot;&gt;«enumeration»&lt;/span&gt;&lt;br&gt;EstadoPostulacion">
+          <mxGeometry x="1028.5" y="210" width="240" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="n-EstadoPostulacion-a" parent="n-EstadoPostulacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;Pendiente&lt;/div&gt;&lt;div&gt;Revisada&lt;/div&gt;&lt;div&gt;Aceptada&lt;/div&gt;&lt;div&gt;Rechazada&lt;/div&gt;">
+          <mxGeometry y="44" width="240" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="n-TipoNotificacion" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;span style=&quot;font-weight:normal&quot;&gt;«enumeration»&lt;/span&gt;&lt;br&gt;TipoNotificacion">
+          <mxGeometry x="4216.0" y="180" width="240" height="176" as="geometry" />
+        </mxCell>
+        <mxCell id="n-TipoNotificacion-a" parent="n-TipoNotificacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;NuevaSolicitud&lt;/div&gt;&lt;div&gt;NuevaConexion&lt;/div&gt;&lt;div&gt;NuevoComentario&lt;/div&gt;&lt;div&gt;MeGusta&lt;/div&gt;&lt;div&gt;NuevaRecomendacion&lt;/div&gt;&lt;div&gt;NuevoMensaje&lt;/div&gt;&lt;div&gt;NuevaVacante&lt;/div&gt;&lt;div&gt;EstadoPostulacion&lt;/div&gt;">
+          <mxGeometry y="44" width="240" height="132" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Contenido" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Contenido">
+          <mxGeometry x="0" y="1197" width="504" height="268" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Contenido-a" parent="n-Contenido" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- id: int&lt;/div&gt;&lt;div&gt;- idAutor: int&lt;/div&gt;&lt;div&gt;- texto: string&lt;/div&gt;&lt;div&gt;- fecha: string&lt;/div&gt;">
+          <mxGeometry y="26" width="504" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Contenido-l" parent="n-Contenido" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="98" width="504" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Contenido-m" parent="n-Contenido" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;# Contenido(pId: int, pIdAutor: int, pTexto: string, pFecha: string)&lt;/div&gt;&lt;div&gt;+ ~Contenido() {virtual}&lt;/div&gt;&lt;div&gt;+ getId(): int&lt;/div&gt;&lt;div&gt;+ getIdAutor(): int&lt;/div&gt;&lt;div&gt;+ getTexto(): string&lt;/div&gt;&lt;div&gt;+ getFecha(): string&lt;/div&gt;&lt;div&gt;+ setTexto(pTexto: string): void&lt;/div&gt;&lt;div&gt;+ esDeAutor(pIdAutor: int): bool&lt;/div&gt;&lt;div&gt;+ tipo(): string {abstract}&lt;/div&gt;&lt;div&gt;+ resumen(): string {virtual}&lt;/div&gt;">
+          <mxGeometry y="106" width="504" height="162" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GestorArchivos" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class GestorArchivos">
+          <mxGeometry x="0" y="1645" width="679" height="358" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GestorArchivos-a" parent="n-GestorArchivos" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;&lt;/div&gt;">
+          <mxGeometry y="26" width="679" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GestorArchivos-l" parent="n-GestorArchivos" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="38" width="679" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-GestorArchivos-m" parent="n-GestorArchivos" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- actualizarContador(contador: int&amp;amp;, id: int): void {static}&lt;/div&gt;&lt;div&gt;- limpiar(texto: string): string {static}&lt;/div&gt;&lt;div&gt;- partir(linea: string): Lista&amp;lt;string&amp;gt; {static}&lt;/div&gt;&lt;div&gt;- entero(c: Lista&amp;lt;string&amp;gt;, pos: uint): int {static}&lt;/div&gt;&lt;div&gt;- campo(c: Lista&amp;lt;string&amp;gt;, pos: uint): string {static}&lt;/div&gt;&lt;div&gt;- leerLineas(nombre: string): Lista&amp;lt;string&amp;gt; {static}&lt;/div&gt;&lt;div&gt;- guardarTexto(red: RedProfesional): void {static}&lt;/div&gt;&lt;div&gt;- cargarTexto(red: RedProfesional&amp;amp;): bool {static}&lt;/div&gt;&lt;div&gt;- escribirEntero(out: ofstream&amp;amp;, numero: int): void {static}&lt;/div&gt;&lt;div&gt;- escribirTexto(out: ofstream&amp;amp;, t: string): void {static}&lt;/div&gt;&lt;div&gt;- leerEntero(in: ifstream&amp;amp;): int {static}&lt;/div&gt;&lt;div&gt;- leerTexto(in: ifstream&amp;amp;): string {static}&lt;/div&gt;&lt;div&gt;- guardarBinario(red: RedProfesional): void {static}&lt;/div&gt;&lt;div&gt;- cargarBinario(red: RedProfesional&amp;amp;): bool {static}&lt;/div&gt;&lt;div&gt;- vaciar(red: RedProfesional&amp;amp;): void {static}&lt;/div&gt;&lt;div&gt;+ guardarTodo(red: RedProfesional): void {static}&lt;/div&gt;&lt;div&gt;+ cargarTodo(red: RedProfesional&amp;amp;): void {static}&lt;/div&gt;&lt;div&gt;+ cargarDatosDeEjemplo(red: RedProfesional&amp;amp;): void {static}&lt;/div&gt;&lt;div&gt;- habilidad(red: RedProfesional&amp;amp;, idUsuario: int, nombre: string, nivel: int): void {static}&lt;/div&gt;&lt;div&gt;- publicacion(red: RedProfesional&amp;amp;, idAutor: int, texto: string, fecha: string): int {static}&lt;/div&gt;">
+          <mxGeometry y="46" width="679" height="312" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Coincidencia" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;span style=&quot;font-weight:normal&quot;&gt;«struct»&lt;/span&gt;&lt;br&gt;Coincidencia">
+          <mxGeometry x="0" y="2063" width="240" height="106" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Coincidencia-a" parent="n-Coincidencia" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ idUsuario: int&lt;/div&gt;&lt;div&gt;+ cantidad: int&lt;/div&gt;">
+          <mxGeometry y="44" width="240" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Coincidencia-l" parent="n-Coincidencia" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="86" width="240" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Coincidencia-m" parent="n-Coincidencia" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;&lt;/div&gt;">
+          <mxGeometry y="94" width="240" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SugerenciaConexion" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fillColor=#e1d5e7;strokeColor=#9673a6;" value="&lt;span style=&quot;font-weight:normal&quot;&gt;«struct»&lt;/span&gt;&lt;br&gt;SugerenciaConexion">
+          <mxGeometry x="0" y="2229" width="240" height="106" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SugerenciaConexion-a" parent="n-SugerenciaConexion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ idUsuario: int&lt;/div&gt;&lt;div&gt;+ contactosEnComun: int&lt;/div&gt;">
+          <mxGeometry y="44" width="240" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SugerenciaConexion-l" parent="n-SugerenciaConexion" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="86" width="240" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SugerenciaConexion-m" parent="n-SugerenciaConexion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;&lt;/div&gt;">
+          <mxGeometry y="94" width="240" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Publicacion" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Publicacion">
+          <mxGeometry x="879" y="1137" width="518" height="208" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Publicacion-a" parent="n-Publicacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- idsMeGusta: Lista&amp;lt;int&amp;gt;&lt;/div&gt;">
+          <mxGeometry y="26" width="518" height="27" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Publicacion-l" parent="n-Publicacion" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="53" width="518" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Publicacion-m" parent="n-Publicacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Publicacion()&lt;/div&gt;&lt;div&gt;+ Publicacion(pId: int, pIdAutor: int, pTexto: string, pFecha: string)&lt;/div&gt;&lt;div&gt;+ getMeGusta(): uint&lt;/div&gt;&lt;div&gt;+ leGustaA(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ darMeGusta(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ paraCadaMeGusta(accion: function): void&lt;/div&gt;&lt;div&gt;+ quitarMeGusta(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ tipo(): string&lt;/div&gt;&lt;div&gt;+ resumen(): string&lt;/div&gt;">
+          <mxGeometry y="61" width="518" height="147" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Comentario" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Comentario">
+          <mxGeometry x="879" y="1405" width="763" height="223" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Comentario-a" parent="n-Comentario" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- idPublicacion: int&lt;/div&gt;&lt;div&gt;- idPadre: int&lt;/div&gt;">
+          <mxGeometry y="26" width="763" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Comentario-l" parent="n-Comentario" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="68" width="763" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Comentario-m" parent="n-Comentario" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Comentario()&lt;/div&gt;&lt;div&gt;+ Comentario(pId: int, pIdAutor: int, pIdPublicacion: int, pTexto: string, pFecha: string, pIdPadre: int)&lt;/div&gt;&lt;div&gt;+ getIdPublicacion(): int&lt;/div&gt;&lt;div&gt;+ getIdPadre(): int&lt;/div&gt;&lt;div&gt;+ esDePublicacion(pIdPublicacion: int): bool&lt;/div&gt;&lt;div&gt;+ esRespuesta(): bool&lt;/div&gt;&lt;div&gt;+ esRespuestaA(pIdComentario: int): bool&lt;/div&gt;&lt;div&gt;+ tipo(): string&lt;/div&gt;&lt;div&gt;+ resumen(): string&lt;/div&gt;">
+          <mxGeometry y="76" width="763" height="147" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Recomendacion" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Recomendacion">
+          <mxGeometry x="879" y="1688" width="665" height="178" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Recomendacion-a" parent="n-Recomendacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- idReceptor: int&lt;/div&gt;">
+          <mxGeometry y="26" width="665" height="27" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Recomendacion-l" parent="n-Recomendacion" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="53" width="665" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Recomendacion-m" parent="n-Recomendacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Recomendacion()&lt;/div&gt;&lt;div&gt;+ Recomendacion(pId: int, pIdEmisor: int, pIdReceptor: int, pTexto: string, pFecha: string)&lt;/div&gt;&lt;div&gt;+ getIdEmisor(): int&lt;/div&gt;&lt;div&gt;+ getIdReceptor(): int&lt;/div&gt;&lt;div&gt;+ esPara(pIdReceptor: int): bool&lt;/div&gt;&lt;div&gt;+ tipo(): string&lt;/div&gt;&lt;div&gt;+ resumen(): string&lt;/div&gt;">
+          <mxGeometry y="61" width="665" height="117" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Mensaje" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Mensaje">
+          <mxGeometry x="879" y="1926" width="623" height="238" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Mensaje-a" parent="n-Mensaje" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- idReceptor: int&lt;/div&gt;&lt;div&gt;- leido: bool&lt;/div&gt;">
+          <mxGeometry y="26" width="623" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Mensaje-l" parent="n-Mensaje" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="68" width="623" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Mensaje-m" parent="n-Mensaje" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Mensaje()&lt;/div&gt;&lt;div&gt;+ Mensaje(pId: int, pIdEmisor: int, pIdReceptor: int, pTexto: string, pFecha: string)&lt;/div&gt;&lt;div&gt;+ getIdEmisor(): int&lt;/div&gt;&lt;div&gt;+ getIdReceptor(): int&lt;/div&gt;&lt;div&gt;+ fueLeido(): bool&lt;/div&gt;&lt;div&gt;+ marcarLeido(): void&lt;/div&gt;&lt;div&gt;+ perteneceA(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ esConversacionEntre(idA: int, idB: int): bool&lt;/div&gt;&lt;div&gt;+ tipo(): string&lt;/div&gt;&lt;div&gt;+ resumen(): string&lt;/div&gt;">
+          <mxGeometry y="76" width="623" height="162" as="geometry" />
+        </mxCell>
+        <mxCell id="n-RedProfesional" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class RedProfesional">
+          <mxGeometry x="1762" y="1137" width="945" height="2128" as="geometry" />
+        </mxCell>
+        <mxCell id="n-RedProfesional-a" parent="n-RedProfesional" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- usuarios: Lista&amp;lt;Usuario&amp;gt;&lt;/div&gt;&lt;div&gt;- empresas: Lista&amp;lt;Empresa&amp;gt;&lt;/div&gt;&lt;div&gt;- vacantes: Lista&amp;lt;Vacante&amp;gt;&lt;/div&gt;&lt;div&gt;- postulaciones: Lista&amp;lt;Postulacion&amp;gt;&lt;/div&gt;&lt;div&gt;- grupos: Lista&amp;lt;GrupoProfesional&amp;gt;&lt;/div&gt;&lt;div&gt;- publicaciones: Lista&amp;lt;Publicacion&amp;gt;&lt;/div&gt;&lt;div&gt;- comentarios: Lista&amp;lt;Comentario&amp;gt;&lt;/div&gt;&lt;div&gt;- recomendaciones: Lista&amp;lt;Recomendacion&amp;gt;&lt;/div&gt;&lt;div&gt;- mensajes: Lista&amp;lt;Mensaje&amp;gt;&lt;/div&gt;&lt;div&gt;- sigUsuario: int&lt;/div&gt;&lt;div&gt;- sigEmpresa: int&lt;/div&gt;&lt;div&gt;- sigVacante: int&lt;/div&gt;&lt;div&gt;- sigPostulacion: int&lt;/div&gt;&lt;div&gt;- sigGrupo: int&lt;/div&gt;&lt;div&gt;- sigPublicacion: int&lt;/div&gt;&lt;div&gt;- sigComentario: int&lt;/div&gt;&lt;div&gt;- sigRecomendacion: int&lt;/div&gt;&lt;div&gt;- sigMensaje: int&lt;/div&gt;&lt;div&gt;- sigSolicitud: int&lt;/div&gt;&lt;div&gt;- sigNotificacion: int&lt;/div&gt;&lt;div&gt;- sigCertificacion: int&lt;/div&gt;&lt;div&gt;- ultimoError: string&lt;/div&gt;&lt;div&gt;+ MAX_NOMBRE: int = 30 {static}&lt;/div&gt;&lt;div&gt;+ MAX_APELLIDO: int = 30 {static}&lt;/div&gt;&lt;div&gt;+ MAX_TITULAR: int = 50 {static}&lt;/div&gt;&lt;div&gt;+ MAX_UBICACION: int = 30 {static}&lt;/div&gt;&lt;div&gt;+ MAX_CORREO: int = 50 {static}&lt;/div&gt;&lt;div&gt;+ MAX_CONTRASENA: int = 20 {static}&lt;/div&gt;&lt;div&gt;+ MAX_NOMBRE_EMPRESA: int = 50 {static}&lt;/div&gt;&lt;div&gt;+ MAX_SECTOR: int = 30 {static}&lt;/div&gt;&lt;div&gt;+ MAX_CERTIFICACION: int = 40 {static}&lt;/div&gt;&lt;div&gt;+ MAX_INSTITUCION: int = 40 {static}&lt;/div&gt;&lt;div&gt;+ MAX_CODIGO: int = 30 {static}&lt;/div&gt;&lt;div&gt;+ MAX_PUBLICACION: int = 121 {static}&lt;/div&gt;&lt;div&gt;+ MAX_COMENTARIO: int = 60 {static}&lt;/div&gt;&lt;div&gt;+ MAX_MENSAJE: int = 58 {static}&lt;/div&gt;&lt;div&gt;+ MAX_RECOMENDACION: int = 121 {static}&lt;/div&gt;&lt;div&gt;+ MAX_HABILIDAD: int = 30 {static}&lt;/div&gt;&lt;div&gt;+ MAX_CARGO: int = 40 {static}&lt;/div&gt;">
+          <mxGeometry y="26" width="945" height="597" as="geometry" />
+        </mxCell>
+        <mxCell id="n-RedProfesional-l" parent="n-RedProfesional" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="623" width="945" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-RedProfesional-m" parent="n-RedProfesional" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- separarRequisitos(texto: string): Lista&amp;lt;string&amp;gt;&lt;/div&gt;&lt;div&gt;- compararRequisitosRec(actual: Lista&amp;lt;string&amp;gt;::Iterador, fin: Lista&amp;lt;string&amp;gt;::Iterador, usuario: Usuario): int&lt;/div&gt;&lt;div&gt;- fallar(motivo: string): bool&lt;/div&gt;&lt;div&gt;- notificar(idDestino: int, tipo: TipoNotificacion, mensaje: string): void&lt;/div&gt;&lt;div&gt;- conectar(idA: int, idB: int): void&lt;/div&gt;&lt;div&gt;- desconectar(idA: int, idB: int): void&lt;/div&gt;&lt;div&gt;- textoMinusculas(texto: string): string {static}&lt;/div&gt;&lt;div&gt;- aAnio(texto: string): int {static}&lt;/div&gt;&lt;div&gt;- haySolicitudPendienteEntre(idA: int, idB: int): bool&lt;/div&gt;&lt;div&gt;- contactosEnComun(idA: int, idB: int): int&lt;/div&gt;&lt;div&gt;- explorarConexionesRec(idActual: int, profundidad: int, visitados: Lista&amp;lt;int&amp;gt;&amp;amp;, descubiertos: Lista&amp;lt;int&amp;gt;&amp;amp;): void&lt;/div&gt;&lt;div&gt;- buscarEmpresa(idEmpresa: int): Empresa*&lt;/div&gt;&lt;div&gt;- buscarVacante(idVacante: int): Vacante*&lt;/div&gt;&lt;div&gt;- buscarPostulacion(idPostulacion: int): Postulacion*&lt;/div&gt;&lt;div&gt;- buscarGrupo(idGrupo: int): GrupoProfesional*&lt;/div&gt;&lt;div&gt;- buscarPublicacion(idPublicacion: int): Publicacion*&lt;/div&gt;&lt;div&gt;- recorrerRespuestas(idPublicacion: int, idPadre: int, nivel: int, accion: function): void&lt;/div&gt;&lt;div&gt;- buscarComentario(idComentario: int): Comentario*&lt;/div&gt;&lt;div&gt;- validarCampo(valor: string, nombreCampo: string, largoMaximo: int, obligatorio: bool): bool&lt;/div&gt;&lt;div&gt;- correoEnUso(correo: string): bool&lt;/div&gt;&lt;div&gt;- validarCredenciales(correo: string, contrasena: string): bool&lt;/div&gt;&lt;div&gt;+ RedProfesional()&lt;/div&gt;&lt;div&gt;+ RedProfesional(otra: RedProfesional)&lt;/div&gt;&lt;div&gt;+ fechaHoy(): string {static}&lt;/div&gt;&lt;div&gt;+ getUltimoError(): string&lt;/div&gt;&lt;div&gt;+ registrarUsuario(nombre: string, apellido: string, titular: string, ubicacion: string, correo: string, contrasena: string): int&lt;/div&gt;&lt;div&gt;+ iniciarSesionUsuario(correo: string, contrasena: string): int&lt;/div&gt;&lt;div&gt;+ buscarUsuario(idUsuario: int): Usuario*&lt;/div&gt;&lt;div&gt;+ existeUsuario(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ obtenerEmpresa(idEmpresa: int): Empresa*&lt;/div&gt;&lt;div&gt;+ nombreDe(idUsuario: int): string&lt;/div&gt;&lt;div&gt;+ totalUsuarios(): uint&lt;/div&gt;&lt;div&gt;+ paraCadaUsuario(accion: function): void&lt;/div&gt;&lt;div&gt;+ enviarSolicitud(idEmisor: int, idReceptor: int, mensaje: string): bool&lt;/div&gt;&lt;div&gt;+ responderSiguienteSolicitud(idReceptor: int, aceptar: bool): bool&lt;/div&gt;&lt;div&gt;+ eliminarContacto(idUsuario: int, idContacto: int): bool&lt;/div&gt;&lt;div&gt;+ nombreNivel(nivel: int): string {static}&lt;/div&gt;&lt;div&gt;+ agregarHabilidad(idUsuario: int, nombre: string, nivel: int): bool&lt;/div&gt;&lt;div&gt;+ eliminarHabilidad(idUsuario: int, nombre: string): bool&lt;/div&gt;&lt;div&gt;+ agregarExperiencia(idUsuario: int, empresa: string, cargo: string, anioInicio: string, anioFin: string): bool&lt;/div&gt;&lt;div&gt;+ eliminarExperiencia(idUsuario: int, pos: int): bool&lt;/div&gt;&lt;div&gt;+ deshacerUltimaAccion(idUsuario: int, descripcionDeshecha: string&amp;amp;): bool&lt;/div&gt;&lt;div&gt;+ esFechaValida(fecha: string): bool {static}&lt;/div&gt;&lt;div&gt;+ agregarCertificacion(idUsuario: int, nombre: string, institucion: string, fechaObtencion: string, codigoCredencial: string): bool&lt;/div&gt;&lt;div&gt;+ certificacionesOrdenadas(idUsuario: int): Lista&amp;lt;Certificacion&amp;gt;&lt;/div&gt;&lt;div&gt;+ contactosOrdenadosPorNombre(idUsuario: int): Lista&amp;lt;int&amp;gt;&lt;/div&gt;&lt;div&gt;+ buscarPersonas(idUsuario: int, texto: string): Lista&amp;lt;int&amp;gt;&lt;/div&gt;&lt;div&gt;+ sugerenciasConexion(idUsuario: int): Lista&amp;lt;SugerenciaConexion&amp;gt;&lt;/div&gt;&lt;div&gt;+ sonContactos(idA: int, idB: int): bool&lt;/div&gt;&lt;div&gt;+ existeSolicitudPendienteEntre(idA: int, idB: int): bool&lt;/div&gt;&lt;div&gt;+ publicar(idAutor: int, texto: string): int&lt;/div&gt;&lt;div&gt;+ comentar(idAutor: int, idPublicacion: int, texto: string, idComentarioPadre: int): int&lt;/div&gt;&lt;div&gt;+ darMeGusta(idUsuario: int, idPublicacion: int): bool&lt;/div&gt;&lt;div&gt;+ quitarMeGusta(idUsuario: int, idPublicacion: int): bool&lt;/div&gt;&lt;div&gt;+ obtenerPublicacion(idPublicacion: int): Publicacion*&lt;/div&gt;&lt;div&gt;+ contarComentarios(idPublicacion: int): int&lt;/div&gt;&lt;div&gt;+ feedPorFecha(): Lista&amp;lt;Publicacion&amp;gt;&lt;/div&gt;&lt;div&gt;+ feedPorPopularidad(): Lista&amp;lt;Publicacion&amp;gt;&lt;/div&gt;&lt;div&gt;+ paraCadaComentarioEnHilo(idPublicacion: int, accion: function): void&lt;/div&gt;&lt;div&gt;+ recomendar(idEmisor: int, idReceptor: int, texto: string): int&lt;/div&gt;&lt;div&gt;+ enviarMensaje(idEmisor: int, idReceptor: int, texto: string): int&lt;/div&gt;&lt;div&gt;+ marcarConversacionLeida(idLector: int, idOtro: int): uint&lt;/div&gt;&lt;div&gt;+ cantidadMensajesNoLeidos(idUsuario: int): uint&lt;/div&gt;&lt;div&gt;+ cantidadMensajesNoLeidosDe(idUsuario: int, idContacto: int): uint&lt;/div&gt;&lt;div&gt;+ cantidadMensajesEntre(idA: int, idB: int): uint&lt;/div&gt;&lt;div&gt;+ obtenerConversacion(idA: int, idB: int): Lista&amp;lt;Mensaje&amp;gt;&lt;/div&gt;&lt;div&gt;+ paraCadaPublicacion(accion: function): void&lt;/div&gt;&lt;div&gt;+ paraCadaComentarioDe(idPublicacion: int, accion: function): void&lt;/div&gt;&lt;div&gt;+ paraCadaMensajeEntre(idA: int, idB: int, accion: function): void&lt;/div&gt;&lt;div&gt;+ paraCadaRecomendacionPara(idReceptor: int, accion: function): void&lt;/div&gt;&lt;div&gt;+ paraCadaRecomendacionDe(idEmisor: int, accion: function): void&lt;/div&gt;&lt;div&gt;+ obtenerRecomendacion(idRecomendacion: int): Recomendacion*&lt;/div&gt;&lt;div&gt;+ recomendacionesRecibidas(idReceptor: int): Lista&amp;lt;Recomendacion&amp;gt;&lt;/div&gt;&lt;div&gt;+ recomendacionesEnviadas(idEmisor: int): Lista&amp;lt;Recomendacion&amp;gt;&lt;/div&gt;&lt;div&gt;+ actividadDe(idUsuario: int): Lista&amp;lt;Contenido*&amp;gt;&lt;/div&gt;&lt;div&gt;+ registrarEmpresa(nombre: string, sector: string, ubicacion: string, correo: string, contrasena: string): int&lt;/div&gt;&lt;div&gt;+ iniciarSesionEmpresa(correo: string, contrasena: string): int&lt;/div&gt;&lt;div&gt;+ publicarVacante(idEmpresa: int, titulo: string, descripcion: string, requisitos: string, modalidad: string): int&lt;/div&gt;&lt;div&gt;+ postular(idUsuario: int, idVacante: int): int&lt;/div&gt;&lt;div&gt;+ revisarSiguientePostulacion(idEmpresa: int, idVacante: int, aceptar: bool): bool&lt;/div&gt;&lt;div&gt;+ verSiguientePostulacion(idEmpresa: int, idVacante: int): Postulacion*&lt;/div&gt;&lt;div&gt;+ cancelarVacante(idEmpresa: int, idVacante: int): bool&lt;/div&gt;&lt;div&gt;+ cerrarVacante(idVacante: int): bool&lt;/div&gt;&lt;div&gt;+ rotarPostulacionesVacante(idVacante: int): bool&lt;/div&gt;&lt;div&gt;+ crearGrupo(nombre: string, descripcion: string, especialidad: string): int&lt;/div&gt;&lt;div&gt;+ unirseAGrupo(idUsuario: int, idGrupo: int): bool&lt;/div&gt;&lt;div&gt;+ salirDeGrupo(idUsuario: int, idGrupo: int): bool&lt;/div&gt;&lt;div&gt;+ nombreEmpresa(idEmpresa: int): string&lt;/div&gt;&lt;div&gt;+ paraCadaEmpresa(accion: function): void&lt;/div&gt;&lt;div&gt;+ paraCadaVacanteActiva(accion: function): void&lt;/div&gt;&lt;div&gt;+ obtenerVacante(idVacante: int): Vacante*&lt;/div&gt;&lt;div&gt;+ paraCadaVacanteDe(idEmpresa: int, accion: function): void&lt;/div&gt;&lt;div&gt;+ paraCadaContratacion(idEmpresa: int, accion: function): void&lt;/div&gt;&lt;div&gt;+ contiene(texto: string, palabra: string): bool {static}&lt;/div&gt;&lt;div&gt;+ buscarProfesionales(palabrasClave: string, totalPalabras: int&amp;amp;): Lista&amp;lt;Coincidencia&amp;gt;&lt;/div&gt;&lt;div&gt;+ vacantesOrdenadasDe(idEmpresa: int): Lista&amp;lt;Vacante&amp;gt;&lt;/div&gt;&lt;div&gt;+ paraCadaPostulacionDe(idUsuario: int, accion: function): void&lt;/div&gt;&lt;div&gt;+ paraCadaGrupo(accion: function): void&lt;/div&gt;&lt;div&gt;+ calcularCompatibilidad(idUsuario: int, idVacante: int): int&lt;/div&gt;">
+          <mxGeometry y="631" width="945" height="1497" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Usuario" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Usuario">
+          <mxGeometry x="2847" y="1137" width="945" height="1153" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Usuario-a" parent="n-Usuario" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- id: int&lt;/div&gt;&lt;div&gt;- nombre: string&lt;/div&gt;&lt;div&gt;- apellido: string&lt;/div&gt;&lt;div&gt;- titular: string&lt;/div&gt;&lt;div&gt;- ubicacion: string&lt;/div&gt;&lt;div&gt;- correo: string&lt;/div&gt;&lt;div&gt;- contrasena: string&lt;/div&gt;&lt;div&gt;- habilidades: Lista&amp;lt;Habilidad&amp;gt;&lt;/div&gt;&lt;div&gt;- certificaciones: Lista&amp;lt;Certificacion&amp;gt;&lt;/div&gt;&lt;div&gt;- historialLaboral: ListaDoble&amp;lt;ExperienciaLaboral&amp;gt;&lt;/div&gt;&lt;div&gt;- solicitudesPendientes: Cola&amp;lt;SolicitudConexion&amp;gt;&lt;/div&gt;&lt;div&gt;- historialAcciones: Pila&amp;lt;Accion&amp;gt;&lt;/div&gt;&lt;div&gt;- notificaciones: Cola&amp;lt;Notificacion&amp;gt;&lt;/div&gt;&lt;div&gt;- contactos: Lista&amp;lt;int&amp;gt;&lt;/div&gt;">
+          <mxGeometry y="26" width="945" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Usuario-l" parent="n-Usuario" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="248" width="945" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Usuario-m" parent="n-Usuario" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Usuario()&lt;/div&gt;&lt;div&gt;+ Usuario(pId: int, pNombre: string, pApellido: string, pTitular: string, pUbicacion: string, pCorreo: string, pContrasena: string)&lt;/div&gt;&lt;div&gt;+ getId(): int&lt;/div&gt;&lt;div&gt;+ getNombre(): string&lt;/div&gt;&lt;div&gt;+ getApellido(): string&lt;/div&gt;&lt;div&gt;+ getNombreCompleto(): string&lt;/div&gt;&lt;div&gt;+ getTitular(): string&lt;/div&gt;&lt;div&gt;+ getUbicacion(): string&lt;/div&gt;&lt;div&gt;+ getCorreo(): string&lt;/div&gt;&lt;div&gt;+ getContrasena(): string&lt;/div&gt;&lt;div&gt;+ setTitular(pTitular: string): void&lt;/div&gt;&lt;div&gt;+ setUbicacion(pUbicacion: string): void&lt;/div&gt;&lt;div&gt;+ mismoId(otro: Usuario): bool&lt;/div&gt;&lt;div&gt;+ tieneCorreo(pCorreo: string): bool&lt;/div&gt;&lt;div&gt;+ contrasenaCorrecta(pContrasena: string): bool&lt;/div&gt;&lt;div&gt;+ tieneHabilidad(nombreHabilidad: string): bool&lt;/div&gt;&lt;div&gt;+ agregarHabilidad(h: Habilidad): bool&lt;/div&gt;&lt;div&gt;+ buscarHabilidad(nombreHabilidad: string): Habilidad*&lt;/div&gt;&lt;div&gt;+ eliminarHabilidad(nombreHabilidad: string): bool&lt;/div&gt;&lt;div&gt;+ totalHabilidades(): uint&lt;/div&gt;&lt;div&gt;+ habilidadPrincipal(): string&lt;/div&gt;&lt;div&gt;+ paraCadaHabilidad(accion: function): void&lt;/div&gt;&lt;div&gt;+ agregarCertificacion(c: Certificacion): void&lt;/div&gt;&lt;div&gt;+ eliminarCertificacion(idCertificacion: int): bool&lt;/div&gt;&lt;div&gt;+ totalCertificaciones(): uint&lt;/div&gt;&lt;div&gt;+ paraCadaCertificacion(accion: function): void&lt;/div&gt;&lt;div&gt;+ agregarExperiencia(e: ExperienciaLaboral): void&lt;/div&gt;&lt;div&gt;+ eliminarExperiencia(pos: uint): bool&lt;/div&gt;&lt;div&gt;+ cantidadExperienciasActuales(): uint&lt;/div&gt;&lt;div&gt;+ totalExperiencias(): uint&lt;/div&gt;&lt;div&gt;+ antiguedadTotalEnAnios(anioActual: int): int&lt;/div&gt;&lt;div&gt;+ paraCadaExperiencia(accion: function, desdeMasReciente: bool): void&lt;/div&gt;&lt;div&gt;+ recibirSolicitud(s: SolicitudConexion): void&lt;/div&gt;&lt;div&gt;+ tieneSolicitudesPendientes(): bool&lt;/div&gt;&lt;div&gt;+ cantidadSolicitudesPendientes(): uint&lt;/div&gt;&lt;div&gt;+ tieneSolicitudDe(idEmisor: int): bool&lt;/div&gt;&lt;div&gt;+ verSiguienteSolicitud(): SolicitudConexion&lt;/div&gt;&lt;div&gt;+ atenderSiguienteSolicitud(): SolicitudConexion&lt;/div&gt;&lt;div&gt;+ paraCadaSolicitud(accion: function): void&lt;/div&gt;&lt;div&gt;+ registrarAccion(a: Accion): void&lt;/div&gt;&lt;div&gt;+ tieneAccionesRegistradas(): bool&lt;/div&gt;&lt;div&gt;+ deshacerUltimaAccion(): string&lt;/div&gt;&lt;div&gt;+ totalAcciones(): uint&lt;/div&gt;&lt;div&gt;+ ultimaAccion(): Accion&lt;/div&gt;&lt;div&gt;+ paraCadaAccion(accion: function, desdeMasAntigua: bool): void&lt;/div&gt;&lt;div&gt;+ contarAcciones(categoria: string): int&lt;/div&gt;&lt;div&gt;+ recibirNotificacion(n: Notificacion): void&lt;/div&gt;&lt;div&gt;+ tieneNotificaciones(): bool&lt;/div&gt;&lt;div&gt;+ cantidadNotificaciones(): uint&lt;/div&gt;&lt;div&gt;+ cantidadNotificacionesNoLeidas(): uint&lt;/div&gt;&lt;div&gt;+ paraCadaNotificacion(accion: function): void&lt;/div&gt;&lt;div&gt;+ marcarNotificacionLeida(idNotificacion: int): bool&lt;/div&gt;&lt;div&gt;+ marcarTodasNotificacionesLeidas(): void&lt;/div&gt;&lt;div&gt;+ leerSiguienteNotificacion(): Notificacion&lt;/div&gt;&lt;div&gt;+ esContactoDirecto(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ agregarContacto(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ eliminarContacto(idUsuario: int): bool&lt;/div&gt;&lt;div&gt;+ totalContactos(): uint&lt;/div&gt;&lt;div&gt;+ paraCadaContacto(accion: function): void&lt;/div&gt;">
+          <mxGeometry y="256" width="945" height="897" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Certificacion" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Certificacion">
+          <mxGeometry x="3912" y="1237" width="840" height="268" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Certificacion-a" parent="n-Certificacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- id: int&lt;/div&gt;&lt;div&gt;- nombre: string&lt;/div&gt;&lt;div&gt;- institucion: string&lt;/div&gt;&lt;div&gt;- fechaObtencion: string&lt;/div&gt;&lt;div&gt;- codigoCredencial: string&lt;/div&gt;">
+          <mxGeometry y="26" width="840" height="87" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Certificacion-l" parent="n-Certificacion" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="113" width="840" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Certificacion-m" parent="n-Certificacion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Certificacion()&lt;/div&gt;&lt;div&gt;+ Certificacion(pId: int, pNombre: string, pInstitucion: string, pFechaObtencion: string, pCodigoCredencial: string)&lt;/div&gt;&lt;div&gt;+ getId(): int&lt;/div&gt;&lt;div&gt;+ getNombre(): string&lt;/div&gt;&lt;div&gt;+ getInstitucion(): string&lt;/div&gt;&lt;div&gt;+ getFechaObtencion(): string&lt;/div&gt;&lt;div&gt;+ getCodigoCredencial(): string&lt;/div&gt;&lt;div&gt;+ mismoId(otra: Certificacion): bool&lt;/div&gt;&lt;div&gt;+ esDeInstitucion(pInstitucion: string): bool&lt;/div&gt;">
+          <mxGeometry y="121" width="840" height="147" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Accion" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Accion">
+          <mxGeometry x="3912" y="1565" width="651" height="238" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Accion-a" parent="n-Accion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- categoria: string&lt;/div&gt;&lt;div&gt;- descripcion: string&lt;/div&gt;&lt;div&gt;- hacer: function&amp;lt;void()&amp;gt;&lt;/div&gt;&lt;div&gt;- deshacer: function&amp;lt;void()&amp;gt;&lt;/div&gt;&lt;div&gt;- ejecutada: bool&lt;/div&gt;">
+          <mxGeometry y="26" width="651" height="87" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Accion-l" parent="n-Accion" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="113" width="651" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Accion-m" parent="n-Accion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Accion()&lt;/div&gt;&lt;div&gt;+ Accion(pCategoria: string, pDescripcion: string, pHacer: function, pDeshacer: function)&lt;/div&gt;&lt;div&gt;+ ejecutar(): void&lt;/div&gt;&lt;div&gt;+ deshacerAccion(): void&lt;/div&gt;&lt;div&gt;+ getCategoria(): string&lt;/div&gt;&lt;div&gt;+ getDescripcion(): string&lt;/div&gt;&lt;div&gt;+ fueEjecutada(): bool&lt;/div&gt;">
+          <mxGeometry y="121" width="651" height="117" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Habilidad" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Habilidad">
+          <mxGeometry x="4952" y="1137" width="392" height="208" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Habilidad-a" parent="n-Habilidad" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- nombre: string&lt;/div&gt;&lt;div&gt;- nivel: NivelHabilidad&lt;/div&gt;">
+          <mxGeometry y="26" width="392" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Habilidad-l" parent="n-Habilidad" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="68" width="392" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Habilidad-m" parent="n-Habilidad" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Habilidad()&lt;/div&gt;&lt;div&gt;+ Habilidad(pNombre: string, pNivel: NivelHabilidad)&lt;/div&gt;&lt;div&gt;+ getNombre(): string&lt;/div&gt;&lt;div&gt;+ getNivel(): NivelHabilidad&lt;/div&gt;&lt;div&gt;+ setNivel(pNivel: NivelHabilidad): void&lt;/div&gt;&lt;div&gt;+ nivelToString(): string&lt;/div&gt;&lt;div&gt;+ mismoNombre(otra: Habilidad): bool&lt;/div&gt;&lt;div&gt;+ tieneNombre(pNombre: string): bool&lt;/div&gt;">
+          <mxGeometry y="76" width="392" height="132" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ExperienciaLaboral" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class ExperienciaLaboral">
+          <mxGeometry x="4952" y="1405" width="952" height="343" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ExperienciaLaboral-a" parent="n-ExperienciaLaboral" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- idEmpresa: int&lt;/div&gt;&lt;div&gt;- nombreEmpresa: string&lt;/div&gt;&lt;div&gt;- cargo: string&lt;/div&gt;&lt;div&gt;- anioInicio: int&lt;/div&gt;&lt;div&gt;- anioFin: int&lt;/div&gt;&lt;div&gt;- descripcion: string&lt;/div&gt;">
+          <mxGeometry y="26" width="952" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ExperienciaLaboral-l" parent="n-ExperienciaLaboral" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="128" width="952" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ExperienciaLaboral-m" parent="n-ExperienciaLaboral" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ ExperienciaLaboral()&lt;/div&gt;&lt;div&gt;+ ExperienciaLaboral(pIdEmpresa: int, pNombreEmpresa: string, pCargo: string, pAnioInicio: int, pAnioFin: int, pDescripcion: string)&lt;/div&gt;&lt;div&gt;+ getIdEmpresa(): int&lt;/div&gt;&lt;div&gt;+ getNombreEmpresa(): string&lt;/div&gt;&lt;div&gt;+ getCargo(): string&lt;/div&gt;&lt;div&gt;+ getAnioInicio(): int&lt;/div&gt;&lt;div&gt;+ getAnioFin(): int&lt;/div&gt;&lt;div&gt;+ getDescripcion(): string&lt;/div&gt;&lt;div&gt;+ setDescripcion(pDescripcion: string): void&lt;/div&gt;&lt;div&gt;+ finalizar(pAnioFin: int): void&lt;/div&gt;&lt;div&gt;+ esActual(): bool&lt;/div&gt;&lt;div&gt;+ esDeEmpresa(pIdEmpresa: int): bool&lt;/div&gt;&lt;div&gt;+ duracionEnAnios(anioActual: int): int&lt;/div&gt;">
+          <mxGeometry y="136" width="952" height="207" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SolicitudConexion" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class SolicitudConexion">
+          <mxGeometry x="4952" y="1848" width="707" height="343" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SolicitudConexion-a" parent="n-SolicitudConexion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- id: int&lt;/div&gt;&lt;div&gt;- idEmisor: int&lt;/div&gt;&lt;div&gt;- idReceptor: int&lt;/div&gt;&lt;div&gt;- mensaje: string&lt;/div&gt;&lt;div&gt;- fecha: string&lt;/div&gt;&lt;div&gt;- estado: EstadoSolicitud&lt;/div&gt;">
+          <mxGeometry y="26" width="707" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SolicitudConexion-l" parent="n-SolicitudConexion" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="128" width="707" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-SolicitudConexion-m" parent="n-SolicitudConexion" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ SolicitudConexion()&lt;/div&gt;&lt;div&gt;+ SolicitudConexion(pId: int, pIdEmisor: int, pIdReceptor: int, pMensaje: string, pFecha: string)&lt;/div&gt;&lt;div&gt;+ getId(): int&lt;/div&gt;&lt;div&gt;+ getIdEmisor(): int&lt;/div&gt;&lt;div&gt;+ getIdReceptor(): int&lt;/div&gt;&lt;div&gt;+ getMensaje(): string&lt;/div&gt;&lt;div&gt;+ getFecha(): string&lt;/div&gt;&lt;div&gt;+ getEstado(): EstadoSolicitud&lt;/div&gt;&lt;div&gt;+ aceptar(): void&lt;/div&gt;&lt;div&gt;+ rechazar(): void&lt;/div&gt;&lt;div&gt;+ estaPendiente(): bool&lt;/div&gt;&lt;div&gt;+ esDe(pIdEmisor: int): bool&lt;/div&gt;&lt;div&gt;+ estadoToString(): string&lt;/div&gt;">
+          <mxGeometry y="136" width="707" height="207" as="geometry" />
+        </mxCell>
+        <mxCell id="n-NivelHabilidad" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;span style=&quot;font-weight:normal&quot;&gt;«enumeration»&lt;/span&gt;&lt;br&gt;NivelHabilidad">
+          <mxGeometry x="6104" y="1183.0" width="240" height="116" as="geometry" />
+        </mxCell>
+        <mxCell id="n-NivelHabilidad-a" parent="n-NivelHabilidad" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;Basico&lt;/div&gt;&lt;div&gt;Intermedio&lt;/div&gt;&lt;div&gt;Avanzado&lt;/div&gt;&lt;div&gt;Experto&lt;/div&gt;">
+          <mxGeometry y="44" width="240" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="n-EstadoSolicitud" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fillColor=#fff2cc;strokeColor=#d6b656;" value="&lt;span style=&quot;font-weight:normal&quot;&gt;«enumeration»&lt;/span&gt;&lt;br&gt;EstadoSolicitud">
+          <mxGeometry x="6104" y="1969.0" width="240" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="n-EstadoSolicitud-a" parent="n-EstadoSolicitud" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;Pendiente&lt;/div&gt;&lt;div&gt;Aceptada&lt;/div&gt;&lt;div&gt;Rechazada&lt;/div&gt;">
+          <mxGeometry y="44" width="240" height="57" as="geometry" />
+        </mxCell>
+        <mxCell id="n-FuncionesInicio" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;span style=&quot;font-weight:normal&quot;&gt;«utility»&lt;/span&gt;&lt;br&gt;FuncionesInicio">
+          <mxGeometry x="6684" y="1207" width="623" height="391" as="geometry" />
+        </mxCell>
+        <mxCell id="n-FuncionesInicio-a" parent="n-FuncionesInicio" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;&lt;/div&gt;">
+          <mxGeometry y="44" width="623" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="n-FuncionesInicio-l" parent="n-FuncionesInicio" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="56" width="623" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-FuncionesInicio-m" parent="n-FuncionesInicio" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ ubicar(x: int, y: int): void&lt;/div&gt;&lt;div&gt;+ colorBlanco(): void&lt;/div&gt;&lt;div&gt;+ colorRojo(): void&lt;/div&gt;&lt;div&gt;+ limpiarPantalla(): void&lt;/div&gt;&lt;div&gt;+ configurarConsola(): void&lt;/div&gt;&lt;div&gt;+ leerTecla(): int&lt;/div&gt;&lt;div&gt;+ dibujarChambalink(): void&lt;/div&gt;&lt;div&gt;+ dibujarIndividuo(x: int, y: int): void&lt;/div&gt;&lt;div&gt;+ dibujarEmpresa(x: int, y: int): void&lt;/div&gt;&lt;div&gt;+ elegirTipo(esEmpresa: bool&amp;amp;): bool&lt;/div&gt;&lt;div&gt;+ elegirAccion(esEmpresa: bool, opcion: int&amp;amp;): bool&lt;/div&gt;&lt;div&gt;+ dibujarFormulario(esEmpresa: bool): void&lt;/div&gt;&lt;div&gt;+ leerCampoEn(x: int, y: int, maximo: int, valor: string&amp;amp;): bool&lt;/div&gt;&lt;div&gt;+ leerCampo(y: int, maximo: int, valor: string&amp;amp;): bool&lt;/div&gt;&lt;div&gt;+ mostrarError(mensaje: string): bool&lt;/div&gt;&lt;div&gt;+ mostrarExito(id: int): void&lt;/div&gt;&lt;div&gt;+ formularioInicioSesion(red: RedProfesional&amp;amp;, esEmpresa: bool, idSesion: int&amp;amp;): bool&lt;/div&gt;&lt;div&gt;+ formularioRegistroIndividuo(red: RedProfesional&amp;amp;): void&lt;/div&gt;&lt;div&gt;+ formularioRegistroEmpresa(red: RedProfesional&amp;amp;): void&lt;/div&gt;&lt;div&gt;+ menuCuenta(red: RedProfesional&amp;amp;, esEmpresa: bool, idSesion: int&amp;amp;): bool&lt;/div&gt;&lt;div&gt;+ mostrarLogin(red: RedProfesional&amp;amp;, idSesion: int&amp;amp;, esEmpresa: bool&amp;amp;): bool&lt;/div&gt;">
+          <mxGeometry y="64" width="623" height="327" as="geometry" />
+        </mxCell>
+        <mxCell id="n-FuncionesMenu" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=44;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fillColor=#f5f5f5;strokeColor=#666666;" value="&lt;span style=&quot;font-weight:normal&quot;&gt;«utility»&lt;/span&gt;&lt;br&gt;FuncionesMenu">
+          <mxGeometry x="7387" y="1207" width="833" height="1126" as="geometry" />
+        </mxCell>
+        <mxCell id="n-FuncionesMenu-a" parent="n-FuncionesMenu" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;&lt;/div&gt;">
+          <mxGeometry y="44" width="833" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="n-FuncionesMenu-l" parent="n-FuncionesMenu" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="56" width="833" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-FuncionesMenu-m" parent="n-FuncionesMenu" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ dibujarLogoPequeno(): void&lt;/div&gt;&lt;div&gt;+ dibujarPie(): void&lt;/div&gt;&lt;div&gt;+ limpiarZonaContenido(): void&lt;/div&gt;&lt;div&gt;+ separadorConOrden(ordenamiento: string): void&lt;/div&gt;&lt;div&gt;+ mostrarSeccionPendiente(titulo: string): void&lt;/div&gt;&lt;div&gt;+ mostrarErrorZona(mensaje: string): bool&lt;/div&gt;&lt;div&gt;+ recortar(texto: string, ancho: int): string&lt;/div&gt;&lt;div&gt;+ valorOVacio(valor: string): string&lt;/div&gt;&lt;div&gt;+ textoHabilidades(red: RedProfesional&amp;amp;, idUsuario: int): string&lt;/div&gt;&lt;div&gt;+ mostrarPerfil(red: RedProfesional&amp;amp;, idUsuario: int, titulo: string): void&lt;/div&gt;&lt;div&gt;+ confirmarZona(y: int, pregunta: string): bool&lt;/div&gt;&lt;div&gt;+ formularioHabilidad(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionHabilidades(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ formularioExperiencia(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionExperiencia(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionHistorialAcciones(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionMiPerfil(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ formularioCertificacion(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionMisCertificaciones(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ escribirTextoPublicacion(texto: string, x: int, y: int): void&lt;/div&gt;&lt;div&gt;+ formularioPublicar(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ formularioComentario(red: RedProfesional&amp;amp;, idSesion: int, idPublicacion: int, idPadre: int, titulo: string): void&lt;/div&gt;&lt;div&gt;+ verPublicacion(red: RedProfesional&amp;amp;, idSesion: int, idPublicacion: int): void&lt;/div&gt;&lt;div&gt;+ seccionPublicaciones(red: RedProfesional&amp;amp;, idSesion: int, soloMias: bool): void&lt;/div&gt;&lt;div&gt;+ obtenerPostulacionUsuarioVacante(red: RedProfesional&amp;amp;, idUsuario: int, idVacante: int): Postulacion*&lt;/div&gt;&lt;div&gt;+ detalleEmpleoUsuario(red: RedProfesional&amp;amp;, idSesion: int, idVacante: int): void&lt;/div&gt;&lt;div&gt;+ seccionEmpleos(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionMisPostulaciones(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ avisoRecomendaciones(mensaje: string): void&lt;/div&gt;&lt;div&gt;+ detalleRecomendacion(red: RedProfesional&amp;amp;, idSesion: int, idRecomendacion: int): void&lt;/div&gt;&lt;div&gt;+ listaRecomendaciones(red: RedProfesional&amp;amp;, idSesion: int, recibidas: bool): void&lt;/div&gt;&lt;div&gt;+ formularioRecomendacion(red: RedProfesional&amp;amp;, idSesion: int, idContacto: int): void&lt;/div&gt;&lt;div&gt;+ seleccionarContactoParaRecomendar(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionRecomendaciones(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ avisoRed(mensaje: string): void&lt;/div&gt;&lt;div&gt;+ formularioSolicitudConexion(red: RedProfesional&amp;amp;, idSesion: int, idDestino: int): void&lt;/div&gt;&lt;div&gt;+ detallePersonaRed(red: RedProfesional&amp;amp;, idSesion: int, idPersona: int): void&lt;/div&gt;&lt;div&gt;+ seccionContactosRed(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionSolicitudesRed(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionBuscarPersonasRed(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionSugerenciasRed(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ deshacerAccionRed(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionMiRed(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ avisoMensajes(mensaje: string): void&lt;/div&gt;&lt;div&gt;+ formularioNuevoMensaje(red: RedProfesional&amp;amp;, idSesion: int, idContacto: int): void&lt;/div&gt;&lt;div&gt;+ conversacionMensajes(red: RedProfesional&amp;amp;, idSesion: int, idContacto: int): void&lt;/div&gt;&lt;div&gt;+ seccionMensajes(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ detalleNotificacion(red: RedProfesional&amp;amp;, idSesion: int, idNotificacion: int): void&lt;/div&gt;&lt;div&gt;+ seccionNotificaciones(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ dibujarEncabezadoIndividuo(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ dibujarOpcionesIndividuo(): void&lt;/div&gt;&lt;div&gt;+ filaOpcionIndividuo(opcion: int): int&lt;/div&gt;&lt;div&gt;+ abrirSeccionIndividuo(red: RedProfesional&amp;amp;, idSesion: int, opcion: int): void&lt;/div&gt;&lt;div&gt;+ menuIndividuo(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ dibujarEncabezadoEmpresa(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ esperarEnter(): void&lt;/div&gt;&lt;div&gt;+ barraCompatibilidad(porcentaje: int): string&lt;/div&gt;&lt;div&gt;+ formularioVacante(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ revisarPostulantes(red: RedProfesional&amp;amp;, idSesion: int, idVacante: int): void&lt;/div&gt;&lt;div&gt;+ detalleVacante(red: RedProfesional&amp;amp;, idSesion: int, idVacante: int): void&lt;/div&gt;&lt;div&gt;+ seccionMisVacantes(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ seccionMisContrataciones(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ mostrarResultadosBusqueda(red: RedProfesional&amp;amp;, resultados: Lista&amp;lt;Coincidencia&amp;gt;&amp;amp;, totalPalabras: int): void&lt;/div&gt;&lt;div&gt;+ seccionBuscarProfesionales(red: RedProfesional&amp;amp;): void&lt;/div&gt;&lt;div&gt;+ seccionMiEmpresa(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ dibujarOpcionesEmpresa(): void&lt;/div&gt;&lt;div&gt;+ filaOpcionEmpresa(opcion: int): int&lt;/div&gt;&lt;div&gt;+ abrirSeccionEmpresa(red: RedProfesional&amp;amp;, idSesion: int, opcion: int): void&lt;/div&gt;&lt;div&gt;+ menuEmpresa(red: RedProfesional&amp;amp;, idSesion: int): void&lt;/div&gt;&lt;div&gt;+ mostrarMenu(red: RedProfesional&amp;amp;, idSesion: int, esEmpresa: bool): void&lt;/div&gt;">
+          <mxGeometry y="64" width="833" height="1062" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Lista" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Lista">
+          <mxGeometry x="60" y="3855" width="427" height="523" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Lista-a" parent="n-Lista" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- ini: Nodo&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;- fin: Nodo&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;- lon: uint&lt;/div&gt;">
+          <mxGeometry y="26" width="427" height="57" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Lista-l" parent="n-Lista" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="83" width="427" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Lista-m" parent="n-Lista" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- nodoEn(pos: uint): Nodo&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;+ Lista()&lt;/div&gt;&lt;div&gt;+ Lista(otra: Lista&amp;lt;T&amp;gt;)&lt;/div&gt;&lt;div&gt;+ operator=(otra: Lista&amp;lt;T&amp;gt;): Lista&amp;lt;T&amp;gt;&amp;amp;&lt;/div&gt;&lt;div&gt;+ ~Lista()&lt;/div&gt;&lt;div&gt;+ longitud(): uint&lt;/div&gt;&lt;div&gt;+ esVacia(): bool&lt;/div&gt;&lt;div&gt;+ agregaInicial(elem: T): void&lt;/div&gt;&lt;div&gt;+ agregaFinal(elem: T): void&lt;/div&gt;&lt;div&gt;+ agregaPos(elem: T, pos: uint): void&lt;/div&gt;&lt;div&gt;+ modificarPos(elem: T, pos: uint): void&lt;/div&gt;&lt;div&gt;+ eliminaInicial(): void&lt;/div&gt;&lt;div&gt;+ eliminaFinal(): void&lt;/div&gt;&lt;div&gt;+ eliminaPos(pos: uint): void&lt;/div&gt;&lt;div&gt;+ eliminaSi(criterio: function): bool&lt;/div&gt;&lt;div&gt;+ vaciar(): void&lt;/div&gt;&lt;div&gt;+ obtenerInicial(): T&lt;/div&gt;&lt;div&gt;+ obtenerFinal(): T&lt;/div&gt;&lt;div&gt;+ obtenerPos(pos: uint): T&lt;/div&gt;&lt;div&gt;+ indiceDe(criterio: function): int&lt;/div&gt;&lt;div&gt;+ existe(criterio: function): bool&lt;/div&gt;&lt;div&gt;+ paraCada(accion: function): void&lt;/div&gt;&lt;div&gt;+ buscarPtr(criterio: function): T*&lt;/div&gt;&lt;div&gt;+ modificarSi(criterio: function, cambio: function): bool&lt;/div&gt;&lt;div&gt;+ insertarOrdenado(elem: T, antesQue: function): void&lt;/div&gt;&lt;div&gt;+ maximoSegun(valor: function): T&lt;/div&gt;&lt;div&gt;+ begin(): Iterador&lt;/div&gt;&lt;div&gt;+ end(): Iterador&lt;/div&gt;">
+          <mxGeometry y="91" width="427" height="432" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Pila" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Pila">
+          <mxGeometry x="747" y="3855" width="280" height="298" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Pila-a" parent="n-Pila" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- cima: Nodo&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;- lon: uint&lt;/div&gt;">
+          <mxGeometry y="26" width="280" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Pila-l" parent="n-Pila" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="68" width="280" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Pila-m" parent="n-Pila" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- copiarDe(otra: Pila&amp;lt;T&amp;gt;): void&lt;/div&gt;&lt;div&gt;+ Pila()&lt;/div&gt;&lt;div&gt;+ Pila(otra: Pila&amp;lt;T&amp;gt;)&lt;/div&gt;&lt;div&gt;+ operator=(otra: Pila&amp;lt;T&amp;gt;): Pila&amp;lt;T&amp;gt;&amp;amp;&lt;/div&gt;&lt;div&gt;+ ~Pila()&lt;/div&gt;&lt;div&gt;+ longitud(): uint&lt;/div&gt;&lt;div&gt;+ esVacia(): bool&lt;/div&gt;&lt;div&gt;+ apilar(elem: T): void&lt;/div&gt;&lt;div&gt;+ desapilar(): T&lt;/div&gt;&lt;div&gt;+ tope(): T&lt;/div&gt;&lt;div&gt;+ vaciar(): void&lt;/div&gt;&lt;div&gt;+ paraCada(accion: function): void&lt;/div&gt;&lt;div&gt;+ contarSi(criterio: function): int&lt;/div&gt;&lt;div&gt;+ invertir(): void&lt;/div&gt;">
+          <mxGeometry y="76" width="280" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Cola" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Cola">
+          <mxGeometry x="1287" y="3855" width="294" height="313" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Cola-a" parent="n-Cola" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- primero: Nodo&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;- ultimo: Nodo&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;- lon: uint&lt;/div&gt;">
+          <mxGeometry y="26" width="294" height="57" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Cola-l" parent="n-Cola" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="83" width="294" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Cola-m" parent="n-Cola" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Cola()&lt;/div&gt;&lt;div&gt;+ Cola(otra: Cola&amp;lt;T&amp;gt;)&lt;/div&gt;&lt;div&gt;+ operator=(otra: Cola&amp;lt;T&amp;gt;): Cola&amp;lt;T&amp;gt;&amp;amp;&lt;/div&gt;&lt;div&gt;+ ~Cola()&lt;/div&gt;&lt;div&gt;+ longitud(): uint&lt;/div&gt;&lt;div&gt;+ esVacia(): bool&lt;/div&gt;&lt;div&gt;+ encolar(elem: T): void&lt;/div&gt;&lt;div&gt;+ desencolar(): T&lt;/div&gt;&lt;div&gt;+ frente(): T&lt;/div&gt;&lt;div&gt;+ vaciar(): void&lt;/div&gt;&lt;div&gt;+ existe(criterio: function): bool&lt;/div&gt;&lt;div&gt;+ paraCada(accion: function): void&lt;/div&gt;&lt;div&gt;+ rotar(): void&lt;/div&gt;&lt;div&gt;+ transferirA(destino: Cola&amp;lt;T&amp;gt;&amp;amp;): void&lt;/div&gt;">
+          <mxGeometry y="91" width="294" height="222" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ListaDoble" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class ListaDoble">
+          <mxGeometry x="1841" y="3855" width="399" height="463" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ListaDoble-a" parent="n-ListaDoble" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- ini: NodoDoble&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;- fin: NodoDoble&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;- lon: uint&lt;/div&gt;">
+          <mxGeometry y="26" width="399" height="57" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ListaDoble-l" parent="n-ListaDoble" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="83" width="399" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ListaDoble-m" parent="n-ListaDoble" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ ListaDoble()&lt;/div&gt;&lt;div&gt;+ ListaDoble(otra: ListaDoble&amp;lt;T&amp;gt;)&lt;/div&gt;&lt;div&gt;+ operator=(otra: ListaDoble&amp;lt;T&amp;gt;): ListaDoble&amp;lt;T&amp;gt;&amp;amp;&lt;/div&gt;&lt;div&gt;+ ~ListaDoble()&lt;/div&gt;&lt;div&gt;+ longitud(): uint&lt;/div&gt;&lt;div&gt;+ esVacia(): bool&lt;/div&gt;&lt;div&gt;+ agregaInicial(elem: T): void&lt;/div&gt;&lt;div&gt;+ agregaFinal(elem: T): void&lt;/div&gt;&lt;div&gt;+ eliminaInicial(): void&lt;/div&gt;&lt;div&gt;+ eliminaFinal(): void&lt;/div&gt;&lt;div&gt;+ vaciar(): void&lt;/div&gt;&lt;div&gt;+ obtenerInicial(): T&lt;/div&gt;&lt;div&gt;+ obtenerFinal(): T&lt;/div&gt;&lt;div&gt;+ existe(criterio: function): bool&lt;/div&gt;&lt;div&gt;+ paraCada(accion: function): void&lt;/div&gt;&lt;div&gt;+ paraCadaInverso(accion: function): void&lt;/div&gt;&lt;div&gt;+ buscarPtr(criterio: function): T*&lt;/div&gt;&lt;div&gt;+ insertarOrdenado(elem: T, antesQue: function): void&lt;/div&gt;&lt;div&gt;+ eliminaPos(pos: uint): void&lt;/div&gt;&lt;div&gt;+ contarSi(criterio: function): uint&lt;/div&gt;&lt;div&gt;+ primero(): Iterador&lt;/div&gt;&lt;div&gt;+ ultimo(): Iterador&lt;/div&gt;&lt;div&gt;+ begin(): Iterador&lt;/div&gt;&lt;div&gt;+ end(): Iterador&lt;/div&gt;">
+          <mxGeometry y="91" width="399" height="372" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Lista__Iterador" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Lista::Iterador">
+          <mxGeometry x="60" y="4578" width="266" height="133" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Lista__Iterador-a" parent="n-Lista__Iterador" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- actual: Nodo&amp;lt;T&amp;gt;*&lt;/div&gt;">
+          <mxGeometry y="26" width="266" height="27" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Lista__Iterador-l" parent="n-Lista__Iterador" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="53" width="266" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Lista__Iterador-m" parent="n-Lista__Iterador" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Iterador(pNodo: Nodo&amp;lt;T&amp;gt;*)&lt;/div&gt;&lt;div&gt;+ operator*(): T&amp;amp;&lt;/div&gt;&lt;div&gt;+ operator++(): Iterador&amp;amp;&lt;/div&gt;&lt;div&gt;+ operator!=(otro: Iterador): bool&lt;/div&gt;">
+          <mxGeometry y="61" width="266" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Nodo" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class Nodo">
+          <mxGeometry x="757.5" y="4618" width="259" height="193" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Nodo-a" parent="n-Nodo" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- elem: T&lt;/div&gt;&lt;div&gt;- sgte: Nodo&amp;lt;T&amp;gt;*&lt;/div&gt;">
+          <mxGeometry y="26" width="259" height="42" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Nodo-l" parent="n-Nodo" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="68" width="259" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Nodo-m" parent="n-Nodo" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Nodo(pElem: T)&lt;/div&gt;&lt;div&gt;+ get_Elem(): T&lt;/div&gt;&lt;div&gt;+ ref_Elem(): T&amp;amp;&lt;/div&gt;&lt;div&gt;+ set_Elem(pElem: T): void&lt;/div&gt;&lt;div&gt;+ get_Sgte(): Nodo&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;+ set_Sgte(pSgte: Nodo&amp;lt;T&amp;gt;*): void&lt;/div&gt;&lt;div&gt;+ es_ultimo(): bool&lt;/div&gt;">
+          <mxGeometry y="76" width="259" height="117" as="geometry" />
+        </mxCell>
+        <mxCell id="n-NodoDoble" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class NodoDoble">
+          <mxGeometry x="1564.0" y="4618" width="294" height="223" as="geometry" />
+        </mxCell>
+        <mxCell id="n-NodoDoble-a" parent="n-NodoDoble" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- elem: T&lt;/div&gt;&lt;div&gt;- ant: NodoDoble&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;- sgte: NodoDoble&amp;lt;T&amp;gt;*&lt;/div&gt;">
+          <mxGeometry y="26" width="294" height="57" as="geometry" />
+        </mxCell>
+        <mxCell id="n-NodoDoble-l" parent="n-NodoDoble" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="83" width="294" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-NodoDoble-m" parent="n-NodoDoble" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ NodoDoble(pElem: T)&lt;/div&gt;&lt;div&gt;+ get_Elem(): T&lt;/div&gt;&lt;div&gt;+ ref_Elem(): T&amp;amp;&lt;/div&gt;&lt;div&gt;+ set_Elem(pElem: T): void&lt;/div&gt;&lt;div&gt;+ get_Ant(): NodoDoble&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;+ set_Ant(pAnt: NodoDoble&amp;lt;T&amp;gt;*): void&lt;/div&gt;&lt;div&gt;+ get_Sgte(): NodoDoble&amp;lt;T&amp;gt;*&lt;/div&gt;&lt;div&gt;+ set_Sgte(pSgte: NodoDoble&amp;lt;T&amp;gt;*): void&lt;/div&gt;">
+          <mxGeometry y="91" width="294" height="132" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ListaDoble__Iterador" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Class ListaDoble::Iterador">
+          <mxGeometry x="1974" y="4578" width="266" height="178" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ListaDoble__Iterador-a" parent="n-ListaDoble__Iterador" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;- actual: NodoDoble&amp;lt;T&amp;gt;*&lt;/div&gt;">
+          <mxGeometry y="26" width="266" height="27" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ListaDoble__Iterador-l" parent="n-ListaDoble__Iterador" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="53" width="266" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ListaDoble__Iterador-m" parent="n-ListaDoble__Iterador" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ Iterador(pNodo: NodoDoble&amp;lt;T&amp;gt;*)&lt;/div&gt;&lt;div&gt;+ operator*(): T&amp;amp;&lt;/div&gt;&lt;div&gt;+ operator++(): Iterador&amp;amp;&lt;/div&gt;&lt;div&gt;+ operator--(): Iterador&amp;amp;&lt;/div&gt;&lt;div&gt;+ valido(): bool&lt;/div&gt;&lt;div&gt;+ operator!=(otro: Iterador): bool&lt;/div&gt;&lt;div&gt;+ operator==(otro: Iterador): bool&lt;/div&gt;">
+          <mxGeometry y="61" width="266" height="117" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Ordenamiento" parent="1" vertex="1" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=62;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fillColor=#d5e8d4;strokeColor=#82b366;" value="&lt;span style=&quot;font-weight:normal&quot;&gt;«utility»&lt;/span&gt;&lt;br&gt;Ordenamiento&lt;br&gt;&lt;span style=&quot;font-weight:normal&quot;&gt;template &amp;lt;class T&amp;gt;&lt;/span&gt;">
+          <mxGeometry x="2560" y="3785" width="721" height="259" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Ordenamiento-a" parent="n-Ordenamiento" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;&amp;nbsp;&lt;/div&gt;">
+          <mxGeometry y="62" width="721" height="12" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Ordenamiento-l" parent="n-Ordenamiento" vertex="1" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" value="">
+          <mxGeometry y="74" width="721" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="n-Ordenamiento-m" parent="n-Ordenamiento" vertex="1" style="text;strokeColor=none;fillColor=#FFFFFF;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" value="&lt;div&gt;+ intercambiar(a: T&amp;amp;, b: T&amp;amp;): void&lt;/div&gt;&lt;div&gt;+ listaAArreglo(lista: Lista&amp;lt;T&amp;gt;): T*&lt;/div&gt;&lt;div&gt;+ arregloALista(arreglo: T*, cantidad: uint): Lista&amp;lt;T&amp;gt;&lt;/div&gt;&lt;div&gt;+ particionar(arreglo: T*, inicio: int, final: int, antesQue: function): int&lt;/div&gt;&lt;div&gt;+ quickSortArreglo(arreglo: T*, inicio: int, final: int, antesQue: function): void&lt;/div&gt;&lt;div&gt;+ quickSort(lista: Lista&amp;lt;T&amp;gt;, antesQue: function): Lista&amp;lt;T&amp;gt;&lt;/div&gt;&lt;div&gt;+ hundir(arreglo: T*, tamanio: int, posicion: int, antesQue: function): void&lt;/div&gt;&lt;div&gt;+ heapSort(lista: Lista&amp;lt;T&amp;gt;, antesQue: function): Lista&amp;lt;T&amp;gt;&lt;/div&gt;&lt;div&gt;+ mezclar(arreglo: T*, auxiliar: T*, inicio: int, medio: int, final: int, antesQue: function): void&lt;/div&gt;&lt;div&gt;+ mergeSortArreglo(arreglo: T*, auxiliar: T*, inicio: int, final: int, antesQue: function): void&lt;/div&gt;&lt;div&gt;+ mergeSort(lista: Lista&amp;lt;T&amp;gt;, antesQue: function): Lista&amp;lt;T&amp;gt;&lt;/div&gt;">
+          <mxGeometry y="82" width="721" height="177" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" parent="1" edge="1" source="n-Publicacion" target="n-Contenido" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.3000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=0;endSize=14;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="709.0" y="1241.0" />
+              <mxPoint x="709.0" y="1277.4" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r2" parent="1" edge="1" source="n-Comentario" target="n-Contenido" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.4500;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=0;endSize=14;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="731.0" y="1516.5" />
+              <mxPoint x="731.0" y="1317.6" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r3" parent="1" edge="1" source="n-Recomendacion" target="n-Contenido" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.6000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=0;endSize=14;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="753.0" y="1777.0" />
+              <mxPoint x="753.0" y="1357.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r4" parent="1" edge="1" source="n-Mensaje" target="n-Contenido" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.7500;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=block;endFill=0;endSize=14;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="775.0" y="2045.0" />
+              <mxPoint x="775.0" y="1398.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r5" parent="1" edge="1" source="n-Publicacion" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0000;entryY=0.0489;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5s" parent="r5" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r5t" parent="r5" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r6" parent="1" edge="1" source="n-Comentario" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0000;entryY=0.1783;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r6s" parent="r6" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r6t" parent="r6" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r7" parent="1" edge="1" source="n-Recomendacion" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0000;entryY=0.3008;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r7s" parent="r7" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r7t" parent="r7" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r8" parent="1" edge="1" source="n-Mensaje" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0000;entryY=0.4267;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r8s" parent="r8" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r8t" parent="r8" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r9" parent="1" edge="1" source="n-Usuario" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.2709;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r9s" parent="r9" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r9t" parent="r9" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r10" parent="1" edge="1" source="n-GrupoProfesional" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.1200;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="329.0" y="789.0" />
+              <mxPoint x="1875.4" y="789.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r10s" parent="r10" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r10t" parent="r10" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r11" parent="1" edge="1" source="n-Postulacion" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.3000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1148.5" y="813.0" />
+              <mxPoint x="2045.5" y="813.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r11s" parent="r11" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r11t" parent="r11" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r12" parent="1" edge="1" source="n-Vacante" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2242.0" y="837.0" />
+              <mxPoint x="2234.5" y="837.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r12s" parent="r12" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r12t" parent="r12" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r13" parent="1" edge="1" source="n-Empresa" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.7000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3289.5" y="861.0" />
+              <mxPoint x="2423.5" y="861.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r13s" parent="r13" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r13t" parent="r13" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r14" parent="1" edge="1" source="n-Notificacion" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.8000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="4336.0" y="885.0" />
+              <mxPoint x="3603.0" y="885.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r14s" parent="r14" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r14t" parent="r14" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r15" parent="1" edge="1" source="n-Postulacion" target="n-EstadoPostulacion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;" value="estado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r15t" parent="r15" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r16" parent="1" edge="1" source="n-Notificacion" target="n-TipoNotificacion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;" value="tipo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r16t" parent="r16" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r17" parent="1" edge="1" source="n-Postulacion" target="n-Vacante" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.6000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0000;entryY=0.7217;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;strokeColor=#999999;fontColor=#666666;" value="idVacante">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r17s" parent="r17" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r17t" parent="r17" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r18" parent="1" edge="1" source="n-Vacante" target="n-Empresa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.7500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0000;entryY=0.6696;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;strokeColor=#999999;fontColor=#666666;" value="idEmpresa">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r18s" parent="r18" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r18t" parent="r18" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r19" parent="1" edge="1" source="n-Postulacion" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.7000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.2000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;strokeColor=#999999;fontColor=#666666;" value="idUsuario">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1256.3" y="909.0" />
+              <mxPoint x="3036.0" y="909.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r19s" parent="r19" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r19t" parent="r19" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r20" parent="1" edge="1" source="n-GrupoProfesional" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.8000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.3000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;strokeColor=#999999;fontColor=#666666;" value="miembros">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="526.4" y="933.0" />
+              <mxPoint x="3130.5" y="933.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r20s" parent="r20" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r20t" parent="r20" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r21" parent="1" edge="1" source="n-Contenido" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.4000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;strokeColor=#999999;fontColor=#666666;" value="idAutor">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="252.0" y="957.0" />
+              <mxPoint x="3225.0" y="957.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r21s" parent="r21" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r21t" parent="r21" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r22" parent="1" edge="1" source="n-ExperienciaLaboral" target="n-Empresa" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.3500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.8000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;strokeColor=#999999;fontColor=#666666;" value="idEmpresa">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="5944.0" y="1525.0" />
+              <mxPoint x="5944.0" y="981.0" />
+              <mxPoint x="3531.0" y="981.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r22s" parent="r22" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r22t" parent="r22" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r23" parent="1" edge="1" source="n-FuncionesInicio" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.8800;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;dashed=1;" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="6995.5" y="1005.0" />
+              <mxPoint x="2593.6" y="1005.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r24" parent="1" edge="1" source="n-FuncionesMenu" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.9500;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;dashed=1;" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="7803.5" y="1029.0" />
+              <mxPoint x="2659.8" y="1029.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r25" parent="1" edge="1" source="n-FuncionesMenu" target="n-FuncionesInicio" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0000;exitY=0.0800;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.2304;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;dashed=1;" value="«use»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r26" parent="1" edge="1" source="n-Certificacion" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.2029;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r26s" parent="r26" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r26t" parent="r26" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r27" parent="1" edge="1" source="n-Accion" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.4744;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r27s" parent="r27" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r27t" parent="r27" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r28" parent="1" edge="1" source="n-Habilidad" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.6000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5500;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="5974.0" y="1261.8" />
+              <mxPoint x="5974.0" y="3345.0" />
+              <mxPoint x="3366.8" y="3345.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r28s" parent="r28" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r28t" parent="r28" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r29" parent="1" edge="1" source="n-ExperienciaLaboral" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.6000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.6500;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="5996.0" y="1610.8" />
+              <mxPoint x="5996.0" y="3369.0" />
+              <mxPoint x="3461.2" y="3369.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r29s" parent="r29" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r29t" parent="r29" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r30" parent="1" edge="1" source="n-SolicitudConexion" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.6000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.7500;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="6018.0" y="2053.8" />
+              <mxPoint x="6018.0" y="3393.0" />
+              <mxPoint x="3555.8" y="3393.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r30s" parent="r30" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r30t" parent="r30" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r31" parent="1" edge="1" source="n-SolicitudConexion" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.4000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.8500;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;strokeColor=#999999;fontColor=#666666;" value="idEmisor">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="5234.8" y="3417.0" />
+              <mxPoint x="3650.2" y="3417.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r31s" parent="r31" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r31t" parent="r31" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r32" parent="1" edge="1" source="n-Habilidad" target="n-NivelHabilidad" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.4000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0000;entryY=0.3207;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;" value="nivel">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r32t" parent="r32" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r33" parent="1" edge="1" source="n-SolicitudConexion" target="n-EstadoSolicitud" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.4000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0000;entryY=0.1604;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;" value="estado">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r33t" parent="r33" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r34" parent="1" edge="1" source="n-Usuario" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0500;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.1500;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;strokeColor=#999999;fontColor=#666666;" value="contactos">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2894.2" y="1097.0" />
+              <mxPoint x="2988.8" y="1097.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r34s" parent="r34" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r34t" parent="r34" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r35" parent="1" edge="1" source="n-Mensaje" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.1000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;strokeColor=#999999;fontColor=#666666;" value="idReceptor">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1190.5" y="3441.0" />
+              <mxPoint x="2941.5" y="3441.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r35s" parent="r35" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r35t" parent="r35" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r36" parent="1" edge="1" source="n-Recomendacion" target="n-Usuario" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0000;exitY=0.7000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.2000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;strokeColor=#999999;fontColor=#666666;" value="idReceptor">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="797.0" y="1812.6" />
+              <mxPoint x="797.0" y="3465.0" />
+              <mxPoint x="3036.0" y="3465.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r36s" parent="r36" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r36t" parent="r36" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r37" parent="1" edge="1" source="n-GestorArchivos" target="n-RedProfesional" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.8500;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.2000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;dashed=1;" value="«friend»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="819.0" y="1949.3" />
+              <mxPoint x="819.0" y="3489.0" />
+              <mxPoint x="1951.0" y="3489.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r38" parent="1" edge="1" source="n-RedProfesional" target="n-Coincidencia" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.3000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;dashed=1;" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2045.5" y="3513.0" />
+              <mxPoint x="841.0" y="3513.0" />
+              <mxPoint x="841.0" y="2116.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r39" parent="1" edge="1" source="n-RedProfesional" target="n-SugerenciaConexion" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.4000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;dashed=1;" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2140.0" y="3537.0" />
+              <mxPoint x="863.0" y="3537.0" />
+              <mxPoint x="863.0" y="2282.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r40" parent="1" edge="1" source="n-FuncionesMenu" target="n-GestorArchivos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.6000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;dashed=1;" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="7803.5" y="3561.0" />
+              <mxPoint x="885.0" y="3561.0" />
+              <mxPoint x="885.0" y="1859.8" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r41" parent="1" edge="1" source="n-RedProfesional" target="pkg-ed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.6000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.8500;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;dashed=1;" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2329.0" y="3585.0" />
+              <mxPoint x="2006.0" y="3585.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r42" parent="1" edge="1" source="n-Usuario" target="pkg-ed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.4500;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.9300;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;dashed=1;" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="3272.2" y="3609.0" />
+              <mxPoint x="2194.8" y="3609.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r43" parent="1" edge="1" source="n-RedProfesional" target="n-Ordenamiento" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.8000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.3000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;dashed=1;" value="«use»">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="2518.0" y="3633.0" />
+              <mxPoint x="2776.3" y="3633.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r44" parent="1" edge="1" source="n-Nodo" target="n-Pila" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r44s" parent="r44" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r44t" parent="r44" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r45" parent="1" edge="1" source="n-Nodo" target="n-Lista" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.1500;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.8500;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="796.4" y="4463.0" />
+              <mxPoint x="422.9" y="4463.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r45s" parent="r45" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r45t" parent="r45" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r46" parent="1" edge="1" source="n-Nodo" target="n-Cola" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.8500;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.3000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="977.6" y="4493.0" />
+              <mxPoint x="1375.2" y="4493.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r46s" parent="r46" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r46t" parent="r46" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r47" parent="1" edge="1" source="n-NodoDoble" target="n-ListaDoble" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.5000;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.3000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=diamondThin;endFill=1;endSize=16;" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1711.0" y="4478.0" />
+              <mxPoint x="1960.7" y="4478.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r47s" parent="r47" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=left;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..*">
+          <mxGeometry x="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r47t" parent="r47" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r48" parent="1" edge="1" source="n-Lista__Iterador" target="n-Lista" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.3000;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.1869;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=circlePlus;endFill=0;endSize=12;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r49" parent="1" edge="1" source="n-ListaDoble__Iterador" target="n-ListaDoble" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.7000;exitY=0.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.8000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=circlePlus;endFill=0;endSize=12;" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r50" parent="1" edge="1" source="n-Lista__Iterador" target="n-Nodo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=1.0000;exitY=0.6000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0000;entryY=0.2062;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;" value="actual">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r50t" parent="r50" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r51" parent="1" edge="1" source="n-ListaDoble__Iterador" target="n-NodoDoble" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.0000;exitY=0.6000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0000;entryY=0.2996;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;" value="actual">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r51t" parent="r51" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r52" parent="1" edge="1" source="n-Nodo" target="n-Nodo" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.3000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.7000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;" value="sgte">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="835.2" y="4856.0" />
+              <mxPoint x="938.8" y="4856.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r52t" parent="r52" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r53" parent="1" edge="1" source="n-NodoDoble" target="n-NodoDoble" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;jumpStyle=arc;jumpSize=8;exitX=0.3000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.7000;entryY=1.0000;entryDx=0;entryDy=0;entryPerimeter=0;endArrow=open;endFill=0;endSize=10;" value="ant / sgte">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1652.2" y="4886.0" />
+              <mxPoint x="1769.8" y="4886.0" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="r53t" parent="r53" vertex="1" connectable="0" style="edgeLabel;resizable=0;html=1;align=right;verticalAlign=bottom;fontSize=11;labelBackgroundColor=none;" value="0..1">
+          <mxGeometry x="1" relative="1" as="geometry">
+            <mxPoint x="-6" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
