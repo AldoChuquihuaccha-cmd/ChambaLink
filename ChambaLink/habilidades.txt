@@ -1,0 +1,20 @@
+1000|C++|2
+1000|Git|1
+1000|Estructuras de datos|2
+1001|SQL|3
+1001|Python|2
+1001|Excel|2
+1002|Java|3
+1002|SQL|2
+1002|Docker|1
+1003|Figma|3
+1003|UX|2
+1004|Linux|3
+1004|Docker|3
+1004|Git|2
+1005|C++|3
+1005|Algoritmos|3
+1006|Python|1
+1006|Git|0
+1007|Scrum|3
+1007|Excel|2

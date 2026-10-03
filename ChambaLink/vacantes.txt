@@ -1,0 +1,4 @@
+1|1000|Desarrollador C++ Junior|Desarrollo de modulos en C++|C++, Git, Estructuras de datos|Hibrido|1
+2|1000|Analista SQL|Reportes y consultas|SQL, Excel, Python|Remoto|1
+3|1001|Cientifico de datos|Modelos predictivos|Python, SQL|Presencial|1
+4|1001|Backend Java|APIs para clientes|Java, SQL, Docker|Hibrido|1

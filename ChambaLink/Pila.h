@@ -89,28 +89,25 @@ public:
             accion(aux->get_Elem());
     }
 
-    int contarSi(std::function<bool(const T&)> criterio) const
-    {
-        int c = 0;
-        for (Nodo<T>* aux = cima; aux; aux = aux->get_Sgte())
-            if (criterio(aux->get_Elem())) c++;
-        return c;
+    // Cuenta los elementos que cumplen la condicion, sin desapilar. O(n)
+    int contarSi(std::function<bool(const T&)> criterio) const {
+        int total = 0;
+        for (Nodo<T>* aux = cima; aux != nullptr; aux = aux->get_Sgte())
+            if (criterio(aux->get_Elem())) total++;
+        return total;
     }
 
-
-    void invertir()
-    {
-        Nodo<T>* ant = nullptr;
-        Nodo<T>* act = cima;
-
-        while (act)
-        {
-            Nodo<T>* sig = act->get_Sgte();
-            act->set_Sgte(ant);
-            ant = act;
-            act = sig;
+    // Da vuelta la pila cambiando los enlaces: el fondo pasa a ser la cima.
+    // No crea ni borra nodos. O(n)
+    void invertir() {
+        Nodo<T>* anterior = nullptr;
+        Nodo<T>* actual = cima;
+        while (actual != nullptr) {
+            Nodo<T>* siguiente = actual->get_Sgte();
+            actual->set_Sgte(anterior);
+            anterior = actual;
+            actual = siguiente;
         }
-
-        cima = ant;
+        cima = anterior;
     }
 };

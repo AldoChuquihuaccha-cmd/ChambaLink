@@ -92,24 +92,14 @@ public:
             accion(aux->get_Elem());
     }
 
-    // Mueve el primer elemento al final de la cola. O(1)
-    void rotar()
-    {
-        if (esVacia() || lon == 1)
-            return;
-
-        T primeroElemento = desencolar();
-        encolar(primeroElemento);
+    // Mueve el primero de la fila al final. O(1)
+    void rotar() {
+        if (lon < 2) return;
+        encolar(desencolar());
     }
 
-
-    // Transfiere todos los elementos a otra cola. O(n)
-    void transferirA(Cola<T>& destino)
-    {
-        while (!esVacia())
-        {
-            destino.encolar(desencolar());
-        }
+    // Pasa todos los elementos, en orden, al final de otra cola. Esta queda vacia. O(n)
+    void transferirA(Cola<T>& destino) {
+        while (!esVacia()) destino.encolar(desencolar());
     }
-
 };

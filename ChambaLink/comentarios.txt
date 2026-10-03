@@ -1,0 +1,2 @@
+1|1005|2|0|Muy bien, ahora analiza su complejidad.|2026/10/03
+2|1000|2|1|Gracias profe, ya lo agregue al informe.|2026/10/03

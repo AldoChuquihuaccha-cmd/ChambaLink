@@ -1,0 +1,8 @@
+1000|joao@demo.pe|1234|Joao|Rivero|Desarrollador C++|Ancon
+1001|ana@demo.pe|1234|Ana|Torres|Analista de datos|Miraflores
+1002|luis@demo.pe|1234|Luis|Paredes|Backend Java|Surco
+1003|maria@demo.pe|1234|Maria|Quispe|Disenadora UX|Lince
+1004|carlos@demo.pe|1234|Carlos|Huaman|DevOps|San Miguel
+1005|rosa@demo.pe|1234|Rosa|Flores|Docente de algoritmos|Barranco
+1006|diego@demo.pe|1234|Diego|Salas|Practicante de sistemas|Comas
+1007|lucia@demo.pe|1234|Lucia|Ramos|Product Manager|San Borja

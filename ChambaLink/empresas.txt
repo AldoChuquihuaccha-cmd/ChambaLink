@@ -1,0 +1,2 @@
+1000|rrhh@techperu.pe|1234|TechPeru|Tecnologia|San Isidro
+1001|talento@dataandes.pe|1234|DataAndes|Analitica|Miraflores

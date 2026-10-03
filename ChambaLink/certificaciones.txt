@@ -1,0 +1,3 @@
+1000|1|Git y GitHub|Platzi|2025/03/15|GIT-2291
+1000|2|C++ Intermedio|Coursera|2024/08/02|
+1000|3|Scrum Fundamentals|SCRUMstudy|2025/11/20|SF-7781

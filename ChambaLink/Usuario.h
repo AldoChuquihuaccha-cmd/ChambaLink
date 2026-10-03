@@ -76,7 +76,7 @@ public:
     std::string getUbicacion() const { return ubicacion; }
     std::string getCorreo() const { return correo; }
 
-    // Solo la usa GestorArchivos para guardar la cuenta en usuarios.csv.
+    // Solo la usa GestorArchivos para guardar la cuenta.
     std::string getContrasena() const { return contrasena; }
 
     void setTitular(std::string pTitular) { titular = pTitular; }
@@ -105,6 +105,13 @@ public:
         return true;
     }
 
+    // Devuelve la habilidad guardada o nullptr si no la tiene. O(h)
+    const Habilidad* buscarHabilidad(std::string nombreHabilidad) const {
+        return habilidades.buscarPtr([nombreHabilidad](const Habilidad& h) {
+            return h.tieneNombre(nombreHabilidad);
+            });
+    }
+
     bool eliminarHabilidad(std::string nombreHabilidad) {
         return habilidades.eliminaSi([nombreHabilidad](const Habilidad& h) {
             return h.tieneNombre(nombreHabilidad);
@@ -112,6 +119,12 @@ public:
     }
 
     uint totalHabilidades() const { return habilidades.longitud(); }
+
+    // Nombre de la habilidad con el nivel mas alto ("" si no tiene). O(h)
+    std::string habilidadPrincipal() const {
+        if (habilidades.esVacia()) return "";
+        return habilidades.maximoSegun([](const Habilidad& h) { return (int)h.getNivel(); }).getNombre();
+    }
 
     void paraCadaHabilidad(std::function<void(const Habilidad&)> accion) const {
         habilidades.paraCada(accion);
@@ -133,8 +146,25 @@ public:
     }
 
     // ---------- Historial laboral ----------
-    // Se agrega al final, asi el ultimo de la lista es el puesto mas reciente.
-    void agregarExperiencia(const ExperienciaLaboral& e) { historialLaboral.agregaFinal(e); }
+    // Se inserta ordenado por anio de inicio: el primero es el puesto mas antiguo
+    // y el ultimo el mas reciente, aunque se registren en otro orden. O(n)
+    void agregarExperiencia(const ExperienciaLaboral& e) {
+        historialLaboral.insertarOrdenado(e, [](const ExperienciaLaboral& a, const ExperienciaLaboral& b) {
+            return a.getAnioInicio() < b.getAnioInicio();
+            });
+    }
+
+    // pos cuenta desde el puesto mas antiguo (0). O(n)
+    bool eliminarExperiencia(uint pos) {
+        if (pos >= historialLaboral.longitud()) return false;
+        historialLaboral.eliminaPos(pos);
+        return true;
+    }
+
+    // Puestos que siguen en curso (sin anio de fin). O(n)
+    uint cantidadExperienciasActuales() const {
+        return historialLaboral.contarSi([](const ExperienciaLaboral& e) { return e.esActual(); });
+    }
 
     uint totalExperiencias() const { return historialLaboral.longitud(); }
 
@@ -202,10 +232,26 @@ public:
         return ultima.getDescripcion();
     }
 
-    void paraCadaAccion(std::function<void(const Accion&)> accion) const {
-        historialAcciones.paraCada(accion);
+    uint totalAcciones() const { return historialAcciones.longitud(); }
+
+    const Accion& ultimaAccion() const { return historialAcciones.tope(); }
+
+    // Recorre la pila sin desapilar. Por defecto va de la mas reciente a la mas antigua;
+    // para el orden contrario se invierte una copia, asi la pila real no cambia. O(n)
+    void paraCadaAccion(std::function<void(const Accion&)> accion, bool desdeMasAntigua) const {
+        if (!desdeMasAntigua) {
+            historialAcciones.paraCada(accion);
+            return;
+        }
+        Pila<Accion> copia = historialAcciones;
+        copia.invertir();
+        copia.paraCada(accion);
     }
-    int contarAccionesEjecutadas() { return historialAcciones.contarSi([](const Accion& a) { return a.fueEjecutada(); }); }
+
+    // Cuantas acciones de una categoria ("Red" o "Perfil") hay en la pila. O(n)
+    int contarAcciones(std::string categoria) const {
+        return historialAcciones.contarSi([categoria](const Accion& a) { return a.getCategoria() == categoria; });
+    }
     // ---------- Notificaciones ----------
     void recibirNotificacion(const Notificacion& n) { notificaciones.encolar(n); }
 

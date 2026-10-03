@@ -213,54 +213,31 @@ public:
         return true;
     }
 
-    
+    // ---------- Metodos nuevos ----------
 
-// Inserta un elemento manteniendo el orden. O(n)
-void insertarOrdenado(const T& elem, std::function<bool(const T&, const T&)> antesQue)
-{
-    if (esVacia()) { agregaInicial(elem); return; }
+    // Inserta el elemento antes del primero que deba ir despues de el. O(n)
+    void insertarOrdenado(const T& elem, std::function<bool(const T&, const T&)> antesQue) {
+        if (esVacia() || antesQue(elem, ini->get_Elem())) { agregaInicial(elem); return; }
 
-    if (antesQue(elem, obtenerInicial()))
-    {
-        agregaInicial(elem);
-        return;
+        Nodo<T>* actual = ini;
+        while (actual->get_Sgte() != nullptr && !antesQue(elem, actual->get_Sgte()->get_Elem()))
+            actual = actual->get_Sgte();
+
+        Nodo<T>* nuevo = new Nodo<T>(elem);
+        nuevo->set_Sgte(actual->get_Sgte());
+        actual->set_Sgte(nuevo);
+        if (nuevo->get_Sgte() == nullptr) fin = nuevo;
+        lon++;
     }
 
-    Nodo<T>* actual = ini;
-
-    while (actual->get_Sgte() != nullptr &&
-        !antesQue(elem, actual->get_Sgte()->get_Elem()))
-    {
-        actual = actual->get_Sgte();
+    // Devuelve el elemento con el mayor valor segun el criterio. O(n)
+    const T& maximoSegun(std::function<int(const T&)> valor) const {
+        if (esVacia()) throw std::out_of_range("Lista::maximoSegun - lista vacia");
+        Nodo<T>* mayor = ini;
+        for (Nodo<T>* aux = ini->get_Sgte(); aux != nullptr; aux = aux->get_Sgte())
+            if (valor(aux->get_Elem()) > valor(mayor->get_Elem())) mayor = aux;
+        return mayor->get_Elem();
     }
-
-    Nodo<T>* nuevo = new Nodo<T>(elem);
-    nuevo->set_Sgte(actual->get_Sgte());
-    actual->set_Sgte(nuevo);
-
-    if (nuevo->get_Sgte() == nullptr)
-        fin = nuevo;
-
-    lon++;
-}
-
-
-// Obtiene el elemento mayor según un criterio. O(n)
-T maximoSegun(std::function<int(const T&)> criterio) const
-{
-    if (esVacia())
-        throw std::out_of_range("Lista::maximoSegun - lista vacia");
-
-    T mayor = obtenerInicial();
-
-    for (Nodo<T>* aux = ini; aux != nullptr; aux = aux->get_Sgte())
-    {
-        if (criterio(aux->get_Elem()) > criterio(mayor))
-            mayor = aux->get_Elem();
-    }
-
-    return mayor;
-}
 
     Iterador begin() { return Iterador(ini); }
     Iterador end() { return Iterador(nullptr); }

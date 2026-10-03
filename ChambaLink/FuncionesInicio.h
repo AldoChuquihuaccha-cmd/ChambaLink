@@ -12,6 +12,7 @@ using std::string;
 
 // Funciones de consola y pantallas de inicio de ChambaLink.
 // La consola es fija de 30 filas x 120 columnas: todas las posiciones son fijas.
+// La letra se agranda en configurarConsola para que la ventana se vea mas grande.
 //   ubicar(x, y): x = columna (0 a 119), y = fila (0 a 29)
 //
 // Cada funcion esta escrita antes de la que la usa.
@@ -47,8 +48,23 @@ void limpiarPantalla() {
     system("cls");
 }
 
+// Alto de la letra en pixeles (el normal es 16). La consola sigue teniendo
+// 120 x 30 caracteres, pero con letra mas grande la ventana se ve mas amplia.
+// Si la ventana no entra en la pantalla, bajar este valor a 18.
+const int TAMANIO_LETRA = 20;
+
 // Se llama una sola vez al inicio del programa.
+// Primero se cambia la letra y despues el tamanio, asi la ventana se ajusta a la letra nueva.
 void configurarConsola() {
+    CONSOLE_FONT_INFOEX fuente;
+    fuente.cbSize = sizeof(fuente);
+    GetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), FALSE, &fuente);
+    fuente.dwFontSize.X = 0;
+    fuente.dwFontSize.Y = TAMANIO_LETRA;
+    fuente.FontWeight = FW_NORMAL;
+    wcscpy_s(fuente.FaceName, L"Consolas");
+    SetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), FALSE, &fuente);
+
     system("mode con cols=120 lines=30");
     SetConsoleTitleA("ChambaLink");
     colorBlanco();

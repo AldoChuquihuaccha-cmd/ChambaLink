@@ -1,0 +1,4 @@
+1|1001|Comparto mi dashboard de ventas hecho en Python.|2026/09/12
+2|1000|Termine mi lista doblemente enlazada con iteradores en C++.|2026/09/28
+3|1002|Buscamos practicantes de backend en mi equipo.|2026/09/20
+4|1005|Recuerden: QuickSort es O(n log n) en promedio.|2026/10/01

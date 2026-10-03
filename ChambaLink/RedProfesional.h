@@ -83,87 +83,33 @@ private:
 
     std::string ultimoError;
 
-    // Convierte el texto de requisitos de una vacante en una lista.
-    // Ejemplo:
-    // "C++,SQL,Java"
-    // se convierte en:
-    // ["C++","SQL","Java"]
-
-    Lista<std::string> separarRequisitos(std::string texto)
-    {
+    // Convierte "C++, SQL,Java" en la lista ["C++", "SQL", "Java"]. O(n)
+    Lista<std::string> separarRequisitos(std::string texto) const {
         Lista<std::string> resultado;
-
         std::stringstream ss(texto);
-
         std::string requisito;
-
-
-        while (getline(ss, requisito, ','))
-        {
-            // quitar espacios iniciales
-            while (requisito.size() > 0 &&
-                requisito[0] == ' ')
-            {
-                requisito.erase(0, 1);
-            }
-
-
-            if (requisito != "")
-            {
-                resultado.agregaFinal(requisito);
-            }
+        while (getline(ss, requisito, ',')) {
+            while (requisito != "" && requisito[0] == ' ') requisito.erase(0, 1);   // espacios iniciales
+            if (requisito != "") resultado.agregaFinal(requisito);
         }
-
-
         return resultado;
     }
 
-    // Compara recursivamente los requisitos de una vacante
-    // con las habilidades del usuario.
-    //
-    // Caso base:
-    // ya no quedan requisitos.
-    //
-    // Caso recursivo:
-    // revisa un requisito y continúa con el siguiente.
-
-    int compararRequisitosRec(
-        const Lista<std::string>& requisitos,
-        const Usuario& usuario,
-        uint posicion
-    )
-    {
-
-        // Caso base
-        if (posicion >= requisitos.longitud())
-        {
-            return 0;
-        }
-
+    // Cuenta, de forma recursiva, cuantos requisitos de la vacante tiene el usuario.
+    // Se recorre la lista con su iterador para avanzar en O(1) por llamada.
+    // Caso base: el iterador llego al final.
+    // Caso recursivo: revisa el requisito actual y sigue con el siguiente.
+    // Complejidad: O(r * h), r = requisitos y h = habilidades del usuario.
+    int compararRequisitosRec(Lista<std::string>::Iterador actual,
+        Lista<std::string>::Iterador fin, const Usuario& usuario) const {
+        if (!(actual != fin)) return 0;
 
         int encontrado = 0;
+        if (usuario.tieneHabilidad(*actual)) encontrado = 1;
 
-
-        std::string requisitoActual =
-            requisitos.obtenerPos(posicion);
-
-
-
-        if (usuario.tieneHabilidad(requisitoActual))
-        {
-            encontrado = 1;
-        }
-
-
-
-        return encontrado +
-            compararRequisitosRec(
-                requisitos,
-                usuario,
-                posicion + 1
-            );
+        ++actual;
+        return encontrado + compararRequisitosRec(actual, fin, usuario);
     }
-
 
     // Guarda el motivo del error y devuelve false, para escribir una sola
     // linea en cada validacion.
@@ -203,6 +149,14 @@ private:
         return texto;
     }
 
+    // "2019" -> 2019. Devuelve -1 si no son 4 digitos.
+    static int aAnio(std::string texto) {
+        if (texto.length() != 4) return -1;
+        for (int i = 0; i < 4; i++)
+            if (texto[i] < '0' || texto[i] > '9') return -1;
+        return std::stoi(texto);
+    }
+
     bool haySolicitudPendienteEntre(int idA, int idB) const {
         const Usuario* a = buscarUsuario(idA);
         const Usuario* b = buscarUsuario(idB);
@@ -223,7 +177,10 @@ private:
     }
 
     // Recorre la red de forma recursiva hasta la profundidad indicada.
-    // visitados evita volver a entrar a un usuario y formar ciclos.
+    // Caso base: profundidad 0. La profundidad asegura que la recursion termina
+    // aunque haya ciclos (A conoce a B y B conoce a A).
+    // visitados solo evita que una persona se repita en descubiertos; por eso
+    // siempre se sigue bajando, aunque el contacto ya se haya visto por otro camino.
     void explorarConexionesRec(int idActual, int profundidad,
         Lista<int>& visitados, Lista<int>& descubiertos) const {
         if (profundidad <= 0) return;
@@ -232,10 +189,10 @@ private:
 
         actual->paraCadaContacto([this, profundidad, &visitados, &descubiertos](const int& idContacto) {
             bool yaVisitado = visitados.existe([idContacto](const int& id) { return id == idContacto; });
-            if (yaVisitado) return;
-
-            visitados.agregaFinal(idContacto);
-            descubiertos.agregaFinal(idContacto);
+            if (!yaVisitado) {
+                visitados.agregaFinal(idContacto);
+                descubiertos.agregaFinal(idContacto);
+            }
             explorarConexionesRec(idContacto, profundidad - 1, visitados, descubiertos);
             });
     }
@@ -281,8 +238,8 @@ private:
 
     // Reglas comunes a todos los campos del registro:
     //   - obligatorio o no,
-    //   - sin comas, porque la coma separa las columnas del CSV,
-    //   - largo maximo, para que quepa en pantalla y en un futuro archivo binario.
+    //   - sin comas, porque la coma separa listas (por ejemplo los requisitos),
+    //   - largo maximo, para que quepa en pantalla.
     bool validarCampo(const std::string& valor, const std::string& nombreCampo,
         int largoMaximo, bool obligatorio) {
         if (obligatorio && valor == "") return fallar("El campo " + nombreCampo + " es obligatorio");
@@ -325,6 +282,8 @@ public:
     static const int MAX_COMENTARIO = 60;
     static const int MAX_MENSAJE = 58;
     static const int MAX_RECOMENDACION = 121; // dos lineas de 60 en pantalla
+    static const int MAX_HABILIDAD = 30;
+    static const int MAX_CARGO = 40;
 
     RedProfesional() {
         // Las cuentas empiezan en 1000 para que su id siempre tenga 4 cifras.
@@ -453,7 +412,7 @@ public:
         if (aceptar) {
             solicitud.aceptar();
             // Las lambdas capturan la red y los ids, nunca punteros a Usuario.
-            Accion accion("Aceptar conexion con " + nombreDe(idEmisor),
+            Accion accion("Red", "Aceptar conexion con " + nombreDe(idEmisor),
                 [this, idReceptor, idEmisor]() { conectar(idReceptor, idEmisor); },
                 [this, idReceptor, idEmisor]() { desconectar(idReceptor, idEmisor); });
             receptor->registrarAccion(accion);
@@ -471,10 +430,86 @@ public:
         if (usuario == nullptr) return fallar("El usuario no existe");
         if (!usuario->esContactoDirecto(idContacto)) return fallar("Ese usuario no esta en tus contactos");
 
-        Accion accion("Eliminar contacto " + nombreDe(idContacto),
+        Accion accion("Red", "Eliminar contacto " + nombreDe(idContacto),
             [this, idUsuario, idContacto]() { desconectar(idUsuario, idContacto); },
             [this, idUsuario, idContacto]() { conectar(idUsuario, idContacto); });
         usuario->registrarAccion(accion);
+        return true;
+    }
+
+    // ---------- Perfil: habilidades y experiencia (Joao) ----------
+
+    static std::string nombreNivel(int nivel) {
+        if (nivel == 1) return "Basico";
+        if (nivel == 2) return "Intermedio";
+        if (nivel == 3) return "Avanzado";
+        return "Experto";
+    }
+
+    // nivel: 1 Basico, 2 Intermedio, 3 Avanzado, 4 Experto.
+    // Se registra como Accion en la pila para poder deshacerla.
+    bool agregarHabilidad(int idUsuario, std::string nombre, int nivel) {
+        Usuario* usuario = buscarUsuario(idUsuario);
+        if (usuario == nullptr) return fallar("El usuario no existe");
+        if (!validarCampo(nombre, "habilidad", MAX_HABILIDAD, true)) return false;
+        if (nivel < 1 || nivel > 4) return fallar("El nivel debe ser 1, 2, 3 o 4");
+        if (usuario->buscarHabilidad(nombre) != nullptr) return fallar("Ya tienes esa habilidad");
+
+        Habilidad h(nombre, (NivelHabilidad)(nivel - 1));
+        Accion accion("Perfil", "Agregar habilidad " + nombre,
+            [this, idUsuario, h]() { buscarUsuario(idUsuario)->agregarHabilidad(h); },
+            [this, idUsuario, nombre]() { buscarUsuario(idUsuario)->eliminarHabilidad(nombre); });
+        usuario->registrarAccion(accion);
+        return true;
+    }
+
+    bool eliminarHabilidad(int idUsuario, std::string nombre) {
+        Usuario* usuario = buscarUsuario(idUsuario);
+        if (usuario == nullptr) return fallar("El usuario no existe");
+        const Habilidad* guardada = usuario->buscarHabilidad(nombre);
+        if (guardada == nullptr) return fallar("No tienes esa habilidad");
+
+        Habilidad h = *guardada;   // copia para poder restaurarla con el mismo nivel
+        Accion accion("Perfil", "Quitar habilidad " + nombre,
+            [this, idUsuario, nombre]() { buscarUsuario(idUsuario)->eliminarHabilidad(nombre); },
+            [this, idUsuario, h]() { buscarUsuario(idUsuario)->agregarHabilidad(h); });
+        usuario->registrarAccion(accion);
+        return true;
+    }
+
+    // Los anios llegan como texto desde el formulario. anioFin vacio = trabajo actual.
+    // Si la empresa esta registrada en la red se guarda su id; si no, solo el nombre.
+    bool agregarExperiencia(int idUsuario, std::string empresa, std::string cargo,
+        std::string anioInicio, std::string anioFin) {
+        Usuario* usuario = buscarUsuario(idUsuario);
+        if (usuario == nullptr) return fallar("El usuario no existe");
+        if (!validarCampo(empresa, "empresa", MAX_NOMBRE_EMPRESA, true)) return false;
+        if (!validarCampo(cargo, "cargo", MAX_CARGO, true)) return false;
+
+        int anioActual = std::stoi(fechaHoy().substr(0, 4));
+        int inicio = aAnio(anioInicio);
+        int fin = 0;
+        if (inicio < 1950 || inicio > anioActual) return fallar("Anio de inicio invalido");
+        if (anioFin != "") {
+            fin = aAnio(anioFin);
+            if (fin < inicio || fin > anioActual) return fallar("Anio de fin invalido");
+        }
+
+        int idEmpresa = 0;
+        const Empresa* registrada = empresas.buscarPtr([&empresa](const Empresa& e) {
+            return textoMinusculas(e.getNombre()) == textoMinusculas(empresa);
+            });
+        if (registrada != nullptr) idEmpresa = registrada->getId();
+
+        usuario->agregarExperiencia(ExperienciaLaboral(idEmpresa, empresa, cargo, inicio, fin, ""));
+        return true;
+    }
+
+    // pos cuenta desde el puesto mas antiguo (0).
+    bool eliminarExperiencia(int idUsuario, int pos) {
+        Usuario* usuario = buscarUsuario(idUsuario);
+        if (usuario == nullptr) return fallar("El usuario no existe");
+        if (pos < 0 || !usuario->eliminarExperiencia((uint)pos)) return fallar("Ese puesto no existe");
         return true;
     }
 
@@ -530,7 +565,7 @@ public:
     }
 
     // Contactos directos ordenados alfabeticamente con QuickSort.
-    // Se devuelve una copia de ids para no alterar el orden en contactos.txt.
+    // Se devuelve una copia de ids para no alterar el orden de la lista de contactos.
     Lista<int> contactosOrdenadosPorNombre(int idUsuario) const {
         Lista<int> copia;
         const Usuario* usuario = buscarUsuario(idUsuario);
@@ -1073,15 +1108,9 @@ public:
 
     // ---------- Buscar profesionales ----------
 
-    static std::string aMinusculas(std::string texto) {
-        for (size_t i = 0; i < texto.length(); i++)
-            texto[i] = (char)tolower((unsigned char)texto[i]);
-        return texto;
-    }
-
     // Si la palabra aparece dentro del texto, sin importar mayusculas.
     static bool contiene(const std::string& texto, const std::string& palabra) {
-        return aMinusculas(texto).find(aMinusculas(palabra)) != std::string::npos;
+        return textoMinusculas(texto).find(textoMinusculas(palabra)) != std::string::npos;
     }
 
     // Busqueda lineal: por cada usuario se revisa si cada palabra clave aparece en
@@ -1115,16 +1144,18 @@ public:
             [](const Coincidencia& a, const Coincidencia& b) { return a.cantidad > b.cantidad; };
         return heapSort(resultados, criterio);
     }
-    void ordenarVacantesHeap()
-    {
+    // Vacantes de una empresa ordenadas por titulo con HeapSort.
+    // Devuelve una copia: la lista principal de vacantes no cambia de orden.
+    Lista<Vacante> vacantesOrdenadasDe(int idEmpresa) const {
+        Lista<Vacante> copia;
+        vacantes.paraCada([idEmpresa, &copia](const Vacante& v) {
+            if (v.esDeEmpresa(idEmpresa)) copia.agregaFinal(v);
+            });
         std::function<bool(const Vacante&, const Vacante&)> criterio =
-            [](const Vacante& a, const Vacante& b)
-            {
-                return a.getTitulo() < b.getTitulo();
-            };
-
-        vacantes = heapSort(vacantes, criterio);
+            [](const Vacante& a, const Vacante& b) { return a.getTitulo() < b.getTitulo(); };
+        return heapSort(copia, criterio);
     }
+
     void paraCadaPostulacionDe(int idUsuario, std::function<void(const Postulacion&)> accion) const {
         postulaciones.paraCada([idUsuario, &accion](const Postulacion& p) {
             if (p.esDeUsuario(idUsuario)) accion(p);
@@ -1135,31 +1166,17 @@ public:
         grupos.paraCada(accion);
     }
 
-    // Calcula el porcentaje de compatibilidad entre
-    // las habilidades del usuario y los requisitos de una vacante.
-
-    int calcularCompatibilidad(int idUsuario, int idVacante)
-    {
-        Usuario* usuario = buscarUsuario(idUsuario);
-        Vacante* vacante = buscarVacante(idVacante);
-
-        if (usuario == nullptr || vacante == nullptr)
-            return 0;
+    // Porcentaje de requisitos de la vacante que el usuario tiene como habilidad.
+    int calcularCompatibilidad(int idUsuario, int idVacante) const {
+        const Usuario* usuario = buscarUsuario(idUsuario);
+        const Vacante* vacante = obtenerVacante(idVacante);
+        if (usuario == nullptr || vacante == nullptr) return 0;
 
         Lista<std::string> requisitos = separarRequisitos(vacante->getRequisitos());
+        int total = (int)requisitos.longitud();
+        if (total == 0) return 0;
 
-        int coincidencias = compararRequisitosRec(requisitos, *usuario, 0);
-        int total = requisitos.longitud();
-
-        if (total == 0)
-            return 0;
-
+        int coincidencias = compararRequisitosRec(requisitos.begin(), requisitos.end(), *usuario);
         return (coincidencias * 100) / total;
     }
-
-
-    // Implementado:
-    // - Comparación recursiva de requisitos.
-    // - Ordenamiento HeapSort de vacantes.
-    // - Persistencia gestionada por GestorArchivos.
 };

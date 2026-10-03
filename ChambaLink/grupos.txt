@@ -1,0 +1,2 @@
+1|Programadores C++|Dudas y proyectos en C++|C++
+2|Datos Lima|Analitica y bases de datos|SQL

@@ -162,6 +162,59 @@ public:
         return nullptr;
     }
 
+    // ---------- Metodos nuevos (Joao) ----------
+
+    // Inserta el elemento antes del primero que deba ir despues de el.
+    // Si hay empates queda despues de los iguales, asi se respeta el orden de llegada.
+    // Se usa para que el historial laboral quede ordenado por anio de inicio. O(n)
+    void insertarOrdenado(const T& elem, std::function<bool(const T&, const T&)> antesQue) {
+        NodoDoble<T>* aux = ini;
+        while (aux != nullptr && !antesQue(elem, aux->get_Elem())) aux = aux->get_Sgte();
+
+        if (aux == nullptr) { agregaFinal(elem); return; }     // va al final
+        if (aux == ini) { agregaInicial(elem); return; }       // va al inicio
+
+        // Va entre aux->get_Ant() y aux: se enlazan los cuatro punteros.
+        NodoDoble<T>* nuevo = new NodoDoble<T>(elem);
+        NodoDoble<T>* anterior = aux->get_Ant();
+        nuevo->set_Ant(anterior);
+        nuevo->set_Sgte(aux);
+        anterior->set_Sgte(nuevo);
+        aux->set_Ant(nuevo);
+        lon++;
+    }
+
+    // Elimina el elemento de la posicion pos (0 = el primero).
+    // Llega al nodo desde el extremo mas cercano: como mucho recorre n/2 nodos.
+    // Esto solo se puede hacer porque cada nodo conoce a su anterior. O(n)
+    void eliminaPos(uint pos) {
+        if (pos >= lon) throw std::out_of_range("ListaDoble::eliminaPos - posicion invalida");
+        if (pos == 0) { eliminaInicial(); return; }
+        if (pos == lon - 1) { eliminaFinal(); return; }
+
+        NodoDoble<T>* aux;
+        if (pos < lon / 2) {
+            aux = ini;
+            for (uint i = 0; i < pos; i++) aux = aux->get_Sgte();
+        }
+        else {
+            aux = fin;
+            for (uint i = lon - 1; i > pos; i--) aux = aux->get_Ant();
+        }
+        aux->get_Ant()->set_Sgte(aux->get_Sgte());
+        aux->get_Sgte()->set_Ant(aux->get_Ant());
+        delete aux;
+        lon--;
+    }
+
+    // Cuenta los elementos que cumplen la condicion. O(n)
+    uint contarSi(std::function<bool(const T&)> criterio) const {
+        uint total = 0;
+        for (NodoDoble<T>* aux = ini; aux != nullptr; aux = aux->get_Sgte())
+            if (criterio(aux->get_Elem())) total++;
+        return total;
+    }
+
     // Iteradores: primero() para recorrer hacia adelante y ultimo() hacia atras.
     Iterador primero() const { return Iterador(ini); }
     Iterador ultimo() const { return Iterador(fin); }

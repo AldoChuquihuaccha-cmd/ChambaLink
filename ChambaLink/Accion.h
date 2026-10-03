@@ -13,6 +13,7 @@
 // siempre se puede volver a buscar.
 class Accion {
 private:
+    std::string categoria;      // "Red" o "Perfil"
     std::string descripcion;
     std::function<void()> hacer;
     std::function<void()> deshacer;
@@ -20,13 +21,16 @@ private:
 
 public:
     Accion() {
+        categoria = "";
         descripcion = "";
         hacer = nullptr;
         deshacer = nullptr;
         ejecutada = false;
     }
 
-    Accion(std::string pDescripcion, std::function<void()> pHacer, std::function<void()> pDeshacer) {
+    Accion(std::string pCategoria, std::string pDescripcion,
+        std::function<void()> pHacer, std::function<void()> pDeshacer) {
+        categoria = pCategoria;
         descripcion = pDescripcion;
         hacer = pHacer;
         deshacer = pDeshacer;
@@ -47,6 +51,7 @@ public:
         ejecutada = false;
     }
 
+    std::string getCategoria() const { return categoria; }
     std::string getDescripcion() const { return descripcion; }
     bool fueEjecutada() const { return ejecutada; }
 };

@@ -1,827 +1,790 @@
 #pragma once
-
-#include <algorithm>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
-#include <fstream>
 #include <string>
+#include <fstream>
+#include <cstdio>
 #include "RedProfesional.h"
 
-// Gestion de archivos de ChambaLink con persistencia binaria.
+#define ARCHIVO_BINARIO "chambalink.bin"
+#define FIRMA "CHAMBA02"     // 8 letras al inicio del binario para reconocerlo
+
+// Persistencia de ChambaLink. Cada vez que se guarda, los datos quedan en dos formatos:
 //
-// En lugar de escribir la memoria cruda de los objetos (lo cual NO es valido para
-// std::string, listas, colas, etc.), cada campo se serializa de forma explicita.
-// Esto permite reconstruir correctamente objetos, relaciones, colas e IDs.
+//   1. Texto: un archivo .txt por clase principal (usuarios.txt, vacantes.txt...).
+//      Cada linea es un registro y los campos van separados por '|'.
+//      Se puede abrir con el Bloc de notas para revisar los datos.
+//   2. Binario: todo en chambalink.bin. Cada numero se escribe con sus 4 bytes
+//      y cada texto como su largo seguido de sus caracteres.
 //
-// Archivo principal: chambalink.bin
-// Formato: firma + version + contadores + catalogos + relaciones embebidas.
+// Al iniciar se lee el texto. Si no estan los .txt se recupera desde el binario,
+// y si tampoco existe se cargan los datos de ejemplo.
 //
-// La pila de Accion no se persiste porque contiene funciones lambda; al iniciar
-// una nueva sesion el historial de deshacer comienza vacio, igual que antes.
+// Los ids se guardan tal cual; al cargar, cada contador queda en el id mas alto mas uno.
+// La pila de acciones no se guarda: sus lambdas no se pueden escribir en un archivo,
+// asi que cada sesion empieza con el historial de deshacer vacio.
 class GestorArchivos {
 private:
-    static const std::uint32_t VERSION = 1;
-    static const std::uint32_t MAX_CADENA = 16u * 1024u * 1024u;
-    static const std::uint32_t MAX_REGISTROS = 1000000u;
+    // ==================== Apoyo ====================
 
-    static std::string archivoPredeterminado() {
-        return "chambalink.bin";
-    }
-
-    static void escribirU32(std::ostream& out, std::uint32_t valor) {
-        out.write(reinterpret_cast<const char*>(&valor), sizeof(valor));
-    }
-
-    static void escribirI32(std::ostream& out, std::int32_t valor) {
-        out.write(reinterpret_cast<const char*>(&valor), sizeof(valor));
-    }
-
-    static void escribirBool(std::ostream& out, bool valor) {
-        std::uint8_t dato = valor ? 1u : 0u;
-        out.write(reinterpret_cast<const char*>(&dato), sizeof(dato));
-    }
-
-    static void escribirCadena(std::ostream& out, const std::string& texto) {
-        std::uint32_t longitud = static_cast<std::uint32_t>(texto.size());
-        escribirU32(out, longitud);
-        if (longitud > 0)
-            out.write(texto.data(), static_cast<std::streamsize>(longitud));
-    }
-
-    static bool leerU32(std::istream& in, std::uint32_t& valor) {
-        return static_cast<bool>(in.read(reinterpret_cast<char*>(&valor), sizeof(valor)));
-    }
-
-    static bool leerI32(std::istream& in, std::int32_t& valor) {
-        return static_cast<bool>(in.read(reinterpret_cast<char*>(&valor), sizeof(valor)));
-    }
-
-    static bool leerBool(std::istream& in, bool& valor) {
-        std::uint8_t dato = 0;
-        if (!in.read(reinterpret_cast<char*>(&dato), sizeof(dato))) return false;
-        if (dato > 1u) return false;
-        valor = dato == 1u;
-        return true;
-    }
-
-    static bool leerCadena(std::istream& in, std::string& texto) {
-        std::uint32_t longitud = 0;
-        if (!leerU32(in, longitud) || longitud > MAX_CADENA) return false;
-        texto.assign(longitud, '\0');
-        if (longitud > 0 && !in.read(&texto[0], static_cast<std::streamsize>(longitud)))
-            return false;
-        return true;
-    }
-
-    static bool leerConteo(std::istream& in, std::uint32_t& cantidad) {
-        return leerU32(in, cantidad) && cantidad <= MAX_REGISTROS;
-    }
-
-    static void asegurarContador(int& contador, int id, int minimo = 1) {
-        if (contador < minimo) contador = minimo;
+    // Deja el contador en el id mas alto encontrado mas uno.
+    static void actualizarContador(int& contador, int id) {
         if (id >= contador) contador = id + 1;
     }
 
-    static void copiarEstado(RedProfesional& destino, const RedProfesional& origen) {
-        destino.usuarios = origen.usuarios;
-        destino.empresas = origen.empresas;
-        destino.vacantes = origen.vacantes;
-        destino.postulaciones = origen.postulaciones;
-        destino.grupos = origen.grupos;
-        destino.publicaciones = origen.publicaciones;
-        destino.comentarios = origen.comentarios;
-        destino.recomendaciones = origen.recomendaciones;
-        destino.mensajes = origen.mensajes;
-
-        destino.sigUsuario = origen.sigUsuario;
-        destino.sigEmpresa = origen.sigEmpresa;
-        destino.sigVacante = origen.sigVacante;
-        destino.sigPostulacion = origen.sigPostulacion;
-        destino.sigGrupo = origen.sigGrupo;
-        destino.sigPublicacion = origen.sigPublicacion;
-        destino.sigComentario = origen.sigComentario;
-        destino.sigRecomendacion = origen.sigRecomendacion;
-        destino.sigMensaje = origen.sigMensaje;
-        destino.sigSolicitud = origen.sigSolicitud;
-        destino.sigNotificacion = origen.sigNotificacion;
-        destino.sigCertificacion = origen.sigCertificacion;
-        destino.ultimoError = "";
+    // Quita '|' y saltos de linea de un texto para que no rompan el formato.
+    static std::string limpiar(std::string texto) {
+        for (size_t i = 0; i < texto.length(); i++)
+            if (texto[i] == '|' || texto[i] == '\n' || texto[i] == '\r') texto[i] = ' ';
+        return texto;
     }
 
-    static void escribirUsuario(std::ostream& out, const Usuario& u) {
-        escribirI32(out, u.getId());
-        escribirCadena(out, u.getCorreo());
-        escribirCadena(out, u.getContrasena());
-        escribirCadena(out, u.getNombre());
-        escribirCadena(out, u.getApellido());
-        escribirCadena(out, u.getTitular());
-        escribirCadena(out, u.getUbicacion());
-
-        escribirU32(out, static_cast<std::uint32_t>(u.totalContactos()));
-        u.paraCadaContacto([&](const int& idContacto) {
-            escribirI32(out, idContacto);
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(u.totalHabilidades()));
-        u.paraCadaHabilidad([&](const Habilidad& h) {
-            escribirCadena(out, h.getNombre());
-            escribirI32(out, static_cast<std::int32_t>(h.getNivel()));
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(u.totalExperiencias()));
-        u.paraCadaExperiencia([&](const ExperienciaLaboral& e) {
-            escribirI32(out, e.getIdEmpresa());
-            escribirCadena(out, e.getNombreEmpresa());
-            escribirCadena(out, e.getCargo());
-            escribirI32(out, e.getAnioInicio());
-            escribirI32(out, e.getAnioFin());
-            escribirCadena(out, e.getDescripcion());
-        }, false);
-
-        escribirU32(out, static_cast<std::uint32_t>(u.totalCertificaciones()));
-        u.paraCadaCertificacion([&](const Certificacion& c) {
-            escribirI32(out, c.getId());
-            escribirCadena(out, c.getNombre());
-            escribirCadena(out, c.getInstitucion());
-            escribirCadena(out, c.getFechaObtencion());
-            escribirCadena(out, c.getCodigoCredencial());
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(u.cantidadSolicitudesPendientes()));
-        u.paraCadaSolicitud([&](const SolicitudConexion& s) {
-            escribirI32(out, s.getId());
-            escribirI32(out, s.getIdEmisor());
-            escribirI32(out, s.getIdReceptor());
-            escribirCadena(out, s.getMensaje());
-            escribirCadena(out, s.getFecha());
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(u.cantidadNotificaciones()));
-        u.paraCadaNotificacion([&](const Notificacion& n) {
-            escribirI32(out, n.getId());
-            escribirI32(out, n.getIdDestino());
-            escribirI32(out, static_cast<std::int32_t>(n.getTipo()));
-            escribirCadena(out, n.getMensaje());
-            escribirCadena(out, n.getFecha());
-            escribirBool(out, n.estaLeida());
-        });
-    }
-
-    static bool leerUsuario(std::istream& in, RedProfesional& red, Usuario& u) {
-        std::int32_t id = 0;
-        std::string correo, contrasena, nombre, apellido, titular, ubicacion;
-        if (!leerI32(in, id) || !leerCadena(in, correo) || !leerCadena(in, contrasena) ||
-            !leerCadena(in, nombre) || !leerCadena(in, apellido) || !leerCadena(in, titular) ||
-            !leerCadena(in, ubicacion)) return false;
-
-        u = Usuario(id, nombre, apellido, titular, ubicacion, correo, contrasena);
-        asegurarContador(red.sigUsuario, id, 1000);
-
-        std::uint32_t cantidad = 0;
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t idContacto = 0;
-            if (!leerI32(in, idContacto)) return false;
-            u.agregarContacto(idContacto);
-        }
-
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::string nombreHabilidad;
-            std::int32_t nivel = 0;
-            if (!leerCadena(in, nombreHabilidad) || !leerI32(in, nivel)) return false;
-            if (nivel < static_cast<int>(NivelHabilidad::Basico) ||
-                nivel > static_cast<int>(NivelHabilidad::Experto)) return false;
-            u.agregarHabilidad(Habilidad(nombreHabilidad, static_cast<NivelHabilidad>(nivel)));
-        }
-
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t idEmpresa = 0, anioInicio = 0, anioFin = 0;
-            std::string nombreEmpresa, cargo, descripcion;
-            if (!leerI32(in, idEmpresa) || !leerCadena(in, nombreEmpresa) || !leerCadena(in, cargo) ||
-                !leerI32(in, anioInicio) || !leerI32(in, anioFin) || !leerCadena(in, descripcion))
-                return false;
-            try {
-                u.agregarExperiencia(ExperienciaLaboral(idEmpresa, nombreEmpresa, cargo,
-                    anioInicio, anioFin, descripcion));
-            }
-            catch (...) {
-                return false;
-            }
-        }
-
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t idCert = 0;
-            std::string nom, institucion, fecha, codigo;
-            if (!leerI32(in, idCert) || !leerCadena(in, nom) || !leerCadena(in, institucion) ||
-                !leerCadena(in, fecha) || !leerCadena(in, codigo)) return false;
-            u.agregarCertificacion(Certificacion(idCert, nom, institucion, fecha, codigo));
-            asegurarContador(red.sigCertificacion, idCert);
-        }
-
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t idSol = 0, idEmisor = 0, idReceptor = 0;
-            std::string mensaje, fecha;
-            if (!leerI32(in, idSol) || !leerI32(in, idEmisor) || !leerI32(in, idReceptor) ||
-                !leerCadena(in, mensaje) || !leerCadena(in, fecha)) return false;
-            u.recibirSolicitud(SolicitudConexion(idSol, idEmisor, idReceptor, mensaje, fecha));
-            asegurarContador(red.sigSolicitud, idSol);
-        }
-
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t idNoti = 0, idDestino = 0, tipo = 0;
-            std::string mensaje, fecha;
-            bool leida = false;
-            if (!leerI32(in, idNoti) || !leerI32(in, idDestino) || !leerI32(in, tipo) ||
-                !leerCadena(in, mensaje) || !leerCadena(in, fecha) || !leerBool(in, leida))
-                return false;
-            if (tipo < static_cast<int>(TipoNotificacion::NuevaSolicitud) ||
-                tipo > static_cast<int>(TipoNotificacion::EstadoPostulacion)) return false;
-            Notificacion n(idNoti, idDestino, static_cast<TipoNotificacion>(tipo), mensaje, fecha);
-            if (leida) n.marcarLeida();
-            u.recibirNotificacion(n);
-            asegurarContador(red.sigNotificacion, idNoti);
-        }
-
-        return true;
-    }
-
-    static bool leerArchivo(std::istream& in, RedProfesional& red) {
-        const char firmaEsperada[8] = { 'C','H','A','M','B','A','B','1' };
-        char firma[8] = {};
-        if (!in.read(firma, sizeof(firma))) return false;
-        if (std::memcmp(firma, firmaEsperada, sizeof(firma)) != 0) return false;
-
-        std::uint32_t version = 0;
-        if (!leerU32(in, version) || version != VERSION) return false;
-
-        RedProfesional cargada;
-
-        std::int32_t contadores[12] = {};
-        for (int i = 0; i < 12; ++i)
-            if (!leerI32(in, contadores[i])) return false;
-
-        cargada.sigUsuario = std::max(1000, static_cast<int>(contadores[0]));
-        cargada.sigEmpresa = std::max(1000, static_cast<int>(contadores[1]));
-        cargada.sigVacante = std::max(1, static_cast<int>(contadores[2]));
-        cargada.sigPostulacion = std::max(1, static_cast<int>(contadores[3]));
-        cargada.sigGrupo = std::max(1, static_cast<int>(contadores[4]));
-        cargada.sigPublicacion = std::max(1, static_cast<int>(contadores[5]));
-        cargada.sigComentario = std::max(1, static_cast<int>(contadores[6]));
-        cargada.sigRecomendacion = std::max(1, static_cast<int>(contadores[7]));
-        cargada.sigMensaje = std::max(1, static_cast<int>(contadores[8]));
-        cargada.sigSolicitud = std::max(1, static_cast<int>(contadores[9]));
-        cargada.sigNotificacion = std::max(1, static_cast<int>(contadores[10]));
-        cargada.sigCertificacion = std::max(1, static_cast<int>(contadores[11]));
-
-        std::uint32_t cantidad = 0;
-
-        // Usuarios y sus relaciones internas.
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            Usuario u;
-            if (!leerUsuario(in, cargada, u)) return false;
-            cargada.usuarios.agregaFinal(u);
-        }
-
-        // Empresas.
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t id = 0;
-            std::string correo, contrasena, nombre, sector, ubicacion;
-            if (!leerI32(in, id) || !leerCadena(in, correo) || !leerCadena(in, contrasena) ||
-                !leerCadena(in, nombre) || !leerCadena(in, sector) || !leerCadena(in, ubicacion))
-                return false;
-            cargada.empresas.agregaFinal(Empresa(id, nombre, sector, ubicacion, correo, contrasena));
-            asegurarContador(cargada.sigEmpresa, id, 1000);
-        }
-
-        // Vacantes y cola de postulaciones por revisar.
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t id = 0, idEmpresa = 0;
-            std::string titulo, descripcion, requisitos, modalidad;
-            bool activa = true;
-            if (!leerI32(in, id) || !leerI32(in, idEmpresa) || !leerCadena(in, titulo) ||
-                !leerCadena(in, descripcion) || !leerCadena(in, requisitos) ||
-                !leerCadena(in, modalidad) || !leerBool(in, activa)) return false;
-            Vacante v(id, idEmpresa, titulo, descripcion, requisitos, modalidad);
-            if (!activa) v.cerrar();
-
-            std::uint32_t pendientes = 0;
-            if (!leerConteo(in, pendientes)) return false;
-            for (std::uint32_t j = 0; j < pendientes; ++j) {
-                std::int32_t idPost = 0;
-                if (!leerI32(in, idPost)) return false;
-                v.recibirPostulacion(idPost);
-            }
-            cargada.vacantes.agregaFinal(v);
-            asegurarContador(cargada.sigVacante, id);
-        }
-
-        // Postulaciones.
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t id = 0, idUsuario = 0, idVacante = 0, estado = 0;
-            std::string fecha;
-            if (!leerI32(in, id) || !leerI32(in, idUsuario) || !leerI32(in, idVacante) ||
-                !leerCadena(in, fecha) || !leerI32(in, estado)) return false;
-            if (estado < static_cast<int>(EstadoPostulacion::Pendiente) ||
-                estado > static_cast<int>(EstadoPostulacion::Rechazada)) return false;
-            Postulacion p(id, idUsuario, idVacante, fecha);
-            if (estado == static_cast<int>(EstadoPostulacion::Revisada)) p.revisar();
-            else if (estado == static_cast<int>(EstadoPostulacion::Aceptada)) p.aceptar();
-            else if (estado == static_cast<int>(EstadoPostulacion::Rechazada)) p.rechazar();
-            cargada.postulaciones.agregaFinal(p);
-            asegurarContador(cargada.sigPostulacion, id);
-        }
-
-        // Grupos y miembros.
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t id = 0;
-            std::string nombre, descripcion, especialidad;
-            if (!leerI32(in, id) || !leerCadena(in, nombre) || !leerCadena(in, descripcion) ||
-                !leerCadena(in, especialidad)) return false;
-            GrupoProfesional g(id, nombre, descripcion, especialidad);
-            std::uint32_t miembros = 0;
-            if (!leerConteo(in, miembros)) return false;
-            for (std::uint32_t j = 0; j < miembros; ++j) {
-                std::int32_t idUsuario = 0;
-                if (!leerI32(in, idUsuario)) return false;
-                g.agregarMiembro(idUsuario);
-            }
-            cargada.grupos.agregaFinal(g);
-            asegurarContador(cargada.sigGrupo, id);
-        }
-
-        // Publicaciones y me gusta.
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t id = 0, idAutor = 0;
-            std::string texto, fecha;
-            if (!leerI32(in, id) || !leerI32(in, idAutor) || !leerCadena(in, texto) ||
-                !leerCadena(in, fecha)) return false;
-            Publicacion p(id, idAutor, texto, fecha);
-            std::uint32_t likes = 0;
-            if (!leerConteo(in, likes)) return false;
-            for (std::uint32_t j = 0; j < likes; ++j) {
-                std::int32_t idUsuario = 0;
-                if (!leerI32(in, idUsuario)) return false;
-                p.darMeGusta(idUsuario);
-            }
-            cargada.publicaciones.agregaFinal(p);
-            asegurarContador(cargada.sigPublicacion, id);
-        }
-
-        // Comentarios.
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t id = 0, idAutor = 0, idPublicacion = 0, idPadre = 0;
-            std::string texto, fecha;
-            if (!leerI32(in, id) || !leerI32(in, idAutor) || !leerI32(in, idPublicacion) ||
-                !leerI32(in, idPadre) || !leerCadena(in, texto) || !leerCadena(in, fecha))
-                return false;
-            cargada.comentarios.agregaFinal(Comentario(id, idAutor, idPublicacion, texto, fecha, idPadre));
-            asegurarContador(cargada.sigComentario, id);
-        }
-
-        // Recomendaciones.
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t id = 0, idEmisor = 0, idReceptor = 0;
-            std::string texto, fecha;
-            if (!leerI32(in, id) || !leerI32(in, idEmisor) || !leerI32(in, idReceptor) ||
-                !leerCadena(in, texto) || !leerCadena(in, fecha)) return false;
-            cargada.recomendaciones.agregaFinal(Recomendacion(id, idEmisor, idReceptor, texto, fecha));
-            asegurarContador(cargada.sigRecomendacion, id);
-        }
-
-        // Mensajes.
-        if (!leerConteo(in, cantidad)) return false;
-        for (std::uint32_t i = 0; i < cantidad; ++i) {
-            std::int32_t id = 0, idEmisor = 0, idReceptor = 0;
-            std::string texto, fecha;
-            bool leido = false;
-            if (!leerI32(in, id) || !leerI32(in, idEmisor) || !leerI32(in, idReceptor) ||
-                !leerCadena(in, texto) || !leerCadena(in, fecha) || !leerBool(in, leido))
-                return false;
-            Mensaje m(id, idEmisor, idReceptor, texto, fecha);
-            if (leido) m.marcarLeido();
-            cargada.mensajes.agregaFinal(m);
-            asegurarContador(cargada.sigMensaje, id);
-        }
-
-        // Si el archivo tiene bytes extra no es un error: permite ampliar el formato
-        // manteniendo compatibilidad hacia delante dentro de una misma version.
-        copiarEstado(red, cargada);
-        return true;
-    }
-
-
-    // ---------- Compatibilidad con el formato de texto anterior ----------
-    // Solo se usa una vez si no existe chambalink.bin y se encuentran los
-    // antiguos usuarios.csv o empresas.csv. Despues se migra al binario.
-    // ---------- Apoyo para leer ----------
-
-    // Separa una linea por el separador y devuelve los campos en una lista.
-    // Se recorre caracter por caracter (y no con getline) para no perder el
-    // ultimo campo cuando esta vacio: "1|Ana|" debe dar 3 campos, no 2.
-    static Lista<std::string> partir(std::string linea, char separador = '|') {
+    // Separa una linea por '|'. Se recorre caracter por caracter para no perder
+    // el ultimo campo cuando esta vacio: "1|Ana|" da 3 campos. O(n)
+    static Lista<std::string> partir(std::string linea) {
         Lista<std::string> campos;
         std::string campo;
-        for (char ch : linea) {
-            if (ch == separador) { campos.agregaFinal(campo); campo = ""; }
-            else if (ch != '\r') campo += ch;
+        for (size_t i = 0; i < linea.length(); i++) {
+            if (linea[i] == '|') { campos.agregaFinal(campo); campo = ""; }
+            else if (linea[i] != '\r') campo += linea[i];
         }
         campos.agregaFinal(campo);
         return campos;
     }
 
-    static int aEntero(std::string texto) {
-        if (texto == "") return 0;
-        return std::stoi(texto);
+    // Convierte el campo pos a numero. Si no es un numero valido devuelve 0.
+    static int entero(const Lista<std::string>& c, uint pos) {
+        std::string t = c.obtenerPos(pos);
+        if (t == "" || t.length() > 9) return 0;
+        for (size_t i = 0; i < t.length(); i++)
+            if ((t[i] < '0' || t[i] > '9') && !(i == 0 && t[i] == '-')) return 0;
+        if (t == "-") return 0;
+        return std::stoi(t);
     }
+    static std::string campo(const Lista<std::string>& c, uint pos) { return c.obtenerPos(pos); }
 
-    static bool aBool(std::string texto) { return texto == "1"; }
-
-    // Deja el contador en el id mas alto encontrado mas uno.
-    static void actualizarContador(int& contador, int idLeido) {
-        if (idLeido >= contador) contador = idLeido + 1;
-    }
-
-    static bool cargarFormatoTextoAnterior(RedProfesional& red) {
-        std::ifstream usuarios("usuarios.csv");
-        std::ifstream empresas("empresas.csv");
-        bool hayCuentas = usuarios.is_open() || empresas.is_open();
-
-        // usuarios.csv: id,correo,contrasena,nombre,apellido,titular,distrito
+    // Lee todas las lineas de un archivo de texto en una lista.
+    static Lista<std::string> leerLineas(std::string nombre) {
+        Lista<std::string> lineas;
+        std::ifstream in(nombre);
         std::string linea;
-        while (std::getline(usuarios, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea, ',');
-            if (c.longitud() < 7) continue;
-            int id = aEntero(c.obtenerPos(0));
-            red.usuarios.agregaFinal(Usuario(id, c.obtenerPos(3), c.obtenerPos(4),
-                c.obtenerPos(5), c.obtenerPos(6), c.obtenerPos(1), c.obtenerPos(2)));
+        while (std::getline(in, linea))
+            if (linea != "" && linea != "\r") lineas.agregaFinal(linea);
+        return lineas;
+    }
+
+    // ==================== Texto: guardar ====================
+
+    static void guardarTexto(const RedProfesional& red) {
+        std::ofstream usuarios("usuarios.txt"), contactos("contactos.txt"), habilidades("habilidades.txt"),
+            experiencias("experiencias.txt"), certificaciones("certificaciones.txt"),
+            solicitudes("solicitudes.txt"), notificaciones("notificaciones.txt");
+
+        red.usuarios.paraCada([&](const Usuario& u) {
+            int id = u.getId();
+            usuarios << id << "|" << limpiar(u.getCorreo()) << "|" << limpiar(u.getContrasena()) << "|"
+                << limpiar(u.getNombre()) << "|" << limpiar(u.getApellido()) << "|"
+                << limpiar(u.getTitular()) << "|" << limpiar(u.getUbicacion()) << "\n";
+            u.paraCadaContacto([&](const int& idContacto) { contactos << id << "|" << idContacto << "\n"; });
+            u.paraCadaHabilidad([&](const Habilidad& h) {
+                habilidades << id << "|" << limpiar(h.getNombre()) << "|" << (int)h.getNivel() << "\n";
+                });
+            u.paraCadaExperiencia([&](const ExperienciaLaboral& e) {
+                experiencias << id << "|" << e.getIdEmpresa() << "|" << limpiar(e.getNombreEmpresa()) << "|"
+                    << limpiar(e.getCargo()) << "|" << e.getAnioInicio() << "|" << e.getAnioFin() << "|"
+                    << limpiar(e.getDescripcion()) << "\n";
+                }, false);
+            u.paraCadaCertificacion([&](const Certificacion& c) {
+                certificaciones << id << "|" << c.getId() << "|" << limpiar(c.getNombre()) << "|"
+                    << limpiar(c.getInstitucion()) << "|" << c.getFechaObtencion() << "|"
+                    << limpiar(c.getCodigoCredencial()) << "\n";
+                });
+            // Las colas se escriben en orden de llegada para recuperarlas igual.
+            u.paraCadaSolicitud([&](const SolicitudConexion& s) {
+                solicitudes << s.getId() << "|" << s.getIdEmisor() << "|" << s.getIdReceptor() << "|"
+                    << limpiar(s.getMensaje()) << "|" << s.getFecha() << "\n";
+                });
+            u.paraCadaNotificacion([&](const Notificacion& n) {
+                notificaciones << n.getId() << "|" << n.getIdDestino() << "|" << (int)n.getTipo() << "|"
+                    << limpiar(n.getMensaje()) << "|" << n.getFecha() << "|" << (n.estaLeida() ? 1 : 0) << "\n";
+                });
+            });
+
+        std::ofstream empresas("empresas.txt");
+        red.empresas.paraCada([&](const Empresa& e) {
+            empresas << e.getId() << "|" << limpiar(e.getCorreo()) << "|" << limpiar(e.getContrasena()) << "|"
+                << limpiar(e.getNombre()) << "|" << limpiar(e.getSector()) << "|" << limpiar(e.getUbicacion()) << "\n";
+            });
+
+        std::ofstream vacantes("vacantes.txt"), porRevisar("postulaciones_por_revisar.txt");
+        red.vacantes.paraCada([&](const Vacante& v) {
+            vacantes << v.getId() << "|" << v.getIdEmpresa() << "|" << limpiar(v.getTitulo()) << "|"
+                << limpiar(v.getDescripcion()) << "|" << limpiar(v.getRequisitos()) << "|"
+                << limpiar(v.getModalidad()) << "|" << (v.estaActiva() ? 1 : 0) << "\n";
+            v.paraCadaPostulacionPorRevisar([&](const int& idPostulacion) {
+                porRevisar << v.getId() << "|" << idPostulacion << "\n";
+                });
+            });
+
+        std::ofstream postulaciones("postulaciones.txt");
+        red.postulaciones.paraCada([&](const Postulacion& p) {
+            postulaciones << p.getId() << "|" << p.getIdUsuario() << "|" << p.getIdVacante() << "|"
+                << p.getFecha() << "|" << (int)p.getEstado() << "\n";
+            });
+
+        std::ofstream grupos("grupos.txt"), miembros("miembros.txt");
+        red.grupos.paraCada([&](const GrupoProfesional& g) {
+            grupos << g.getId() << "|" << limpiar(g.getNombre()) << "|" << limpiar(g.getDescripcion()) << "|"
+                << limpiar(g.getEspecialidad()) << "\n";
+            g.paraCadaMiembro([&](const int& idUsuario) { miembros << g.getId() << "|" << idUsuario << "\n"; });
+            });
+
+        std::ofstream publicaciones("publicaciones.txt"), meGusta("me_gusta.txt");
+        red.publicaciones.paraCada([&](const Publicacion& p) {
+            publicaciones << p.getId() << "|" << p.getIdAutor() << "|" << limpiar(p.getTexto()) << "|" << p.getFecha() << "\n";
+            p.paraCadaMeGusta([&](const int& idUsuario) { meGusta << p.getId() << "|" << idUsuario << "\n"; });
+            });
+
+        std::ofstream comentarios("comentarios.txt");
+        red.comentarios.paraCada([&](const Comentario& c) {
+            comentarios << c.getId() << "|" << c.getIdAutor() << "|" << c.getIdPublicacion() << "|"
+                << c.getIdPadre() << "|" << limpiar(c.getTexto()) << "|" << c.getFecha() << "\n";
+            });
+
+        std::ofstream recomendaciones("recomendaciones.txt");
+        red.recomendaciones.paraCada([&](const Recomendacion& r) {
+            recomendaciones << r.getId() << "|" << r.getIdEmisor() << "|" << r.getIdReceptor() << "|"
+                << limpiar(r.getTexto()) << "|" << r.getFecha() << "\n";
+            });
+
+        std::ofstream mensajes("mensajes.txt");
+        red.mensajes.paraCada([&](const Mensaje& m) {
+            mensajes << m.getId() << "|" << m.getIdEmisor() << "|" << m.getIdReceptor() << "|"
+                << limpiar(m.getTexto()) << "|" << m.getFecha() << "|" << (m.fueLeido() ? 1 : 0) << "\n";
+            });
+    }
+
+    // ==================== Texto: cargar ====================
+    // Primero las cuentas, porque los demas archivos se enlazan a ellas por id.
+    // Una linea con menos campos de los esperados se ignora.
+
+    static bool cargarTexto(RedProfesional& red) {
+        Lista<std::string> lineas = leerLineas("usuarios.txt");
+        if (lineas.esVacia()) return false;
+
+        lineas.paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 7) return;
+            int id = entero(c, 0);
+            red.usuarios.agregaFinal(Usuario(id, campo(c, 3), campo(c, 4), campo(c, 5), campo(c, 6),
+                campo(c, 1), campo(c, 2)));
             actualizarContador(red.sigUsuario, id);
+            });
+
+        leerLineas("contactos.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 2) return;
+            Usuario* u = red.buscarUsuario(entero(c, 0));
+            if (u != nullptr) u->agregarContacto(entero(c, 1));
+            });
+
+        leerLineas("habilidades.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 3) return;
+            Usuario* u = red.buscarUsuario(entero(c, 0));
+            int nivel = entero(c, 2);
+            if (u != nullptr && nivel >= 0 && nivel <= 3)
+                u->agregarHabilidad(Habilidad(campo(c, 1), (NivelHabilidad)nivel));
+            });
+
+        leerLineas("experiencias.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 7) return;
+            Usuario* u = red.buscarUsuario(entero(c, 0));
+            int inicio = entero(c, 4);
+            int fin = entero(c, 5);
+            if (u != nullptr && (fin == 0 || fin >= inicio))
+                u->agregarExperiencia(ExperienciaLaboral(entero(c, 1), campo(c, 2), campo(c, 3), inicio, fin, campo(c, 6)));
+            });
+
+        leerLineas("certificaciones.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 6) return;
+            Usuario* u = red.buscarUsuario(entero(c, 0));
+            if (u == nullptr) return;
+            int id = entero(c, 1);
+            u->agregarCertificacion(Certificacion(id, campo(c, 2), campo(c, 3), campo(c, 4), campo(c, 5)));
+            actualizarContador(red.sigCertificacion, id);
+            });
+
+        leerLineas("solicitudes.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 5) return;
+            Usuario* receptor = red.buscarUsuario(entero(c, 2));
+            if (receptor == nullptr) return;
+            int id = entero(c, 0);
+            receptor->recibirSolicitud(SolicitudConexion(id, entero(c, 1), entero(c, 2), campo(c, 3), campo(c, 4)));
+            actualizarContador(red.sigSolicitud, id);
+            });
+
+        leerLineas("notificaciones.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 6) return;
+            Usuario* destino = red.buscarUsuario(entero(c, 1));
+            int tipo = entero(c, 2);
+            if (destino == nullptr || tipo < 0 || tipo > (int)TipoNotificacion::EstadoPostulacion) return;
+            int id = entero(c, 0);
+            Notificacion n(id, entero(c, 1), (TipoNotificacion)tipo, campo(c, 3), campo(c, 4));
+            if (campo(c, 5) == "1") n.marcarLeida();
+            destino->recibirNotificacion(n);
+            actualizarContador(red.sigNotificacion, id);
+            });
+
+        leerLineas("empresas.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 6) return;
+            int id = entero(c, 0);
+            red.empresas.agregaFinal(Empresa(id, campo(c, 3), campo(c, 4), campo(c, 5), campo(c, 1), campo(c, 2)));
+            actualizarContador(red.sigEmpresa, id);
+            });
+
+        leerLineas("vacantes.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 7) return;
+            int id = entero(c, 0);
+            Vacante v(id, entero(c, 1), campo(c, 2), campo(c, 3), campo(c, 4), campo(c, 5));
+            if (campo(c, 6) == "0") v.cerrar();
+            red.vacantes.agregaFinal(v);
+            actualizarContador(red.sigVacante, id);
+            });
+
+        leerLineas("postulaciones_por_revisar.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 2) return;
+            Vacante* v = red.buscarVacante(entero(c, 0));
+            if (v != nullptr) v->recibirPostulacion(entero(c, 1));
+            });
+
+        leerLineas("postulaciones.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 5) return;
+            int id = entero(c, 0);
+            int estado = entero(c, 4);
+            Postulacion p(id, entero(c, 1), entero(c, 2), campo(c, 3));
+            if (estado == (int)EstadoPostulacion::Revisada) p.revisar();
+            else if (estado == (int)EstadoPostulacion::Aceptada) p.aceptar();
+            else if (estado == (int)EstadoPostulacion::Rechazada) p.rechazar();
+            red.postulaciones.agregaFinal(p);
+            actualizarContador(red.sigPostulacion, id);
+            });
+
+        leerLineas("grupos.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 4) return;
+            int id = entero(c, 0);
+            red.grupos.agregaFinal(GrupoProfesional(id, campo(c, 1), campo(c, 2), campo(c, 3)));
+            actualizarContador(red.sigGrupo, id);
+            });
+
+        leerLineas("miembros.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 2) return;
+            GrupoProfesional* g = red.buscarGrupo(entero(c, 0));
+            if (g != nullptr) g->agregarMiembro(entero(c, 1));
+            });
+
+        leerLineas("publicaciones.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 4) return;
+            int id = entero(c, 0);
+            red.publicaciones.agregaFinal(Publicacion(id, entero(c, 1), campo(c, 2), campo(c, 3)));
+            actualizarContador(red.sigPublicacion, id);
+            });
+
+        leerLineas("me_gusta.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 2) return;
+            Publicacion* p = red.buscarPublicacion(entero(c, 0));
+            if (p != nullptr) p->darMeGusta(entero(c, 1));
+            });
+
+        leerLineas("comentarios.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 6) return;
+            int id = entero(c, 0);
+            red.comentarios.agregaFinal(Comentario(id, entero(c, 1), entero(c, 2), campo(c, 4), campo(c, 5), entero(c, 3)));
+            actualizarContador(red.sigComentario, id);
+            });
+
+        leerLineas("recomendaciones.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 5) return;
+            int id = entero(c, 0);
+            red.recomendaciones.agregaFinal(Recomendacion(id, entero(c, 1), entero(c, 2), campo(c, 3), campo(c, 4)));
+            actualizarContador(red.sigRecomendacion, id);
+            });
+
+        leerLineas("mensajes.txt").paraCada([&](const std::string& l) {
+            Lista<std::string> c = partir(l);
+            if (c.longitud() < 6) return;
+            int id = entero(c, 0);
+            Mensaje m(id, entero(c, 1), entero(c, 2), campo(c, 3), campo(c, 4));
+            if (campo(c, 5) == "1") m.marcarLeido();
+            red.mensajes.agregaFinal(m);
+            actualizarContador(red.sigMensaje, id);
+            });
+
+        return true;
+    }
+
+    // ==================== Binario ====================
+
+    static void escribirEntero(std::ofstream& out, int numero) {
+        out.write((const char*)&numero, sizeof(int));
+    }
+
+    // Primero el largo y despues los caracteres, asi al leer se sabe cuantos tomar.
+    static void escribirTexto(std::ofstream& out, const std::string& t) {
+        escribirEntero(out, (int)t.length());
+        out.write(t.c_str(), t.length());
+    }
+
+    static int leerEntero(std::ifstream& in) {
+        int numero = 0;
+        in.read((char*)&numero, sizeof(int));
+        return numero;
+    }
+
+    static std::string leerTexto(std::ifstream& in) {
+        int largo = leerEntero(in);
+        if (!in || largo < 0 || largo > 100000) { in.setstate(std::ios::failbit); return ""; }
+        std::string t(largo, ' ');
+        if (largo > 0) in.read(&t[0], largo);
+        return t;
+    }
+
+    static void guardarBinario(const RedProfesional& red) {
+        std::ofstream out(ARCHIVO_BINARIO, std::ios::binary);
+        if (!out.is_open()) return;
+        out.write(FIRMA, 8);
+
+        escribirEntero(out, red.usuarios.longitud());
+        red.usuarios.paraCada([&](const Usuario& u) {
+            escribirEntero(out, u.getId());
+            escribirTexto(out, u.getCorreo());
+            escribirTexto(out, u.getContrasena());
+            escribirTexto(out, u.getNombre());
+            escribirTexto(out, u.getApellido());
+            escribirTexto(out, u.getTitular());
+            escribirTexto(out, u.getUbicacion());
+
+            escribirEntero(out, u.totalContactos());
+            u.paraCadaContacto([&](const int& idContacto) { escribirEntero(out, idContacto); });
+
+            escribirEntero(out, u.totalHabilidades());
+            u.paraCadaHabilidad([&](const Habilidad& h) {
+                escribirTexto(out, h.getNombre());
+                escribirEntero(out, (int)h.getNivel());
+                });
+
+            escribirEntero(out, u.totalExperiencias());
+            u.paraCadaExperiencia([&](const ExperienciaLaboral& e) {
+                escribirEntero(out, e.getIdEmpresa());
+                escribirTexto(out, e.getNombreEmpresa());
+                escribirTexto(out, e.getCargo());
+                escribirEntero(out, e.getAnioInicio());
+                escribirEntero(out, e.getAnioFin());
+                escribirTexto(out, e.getDescripcion());
+                }, false);
+
+            escribirEntero(out, u.totalCertificaciones());
+            u.paraCadaCertificacion([&](const Certificacion& c) {
+                escribirEntero(out, c.getId());
+                escribirTexto(out, c.getNombre());
+                escribirTexto(out, c.getInstitucion());
+                escribirTexto(out, c.getFechaObtencion());
+                escribirTexto(out, c.getCodigoCredencial());
+                });
+
+            escribirEntero(out, u.cantidadSolicitudesPendientes());
+            u.paraCadaSolicitud([&](const SolicitudConexion& s) {
+                escribirEntero(out, s.getId());
+                escribirEntero(out, s.getIdEmisor());
+                escribirTexto(out, s.getMensaje());
+                escribirTexto(out, s.getFecha());
+                });
+
+            escribirEntero(out, u.cantidadNotificaciones());
+            u.paraCadaNotificacion([&](const Notificacion& n) {
+                escribirEntero(out, n.getId());
+                escribirEntero(out, (int)n.getTipo());
+                escribirTexto(out, n.getMensaje());
+                escribirTexto(out, n.getFecha());
+                escribirEntero(out, n.estaLeida() ? 1 : 0);
+                });
+            });
+
+        escribirEntero(out, red.empresas.longitud());
+        red.empresas.paraCada([&](const Empresa& e) {
+            escribirEntero(out, e.getId());
+            escribirTexto(out, e.getCorreo());
+            escribirTexto(out, e.getContrasena());
+            escribirTexto(out, e.getNombre());
+            escribirTexto(out, e.getSector());
+            escribirTexto(out, e.getUbicacion());
+            });
+
+        escribirEntero(out, red.vacantes.longitud());
+        red.vacantes.paraCada([&](const Vacante& v) {
+            escribirEntero(out, v.getId());
+            escribirEntero(out, v.getIdEmpresa());
+            escribirTexto(out, v.getTitulo());
+            escribirTexto(out, v.getDescripcion());
+            escribirTexto(out, v.getRequisitos());
+            escribirTexto(out, v.getModalidad());
+            escribirEntero(out, v.estaActiva() ? 1 : 0);
+            escribirEntero(out, v.cantidadPorRevisar());
+            v.paraCadaPostulacionPorRevisar([&](const int& idPostulacion) { escribirEntero(out, idPostulacion); });
+            });
+
+        escribirEntero(out, red.postulaciones.longitud());
+        red.postulaciones.paraCada([&](const Postulacion& p) {
+            escribirEntero(out, p.getId());
+            escribirEntero(out, p.getIdUsuario());
+            escribirEntero(out, p.getIdVacante());
+            escribirTexto(out, p.getFecha());
+            escribirEntero(out, (int)p.getEstado());
+            });
+
+        escribirEntero(out, red.grupos.longitud());
+        red.grupos.paraCada([&](const GrupoProfesional& g) {
+            escribirEntero(out, g.getId());
+            escribirTexto(out, g.getNombre());
+            escribirTexto(out, g.getDescripcion());
+            escribirTexto(out, g.getEspecialidad());
+            escribirEntero(out, g.getCantidadMiembros());
+            g.paraCadaMiembro([&](const int& idUsuario) { escribirEntero(out, idUsuario); });
+            });
+
+        escribirEntero(out, red.publicaciones.longitud());
+        red.publicaciones.paraCada([&](const Publicacion& p) {
+            escribirEntero(out, p.getId());
+            escribirEntero(out, p.getIdAutor());
+            escribirTexto(out, p.getTexto());
+            escribirTexto(out, p.getFecha());
+            escribirEntero(out, p.getMeGusta());
+            p.paraCadaMeGusta([&](const int& idUsuario) { escribirEntero(out, idUsuario); });
+            });
+
+        escribirEntero(out, red.comentarios.longitud());
+        red.comentarios.paraCada([&](const Comentario& c) {
+            escribirEntero(out, c.getId());
+            escribirEntero(out, c.getIdAutor());
+            escribirEntero(out, c.getIdPublicacion());
+            escribirEntero(out, c.getIdPadre());
+            escribirTexto(out, c.getTexto());
+            escribirTexto(out, c.getFecha());
+            });
+
+        escribirEntero(out, red.recomendaciones.longitud());
+        red.recomendaciones.paraCada([&](const Recomendacion& r) {
+            escribirEntero(out, r.getId());
+            escribirEntero(out, r.getIdEmisor());
+            escribirEntero(out, r.getIdReceptor());
+            escribirTexto(out, r.getTexto());
+            escribirTexto(out, r.getFecha());
+            });
+
+        escribirEntero(out, red.mensajes.longitud());
+        red.mensajes.paraCada([&](const Mensaje& m) {
+            escribirEntero(out, m.getId());
+            escribirEntero(out, m.getIdEmisor());
+            escribirEntero(out, m.getIdReceptor());
+            escribirTexto(out, m.getTexto());
+            escribirTexto(out, m.getFecha());
+            escribirEntero(out, m.fueLeido() ? 1 : 0);
+            });
+    }
+
+    // Lee en el mismo orden en que se escribio. Si algo falla (archivo cortado o de
+    // otra version) devuelve false y la red queda vacia.
+    static bool cargarBinario(RedProfesional& red) {
+        std::ifstream in(ARCHIVO_BINARIO, std::ios::binary);
+        if (!in.is_open()) return false;
+        char firma[8] = {};
+        in.read(firma, 8);
+        if (!in || std::string(firma, 8) != std::string(FIRMA, 8)) return false;
+
+        int cantidad = leerEntero(in);
+        for (int i = 0; i < cantidad && in; i++) {
+            int id = leerEntero(in);
+            std::string correo = leerTexto(in), contrasena = leerTexto(in), nombre = leerTexto(in),
+                apellido = leerTexto(in), titular = leerTexto(in), ubicacion = leerTexto(in);
+            Usuario u(id, nombre, apellido, titular, ubicacion, correo, contrasena);
+            actualizarContador(red.sigUsuario, id);
+
+            int n = leerEntero(in);
+            for (int j = 0; j < n && in; j++) u.agregarContacto(leerEntero(in));
+
+            n = leerEntero(in);
+            for (int j = 0; j < n && in; j++) {
+                std::string nombreHabilidad = leerTexto(in);
+                int nivel = leerEntero(in);
+                if (nivel >= 0 && nivel <= 3) u.agregarHabilidad(Habilidad(nombreHabilidad, (NivelHabilidad)nivel));
+            }
+
+            n = leerEntero(in);
+            for (int j = 0; j < n && in; j++) {
+                int idEmpresa = leerEntero(in);
+                std::string empresa = leerTexto(in), cargo = leerTexto(in);
+                int inicio = leerEntero(in);
+                int fin = leerEntero(in);
+                std::string descripcion = leerTexto(in);
+                if (fin == 0 || fin >= inicio)
+                    u.agregarExperiencia(ExperienciaLaboral(idEmpresa, empresa, cargo, inicio, fin, descripcion));
+            }
+
+            n = leerEntero(in);
+            for (int j = 0; j < n && in; j++) {
+                int idCertificacion = leerEntero(in);
+                std::string nom = leerTexto(in), institucion = leerTexto(in), fecha = leerTexto(in), codigo = leerTexto(in);
+                u.agregarCertificacion(Certificacion(idCertificacion, nom, institucion, fecha, codigo));
+                actualizarContador(red.sigCertificacion, idCertificacion);
+            }
+
+            n = leerEntero(in);
+            for (int j = 0; j < n && in; j++) {
+                int idSolicitud = leerEntero(in);
+                int idEmisor = leerEntero(in);
+                std::string mensaje = leerTexto(in), fecha = leerTexto(in);
+                u.recibirSolicitud(SolicitudConexion(idSolicitud, idEmisor, id, mensaje, fecha));
+                actualizarContador(red.sigSolicitud, idSolicitud);
+            }
+
+            n = leerEntero(in);
+            for (int j = 0; j < n && in; j++) {
+                int idNotificacion = leerEntero(in);
+                int tipo = leerEntero(in);
+                std::string mensaje = leerTexto(in), fecha = leerTexto(in);
+                bool leida = leerEntero(in) == 1;
+                if (tipo < 0 || tipo >(int)TipoNotificacion::EstadoPostulacion) continue;
+                Notificacion noti(idNotificacion, id, (TipoNotificacion)tipo, mensaje, fecha);
+                if (leida) noti.marcarLeida();
+                u.recibirNotificacion(noti);
+                actualizarContador(red.sigNotificacion, idNotificacion);
+            }
+            red.usuarios.agregaFinal(u);
         }
 
-        // empresas.csv: id,correo,contrasena,nombre,sector,distrito
-        while (std::getline(empresas, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea, ',');
-            if (c.longitud() < 6) continue;
-            int id = aEntero(c.obtenerPos(0));
-            red.empresas.agregaFinal(Empresa(id, c.obtenerPos(3), c.obtenerPos(4),
-                c.obtenerPos(5), c.obtenerPos(1), c.obtenerPos(2)));
+        cantidad = leerEntero(in);
+        for (int i = 0; i < cantidad && in; i++) {
+            int id = leerEntero(in);
+            std::string correo = leerTexto(in), contrasena = leerTexto(in), nombre = leerTexto(in),
+                sector = leerTexto(in), ubicacion = leerTexto(in);
+            red.empresas.agregaFinal(Empresa(id, nombre, sector, ubicacion, correo, contrasena));
             actualizarContador(red.sigEmpresa, id);
         }
 
-        std::ifstream vacantes("vacantes.txt");
-        while (std::getline(vacantes, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 7) continue;
-            int id = aEntero(c.obtenerPos(0));
-            Vacante v(id, aEntero(c.obtenerPos(1)), c.obtenerPos(2), c.obtenerPos(3),
-                c.obtenerPos(4), c.obtenerPos(5));
-            if (!aBool(c.obtenerPos(6))) v.cerrar();
+        cantidad = leerEntero(in);
+        for (int i = 0; i < cantidad && in; i++) {
+            int id = leerEntero(in);
+            int idEmpresa = leerEntero(in);
+            std::string titulo = leerTexto(in), descripcion = leerTexto(in), requisitos = leerTexto(in),
+                modalidad = leerTexto(in);
+            Vacante v(id, idEmpresa, titulo, descripcion, requisitos, modalidad);
+            if (leerEntero(in) == 0) v.cerrar();
+            int n = leerEntero(in);
+            for (int j = 0; j < n && in; j++) v.recibirPostulacion(leerEntero(in));
             red.vacantes.agregaFinal(v);
             actualizarContador(red.sigVacante, id);
         }
 
-        std::ifstream postulaciones("postulaciones.txt");
-        while (std::getline(postulaciones, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 5) continue;
-            int id = aEntero(c.obtenerPos(0));
-            Postulacion p(id, aEntero(c.obtenerPos(1)), aEntero(c.obtenerPos(2)), c.obtenerPos(3));
-            int estado = aEntero(c.obtenerPos(4));
+        cantidad = leerEntero(in);
+        for (int i = 0; i < cantidad && in; i++) {
+            int id = leerEntero(in);
+            int idUsuario = leerEntero(in);
+            int idVacante = leerEntero(in);
+            std::string fecha = leerTexto(in);
+            int estado = leerEntero(in);
+            Postulacion p(id, idUsuario, idVacante, fecha);
             if (estado == (int)EstadoPostulacion::Revisada) p.revisar();
-            if (estado == (int)EstadoPostulacion::Aceptada) p.aceptar();
-            if (estado == (int)EstadoPostulacion::Rechazada) p.rechazar();
+            else if (estado == (int)EstadoPostulacion::Aceptada) p.aceptar();
+            else if (estado == (int)EstadoPostulacion::Rechazada) p.rechazar();
             red.postulaciones.agregaFinal(p);
             actualizarContador(red.sigPostulacion, id);
         }
 
-        std::ifstream grupos("grupos.txt");
-        while (std::getline(grupos, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 4) continue;
-            int id = aEntero(c.obtenerPos(0));
-            red.grupos.agregaFinal(GrupoProfesional(id, c.obtenerPos(1), c.obtenerPos(2), c.obtenerPos(3)));
+        cantidad = leerEntero(in);
+        for (int i = 0; i < cantidad && in; i++) {
+            int id = leerEntero(in);
+            std::string nombre = leerTexto(in), descripcion = leerTexto(in), especialidad = leerTexto(in);
+            GrupoProfesional g(id, nombre, descripcion, especialidad);
+            int n = leerEntero(in);
+            for (int j = 0; j < n && in; j++) g.agregarMiembro(leerEntero(in));
+            red.grupos.agregaFinal(g);
             actualizarContador(red.sigGrupo, id);
         }
 
-        std::ifstream publicaciones("publicaciones.txt");
-        while (std::getline(publicaciones, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 4) continue;
-            int id = aEntero(c.obtenerPos(0));
-            red.publicaciones.agregaFinal(Publicacion(id, aEntero(c.obtenerPos(1)),
-                c.obtenerPos(2), c.obtenerPos(3)));
+        cantidad = leerEntero(in);
+        for (int i = 0; i < cantidad && in; i++) {
+            int id = leerEntero(in);
+            int idAutor = leerEntero(in);
+            std::string textoPublicacion = leerTexto(in), fecha = leerTexto(in);
+            Publicacion p(id, idAutor, textoPublicacion, fecha);
+            int n = leerEntero(in);
+            for (int j = 0; j < n && in; j++) p.darMeGusta(leerEntero(in));
+            red.publicaciones.agregaFinal(p);
             actualizarContador(red.sigPublicacion, id);
         }
 
-        std::ifstream comentarios("comentarios.txt");
-        while (std::getline(comentarios, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 6) continue;
-            int id = aEntero(c.obtenerPos(0));
-            red.comentarios.agregaFinal(Comentario(id, aEntero(c.obtenerPos(1)),
-                aEntero(c.obtenerPos(2)), c.obtenerPos(4), c.obtenerPos(5), aEntero(c.obtenerPos(3))));
+        cantidad = leerEntero(in);
+        for (int i = 0; i < cantidad && in; i++) {
+            int id = leerEntero(in);
+            int idAutor = leerEntero(in);
+            int idPublicacion = leerEntero(in);
+            int idPadre = leerEntero(in);
+            std::string textoComentario = leerTexto(in), fecha = leerTexto(in);
+            red.comentarios.agregaFinal(Comentario(id, idAutor, idPublicacion, textoComentario, fecha, idPadre));
             actualizarContador(red.sigComentario, id);
         }
 
-        std::ifstream recomendaciones("recomendaciones.txt");
-        while (std::getline(recomendaciones, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 5) continue;
-            int id = aEntero(c.obtenerPos(0));
-            red.recomendaciones.agregaFinal(Recomendacion(id, aEntero(c.obtenerPos(1)),
-                aEntero(c.obtenerPos(2)), c.obtenerPos(3), c.obtenerPos(4)));
+        cantidad = leerEntero(in);
+        for (int i = 0; i < cantidad && in; i++) {
+            int id = leerEntero(in);
+            int idEmisor = leerEntero(in);
+            int idReceptor = leerEntero(in);
+            std::string textoRecomendacion = leerTexto(in), fecha = leerTexto(in);
+            red.recomendaciones.agregaFinal(Recomendacion(id, idEmisor, idReceptor, textoRecomendacion, fecha));
             actualizarContador(red.sigRecomendacion, id);
         }
 
-        std::ifstream mensajes("mensajes.txt");
-        while (std::getline(mensajes, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 6) continue;
-            int id = aEntero(c.obtenerPos(0));
-            Mensaje m(id, aEntero(c.obtenerPos(1)), aEntero(c.obtenerPos(2)),
-                c.obtenerPos(3), c.obtenerPos(4));
-            if (aBool(c.obtenerPos(5))) m.marcarLeido();
+        cantidad = leerEntero(in);
+        for (int i = 0; i < cantidad && in; i++) {
+            int id = leerEntero(in);
+            int idEmisor = leerEntero(in);
+            int idReceptor = leerEntero(in);
+            std::string textoMensaje = leerTexto(in), fecha = leerTexto(in);
+            Mensaje m(id, idEmisor, idReceptor, textoMensaje, fecha);
+            if (leerEntero(in) == 1) m.marcarLeido();
             red.mensajes.agregaFinal(m);
             actualizarContador(red.sigMensaje, id);
         }
 
-        // ---------- Relaciones: se cargan despues de los objetos ----------
-
-        std::ifstream contactos("contactos.txt");
-        while (std::getline(contactos, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 2) continue;
-            Usuario* u = red.buscarUsuario(aEntero(c.obtenerPos(0)));
-            if (u != nullptr) u->agregarContacto(aEntero(c.obtenerPos(1)));
-        }
-
-        std::ifstream habilidades("habilidades.txt");
-        while (std::getline(habilidades, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 3) continue;
-            Usuario* u = red.buscarUsuario(aEntero(c.obtenerPos(0)));
-            if (u != nullptr)
-                u->agregarHabilidad(Habilidad(c.obtenerPos(1), (NivelHabilidad)aEntero(c.obtenerPos(2))));
-        }
-
-        std::ifstream experiencias("experiencias.txt");
-        while (std::getline(experiencias, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 7) continue;
-            Usuario* u = red.buscarUsuario(aEntero(c.obtenerPos(0)));
-            if (u != nullptr)
-                u->agregarExperiencia(ExperienciaLaboral(aEntero(c.obtenerPos(1)), c.obtenerPos(2),
-                    c.obtenerPos(3), aEntero(c.obtenerPos(4)), aEntero(c.obtenerPos(5)), c.obtenerPos(6)));
-        }
-
-        std::ifstream certificaciones("certificaciones.txt");
-        while (std::getline(certificaciones, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 6) continue;
-            Usuario* u = red.buscarUsuario(aEntero(c.obtenerPos(0)));
-            int id = aEntero(c.obtenerPos(1));
-            if (u != nullptr)
-                u->agregarCertificacion(Certificacion(id, c.obtenerPos(2), c.obtenerPos(3),
-                    c.obtenerPos(4), c.obtenerPos(5)));
-            actualizarContador(red.sigCertificacion, id);
-        }
-
-        std::ifstream solicitudes("solicitudes.txt");
-        while (std::getline(solicitudes, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 5) continue;
-            int id = aEntero(c.obtenerPos(0));
-            Usuario* receptor = red.buscarUsuario(aEntero(c.obtenerPos(2)));
-            if (receptor != nullptr)
-                receptor->recibirSolicitud(SolicitudConexion(id, aEntero(c.obtenerPos(1)),
-                    aEntero(c.obtenerPos(2)), c.obtenerPos(3), c.obtenerPos(4)));
-            actualizarContador(red.sigSolicitud, id);
-        }
-
-        std::ifstream notificaciones("notificaciones.txt");
-        while (std::getline(notificaciones, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 6) continue;
-            int id = aEntero(c.obtenerPos(0));
-            Usuario* destino = red.buscarUsuario(aEntero(c.obtenerPos(1)));
-            if (destino != nullptr) {
-                Notificacion n(id, aEntero(c.obtenerPos(1)), (TipoNotificacion)aEntero(c.obtenerPos(2)),
-                    c.obtenerPos(3), c.obtenerPos(4));
-                if (aBool(c.obtenerPos(5))) n.marcarLeida();
-                destino->recibirNotificacion(n);
-            }
-            actualizarContador(red.sigNotificacion, id);
-        }
-
-        std::ifstream miembros("miembros.txt");
-        while (std::getline(miembros, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 2) continue;
-            GrupoProfesional* g = red.buscarGrupo(aEntero(c.obtenerPos(0)));
-            if (g != nullptr) g->agregarMiembro(aEntero(c.obtenerPos(1)));
-        }
-
-        std::ifstream meGusta("me_gusta.txt");
-        while (std::getline(meGusta, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 2) continue;
-            Publicacion* p = red.buscarPublicacion(aEntero(c.obtenerPos(0)));
-            if (p != nullptr) p->darMeGusta(aEntero(c.obtenerPos(1)));
-        }
-
-        std::ifstream porRevisar("postulaciones_por_revisar.txt");
-        while (std::getline(porRevisar, linea)) {
-            if (linea == "") continue;
-            Lista<std::string> c = partir(linea);
-            if (c.longitud() < 2) continue;
-            Vacante* v = red.buscarVacante(aEntero(c.obtenerPos(0)));
-            if (v != nullptr) v->recibirPostulacion(aEntero(c.obtenerPos(1)));
-        }
-
-        return hayCuentas;
-    }
-
-
-public:
-    static bool guardarTodo(const RedProfesional& red,
-        const std::string& archivo = archivoPredeterminado()) {
-        const std::string temporal = archivo + ".tmp";
-        std::ofstream out(temporal, std::ios::binary | std::ios::trunc);
-        if (!out.is_open()) return false;
-
-        const char firma[8] = { 'C','H','A','M','B','A','B','1' };
-        out.write(firma, sizeof(firma));
-        escribirU32(out, VERSION);
-
-        // Se guardan los siguientes IDs para no reutilizar identificadores de
-        // elementos que pudieron haberse eliminado antes de cerrar el programa.
-        escribirI32(out, red.sigUsuario);
-        escribirI32(out, red.sigEmpresa);
-        escribirI32(out, red.sigVacante);
-        escribirI32(out, red.sigPostulacion);
-        escribirI32(out, red.sigGrupo);
-        escribirI32(out, red.sigPublicacion);
-        escribirI32(out, red.sigComentario);
-        escribirI32(out, red.sigRecomendacion);
-        escribirI32(out, red.sigMensaje);
-        escribirI32(out, red.sigSolicitud);
-        escribirI32(out, red.sigNotificacion);
-        escribirI32(out, red.sigCertificacion);
-
-        escribirU32(out, static_cast<std::uint32_t>(red.usuarios.longitud()));
-        red.usuarios.paraCada([&](const Usuario& u) { escribirUsuario(out, u); });
-
-        escribirU32(out, static_cast<std::uint32_t>(red.empresas.longitud()));
-        red.empresas.paraCada([&](const Empresa& e) {
-            escribirI32(out, e.getId());
-            escribirCadena(out, e.getCorreo());
-            escribirCadena(out, e.getContrasena());
-            escribirCadena(out, e.getNombre());
-            escribirCadena(out, e.getSector());
-            escribirCadena(out, e.getUbicacion());
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(red.vacantes.longitud()));
-        red.vacantes.paraCada([&](const Vacante& v) {
-            escribirI32(out, v.getId());
-            escribirI32(out, v.getIdEmpresa());
-            escribirCadena(out, v.getTitulo());
-            escribirCadena(out, v.getDescripcion());
-            escribirCadena(out, v.getRequisitos());
-            escribirCadena(out, v.getModalidad());
-            escribirBool(out, v.estaActiva());
-            escribirU32(out, static_cast<std::uint32_t>(v.cantidadPorRevisar()));
-            v.paraCadaPostulacionPorRevisar([&](const int& idPostulacion) {
-                escribirI32(out, idPostulacion);
-            });
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(red.postulaciones.longitud()));
-        red.postulaciones.paraCada([&](const Postulacion& p) {
-            escribirI32(out, p.getId());
-            escribirI32(out, p.getIdUsuario());
-            escribirI32(out, p.getIdVacante());
-            escribirCadena(out, p.getFecha());
-            escribirI32(out, static_cast<std::int32_t>(p.getEstado()));
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(red.grupos.longitud()));
-        red.grupos.paraCada([&](const GrupoProfesional& g) {
-            escribirI32(out, g.getId());
-            escribirCadena(out, g.getNombre());
-            escribirCadena(out, g.getDescripcion());
-            escribirCadena(out, g.getEspecialidad());
-            escribirU32(out, static_cast<std::uint32_t>(g.getCantidadMiembros()));
-            g.paraCadaMiembro([&](const int& idUsuario) { escribirI32(out, idUsuario); });
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(red.publicaciones.longitud()));
-        red.publicaciones.paraCada([&](const Publicacion& p) {
-            escribirI32(out, p.getId());
-            escribirI32(out, p.getIdAutor());
-            escribirCadena(out, p.getTexto());
-            escribirCadena(out, p.getFecha());
-            escribirU32(out, static_cast<std::uint32_t>(p.getMeGusta()));
-            p.paraCadaMeGusta([&](const int& idUsuario) { escribirI32(out, idUsuario); });
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(red.comentarios.longitud()));
-        red.comentarios.paraCada([&](const Comentario& c) {
-            escribirI32(out, c.getId());
-            escribirI32(out, c.getIdAutor());
-            escribirI32(out, c.getIdPublicacion());
-            escribirI32(out, c.getIdPadre());
-            escribirCadena(out, c.getTexto());
-            escribirCadena(out, c.getFecha());
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(red.recomendaciones.longitud()));
-        red.recomendaciones.paraCada([&](const Recomendacion& r) {
-            escribirI32(out, r.getId());
-            escribirI32(out, r.getIdEmisor());
-            escribirI32(out, r.getIdReceptor());
-            escribirCadena(out, r.getTexto());
-            escribirCadena(out, r.getFecha());
-        });
-
-        escribirU32(out, static_cast<std::uint32_t>(red.mensajes.longitud()));
-        red.mensajes.paraCada([&](const Mensaje& m) {
-            escribirI32(out, m.getId());
-            escribirI32(out, m.getIdEmisor());
-            escribirI32(out, m.getIdReceptor());
-            escribirCadena(out, m.getTexto());
-            escribirCadena(out, m.getFecha());
-            escribirBool(out, m.fueLeido());
-        });
-
-        out.flush();
-        bool correcto = out.good();
-        out.close();
-        if (!correcto) {
-            std::remove(temporal.c_str());
-            return false;
-        }
-
-        // Reemplazo al final para evitar dejar un archivo principal incompleto
-        // si ocurre un error durante la escritura.
-        std::remove(archivo.c_str());
-        if (std::rename(temporal.c_str(), archivo.c_str()) != 0) {
-            std::remove(temporal.c_str());
+        if (!in) {   // archivo incompleto: no se usa nada de lo leido
+            vaciar(red);
             return false;
         }
         return true;
     }
 
-    static bool cargarTodo(RedProfesional& red,
-        const std::string& archivo = archivoPredeterminado()) {
-        std::ifstream in(archivo, std::ios::binary);
-        if (in.is_open())
-            return leerArchivo(in, red);
+    static void vaciar(RedProfesional& red) {
+        red.usuarios.vaciar();
+        red.empresas.vaciar();
+        red.vacantes.vaciar();
+        red.postulaciones.vaciar();
+        red.grupos.vaciar();
+        red.publicaciones.vaciar();
+        red.comentarios.vaciar();
+        red.recomendaciones.vaciar();
+        red.mensajes.vaciar();
+    }
 
-        // Compatibilidad con la version previa del proyecto: si no existe aun
-        // chambalink.bin, intenta recuperar los CSV/TXT y los migra al binario.
-        // Solo se invoca el cargador viejo si realmente existe al menos un
-        // archivo de cuentas, para no mezclar archivos de datos huerfanos.
-        std::ifstream usuariosAnteriores("usuarios.csv");
-        std::ifstream empresasAnteriores("empresas.csv");
-        if (!usuariosAnteriores.is_open() && !empresasAnteriores.is_open())
-            return false;
-        usuariosAnteriores.close();
-        empresasAnteriores.close();
+public:
+    // Guarda en los dos formatos.
+    static void guardarTodo(const RedProfesional& red) {
+        guardarTexto(red);
+        guardarBinario(red);
+    }
 
-        bool cargoFormatoAnterior = cargarFormatoTextoAnterior(red);
-        if (cargoFormatoAnterior)
-            guardarTodo(red, archivo);
-        return cargoFormatoAnterior;
+    // Texto primero; si no hay .txt, el binario; si tampoco, los datos de ejemplo.
+    static void cargarTodo(RedProfesional& red) {
+        if (cargarTexto(red)) return;
+        if (cargarBinario(red)) return;
+        cargarDatosDeEjemplo(red);
+        guardarTodo(red);
+    }
+
+    // Datos para la demostracion. Para volver a ellos se borran los .txt y chambalink.bin.
+    // Todas las cuentas tienen la contrasena 1234.
+    // Las habilidades y conexiones se agregan directo (sin Accion) para que la pila
+    // de deshacer empiece vacia.
+    static void cargarDatosDeEjemplo(RedProfesional& red) {
+        int joao = red.registrarUsuario("Joao", "Rivero", "Desarrollador C++", "Ancon", "joao@demo.pe", "1234");
+        int ana = red.registrarUsuario("Ana", "Torres", "Analista de datos", "Miraflores", "ana@demo.pe", "1234");
+        int luis = red.registrarUsuario("Luis", "Paredes", "Backend Java", "Surco", "luis@demo.pe", "1234");
+        int maria = red.registrarUsuario("Maria", "Quispe", "Disenadora UX", "Lince", "maria@demo.pe", "1234");
+        int carlos = red.registrarUsuario("Carlos", "Huaman", "DevOps", "San Miguel", "carlos@demo.pe", "1234");
+        int rosa = red.registrarUsuario("Rosa", "Flores", "Docente de algoritmos", "Barranco", "rosa@demo.pe", "1234");
+        int diego = red.registrarUsuario("Diego", "Salas", "Practicante de sistemas", "Comas", "diego@demo.pe", "1234");
+        int lucia = red.registrarUsuario("Lucia", "Ramos", "Product Manager", "San Borja", "lucia@demo.pe", "1234");
+
+        habilidad(red, joao, "C++", 3);    habilidad(red, joao, "Git", 2);     habilidad(red, joao, "Estructuras de datos", 3);
+        habilidad(red, ana, "SQL", 4);     habilidad(red, ana, "Python", 3);   habilidad(red, ana, "Excel", 3);
+        habilidad(red, luis, "Java", 4);   habilidad(red, luis, "SQL", 3);     habilidad(red, luis, "Docker", 2);
+        habilidad(red, maria, "Figma", 4); habilidad(red, maria, "UX", 3);
+        habilidad(red, carlos, "Linux", 4); habilidad(red, carlos, "Docker", 4); habilidad(red, carlos, "Git", 3);
+        habilidad(red, rosa, "C++", 4);    habilidad(red, rosa, "Algoritmos", 4);
+        habilidad(red, diego, "Python", 2); habilidad(red, diego, "Git", 1);
+        habilidad(red, lucia, "Scrum", 4); habilidad(red, lucia, "Excel", 3);
+
+        // Red: Joao conoce a Ana y Luis. Segundo grado: Rosa (2 en comun), Maria y Carlos.
+        // Diego esta a tercer grado, por eso no debe salir en las sugerencias de Joao.
+        red.conectar(joao, ana);   red.conectar(joao, luis);  red.conectar(ana, luis);
+        red.conectar(ana, maria);  red.conectar(luis, carlos); red.conectar(carlos, diego);
+        red.conectar(rosa, ana);   red.conectar(rosa, luis);
+
+        // Solicitudes pendientes para Joao (Cola: se atienden en orden de llegada).
+        red.enviarSolicitud(lucia, joao, "Hola Joao, conectemos");
+        red.enviarSolicitud(diego, joao, "Vi tu perfil de C++");
+
+        int tech = red.registrarEmpresa("TechPeru", "Tecnologia", "San Isidro", "rrhh@techperu.pe", "1234");
+        int data = red.registrarEmpresa("DataAndes", "Analitica", "Miraflores", "talento@dataandes.pe", "1234");
+        // Experiencia ingresada desordenada: la lista doble la deja por anio de inicio.
+        red.agregarExperiencia(joao, "TechPeru", "Practicante de desarrollo", "2024", "2025");
+        red.agregarExperiencia(joao, "Cibertec", "Soporte TI", "2022", "2023");
+        red.agregarExperiencia(joao, "DataAndes", "Desarrollador C++", "2025", "");
+        red.agregarExperiencia(ana, "DataAndes", "Analista de datos", "2021", "");
+
+        red.agregarCertificacion(joao, "Git y GitHub", "Platzi", "2025/03/15", "GIT-2291");
+        red.agregarCertificacion(joao, "C++ Intermedio", "Coursera", "2024/08/02", "");
+        red.agregarCertificacion(joao, "Scrum Fundamentals", "SCRUMstudy", "2025/11/20", "SF-7781");
+
+        int v1 = red.publicarVacante(tech, "Desarrollador C++ Junior", "Desarrollo de modulos en C++",
+            "C++, Git, Estructuras de datos", "Hibrido");
+        int v2 = red.publicarVacante(tech, "Analista SQL", "Reportes y consultas", "SQL, Excel, Python", "Remoto");
+        red.publicarVacante(data, "Cientifico de datos", "Modelos predictivos", "Python, SQL", "Presencial");
+        int v4 = red.publicarVacante(data, "Backend Java", "APIs para clientes", "Java, SQL, Docker", "Hibrido");
+        red.postular(joao, v1);
+        red.postular(ana, v2);
+        red.postular(diego, v2);
+        red.postular(luis, v4);
+
+        // Publicaciones con fechas distintas para que se note el MergeSort.
+        int p1 = publicacion(red, ana, "Comparto mi dashboard de ventas hecho en Python.", "2026/09/12");
+        int p2 = publicacion(red, joao, "Termine mi lista doblemente enlazada con iteradores en C++.", "2026/09/28");
+        int p3 = publicacion(red, luis, "Buscamos practicantes de backend en mi equipo.", "2026/09/20");
+        publicacion(red, rosa, "Recuerden: QuickSort es O(n log n) en promedio.", "2026/10/01");
+        red.darMeGusta(ana, p2);  red.darMeGusta(luis, p2);  red.darMeGusta(rosa, p2);
+        red.darMeGusta(joao, p1); red.darMeGusta(joao, p3);
+        int c1 = red.comentar(rosa, p2, "Muy bien, ahora analiza su complejidad.");
+        red.comentar(joao, p2, "Gracias profe, ya lo agregue al informe.", c1);
+
+        int g1 = red.crearGrupo("Programadores C++", "Dudas y proyectos en C++", "C++");
+        int g2 = red.crearGrupo("Datos Lima", "Analitica y bases de datos", "SQL");
+        red.unirseAGrupo(joao, g1); red.unirseAGrupo(rosa, g1); red.unirseAGrupo(diego, g1);
+        red.unirseAGrupo(ana, g2);  red.unirseAGrupo(luis, g2);
+
+        red.recomendar(ana, joao, "Joao es muy ordenado y explica bien sus soluciones.");
+        red.enviarMensaje(ana, joao, "Hola Joao, viste la vacante de TechPeru?");
+    }
+
+private:
+    static void habilidad(RedProfesional& red, int idUsuario, std::string nombre, int nivel) {
+        red.buscarUsuario(idUsuario)->agregarHabilidad(Habilidad(nombre, (NivelHabilidad)(nivel - 1)));
+    }
+
+    static int publicacion(RedProfesional& red, int idAutor, std::string texto, std::string fecha) {
+        int id = red.sigPublicacion;
+        red.sigPublicacion++;
+        red.publicaciones.agregaFinal(Publicacion(id, idAutor, texto, fecha));
+        return id;
     }
 };

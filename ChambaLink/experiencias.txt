@@ -1,0 +1,4 @@
+1000|0|Cibertec|Soporte TI|2022|2023|
+1000|1000|TechPeru|Practicante de desarrollo|2024|2025|
+1000|1001|DataAndes|Desarrollador C++|2025|0|
+1001|1001|DataAndes|Analista de datos|2021|0|

@@ -42,6 +42,13 @@ void limpiarZonaContenido() {
     }
 }
 
+// Linea separadora que muestra el ordenamiento usado en la lista de abajo:
+//   ---- (QuickSort por nombre) -----------------------------
+void separadorConOrden(string ordenamiento) {
+    string texto = "---- (" + ordenamiento + ") ";
+    ubicar(55, 12); cout << texto << string(64 - texto.length(), '-');
+}
+
 // Pantalla provisional mientras una seccion no esta programada.
 // Espera ESC para volver al menu.
 void mostrarSeccionPendiente(string titulo) {
@@ -107,12 +114,271 @@ void mostrarPerfil(RedProfesional& red, int idUsuario, string titulo) {
     ubicar(55, 18); cout << "Correo:";      ubicar(68, 18); cout << usuario->getCorreo();
     ubicar(55, 19); cout << "ID:";          ubicar(68, 19); cout << usuario->getId();
     ubicar(55, 20); cout << "Habilidades:"; ubicar(68, 20); cout << recortar(valorOVacio(textoHabilidades(red, idUsuario)), 50);
+    ubicar(55, 21); cout << "Principal:";   ubicar(68, 21); cout << valorOVacio(usuario->habilidadPrincipal());
+    ubicar(55, 22); cout << "Experiencia:"; ubicar(68, 22); cout << usuario->totalExperiencias() << " puesto(s), "
+        << usuario->antiguedadTotalEnAnios(std::stoi(RedProfesional::fechaHoy().substr(0, 4))) << " anio(s) en total";
 
     while (leerTecla() != TECLA_ESC) {}
 }
 
+// Pide ENTER para confirmar o ESC para cancelar en la fila y.
+bool confirmarZona(int y, string pregunta) {
+    ubicar(55, y); cout << string(64, ' ');
+    ubicar(55, y + 1); cout << string(64, ' ');
+    ubicar(55, y); cout << pregunta;
+    ubicar(55, y + 1); cout << "ENTER: confirmar     ESC: cancelar";
+    while (true) {
+        int tecla = leerTecla();
+        if (tecla == TECLA_ENTER) return true;
+        if (tecla == TECLA_ESC) return false;
+    }
+}
+
+// ---------- Mis habilidades (Lista simple) ----------
+
+void formularioHabilidad(RedProfesional& red, int idSesion) {
+    string nombre, nivel;
+    while (true) {
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "AGREGAR HABILIDAD";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 14); cout << "Nombre:";
+        ubicar(55, 16); cout << "Nivel:";
+        ubicar(55, 17); cout << "(1 Basico  2 Intermedio  3 Avanzado  4 Experto)";
+
+        if (!leerCampoEn(68, 14, RedProfesional::MAX_HABILIDAD, nombre)) return;
+        if (!leerCampoEn(68, 16, 1, nivel)) return;
+
+        int numero = 0;
+        if (nivel != "") numero = nivel[0] - '0';
+        if (red.agregarHabilidad(idSesion, nombre, numero)) {
+            GestorArchivos::guardarTodo(red);
+            return;
+        }
+        if (!mostrarErrorZona(red.getUltimoError())) return;
+    }
+}
+
+// Lista de habilidades, 8 por pagina. La ultima opcion es Agregar habilidad.
+// ENTER sobre una habilidad la quita (se puede deshacer en Historial de acciones).
+void seccionHabilidades(RedProfesional& red, int idSesion) {
+    int seleccion = 0;
+    int pagina = 0;
+    while (true) {
+        const Usuario* usuario = red.buscarUsuario(idSesion);
+        if (usuario == nullptr) return;
+
+        Lista<Habilidad> lista;
+        usuario->paraCadaHabilidad([&lista](const Habilidad& h) { lista.agregaFinal(h); });
+
+        int total = (int)lista.longitud();
+        int paginas = total == 0 ? 1 : (total + 7) / 8;
+        if (pagina >= paginas) pagina = paginas - 1;
+        int enPagina = total - pagina * 8;
+        if (enPagina > 8) enPagina = 8;
+        if (seleccion > enPagina) seleccion = enPagina;   // enPagina = opcion Agregar
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "MIS HABILIDADES (" << total << ")";
+        if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        if (total == 0) { ubicar(58, 14); cout << "Aun no registras habilidades"; }
+
+        string nombres[8];
+        int i = 0;
+        for (Habilidad& h : lista) {
+            if (i >= pagina * 8 && i < pagina * 8 + 8) {
+                int posicion = i - pagina * 8;
+                nombres[posicion] = h.getNombre();
+                ubicar(58, 14 + posicion); cout << recortar(h.getNombre(), 30);
+                ubicar(92, 14 + posicion); cout << h.nivelToString();
+            }
+            i++;
+        }
+        ubicar(58, 23); cout << "Agregar habilidad";
+        ubicar(55, seleccion < enPagina ? 14 + seleccion : 23); cout << "->";
+        ubicar(55, 25); cout << "ENTER: quitar / agregar     ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER) {
+            if (seleccion == enPagina) formularioHabilidad(red, idSesion);
+            else if (confirmarZona(24, "Quitar " + recortar(nombres[seleccion], 30) + "?")) {
+                if (red.eliminarHabilidad(idSesion, nombres[seleccion])) GestorArchivos::guardarTodo(red);
+            }
+        }
+    }
+}
+
+// ---------- Mi experiencia laboral (Lista doble) ----------
+
+void formularioExperiencia(RedProfesional& red, int idSesion) {
+    string empresa, cargo, inicio, fin;
+    while (true) {
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "AGREGAR EXPERIENCIA";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 14); cout << "Empresa:";
+        ubicar(55, 16); cout << "Cargo:";
+        ubicar(55, 18); cout << "Anio inicio:";
+        ubicar(55, 20); cout << "Anio fin:";
+        ubicar(55, 21); cout << "(vacio si es tu trabajo actual)";
+
+        if (!leerCampoEn(69, 14, 40, empresa)) return;
+        if (!leerCampoEn(69, 16, RedProfesional::MAX_CARGO, cargo)) return;
+        if (!leerCampoEn(69, 18, 4, inicio)) return;
+        if (!leerCampoEn(69, 20, 4, fin)) return;
+
+        if (red.agregarExperiencia(idSesion, empresa, cargo, inicio, fin)) {
+            GestorArchivos::guardarTodo(red);
+            return;
+        }
+        if (!mostrarErrorZona(red.getUltimoError())) return;
+    }
+}
+
+// Historial laboral con el iterador de la lista doble, 4 puestos por pagina.
+// La primera opcion cambia el sentido: mas reciente primero (--) o mas antiguo primero (++).
+// ENTER sobre un puesto lo elimina (eliminaPos llega desde el extremo mas cercano).
+void seccionExperiencia(RedProfesional& red, int idSesion) {
+    bool recientePrimero = true;
+    int seleccion = 0;   // 0 = cambiar orden, 1..4 = puestos, ultima = agregar
+    int pagina = 0;
+    int anioActual = std::stoi(RedProfesional::fechaHoy().substr(0, 4));
+    while (true) {
+        const Usuario* usuario = red.buscarUsuario(idSesion);
+        if (usuario == nullptr) return;
+
+        int total = (int)usuario->totalExperiencias();
+        int paginas = total == 0 ? 1 : (total + 3) / 4;
+        if (pagina >= paginas) pagina = paginas - 1;
+        int enPagina = total - pagina * 4;
+        if (enPagina > 4) enPagina = 4;
+        if (enPagina < 0) enPagina = 0;
+        if (seleccion > enPagina + 1) seleccion = enPagina + 1;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "MI EXPERIENCIA (" << total << ")   En curso: " << usuario->cantidadExperienciasActuales();
+        if (paginas > 1) cout << "   Pag. " << pagina + 1 << "/" << paginas << " (<- ->)";
+        separadorConOrden("Lista doble ordenada por anio de inicio");
+        ubicar(58, 13); cout << "Orden: " << (recientePrimero ? "mas reciente primero (iterador --)" : "mas antiguo primero (iterador ++)");
+        if (total == 0) { ubicar(58, 15); cout << "Aun no registras experiencia laboral"; }
+
+        // posiciones[] guarda la posicion real en la lista (0 = mas antiguo) para eliminar.
+        int posiciones[4] = { 0, 0, 0, 0 };
+        int i = 0;
+        usuario->paraCadaExperiencia([&](const ExperienciaLaboral& e) {
+            if (i >= pagina * 4 && i < pagina * 4 + 4) {
+                int fila = i - pagina * 4;
+                int y = 15 + fila * 2;
+                posiciones[fila] = recientePrimero ? total - 1 - i : i;
+                ubicar(58, y); cout << recortar(e.getCargo() + " - " + e.getNombreEmpresa(), 58);
+                ubicar(60, y + 1); cout << e.getAnioInicio() << " - ";
+                if (e.esActual()) cout << "Actual"; else cout << e.getAnioFin();
+                cout << "  (" << e.duracionEnAnios(anioActual) << " anios)";
+            }
+            i++;
+            }, recientePrimero);
+
+        ubicar(58, 23); cout << "Agregar experiencia";
+        int filaFlecha = 13;
+        if (seleccion >= 1 && seleccion <= enPagina) filaFlecha = 15 + (seleccion - 1) * 2;
+        if (seleccion == enPagina + 1) filaFlecha = 23;
+        ubicar(55, filaFlecha); cout << "->";
+        ubicar(55, 25); cout << "Lista doble     ENTER: elegir     ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina + 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER) {
+            if (seleccion == 0) { recientePrimero = !recientePrimero; pagina = 0; }
+            else if (seleccion == enPagina + 1) formularioExperiencia(red, idSesion);
+            else if (confirmarZona(24, "Eliminar este puesto?")) {
+                if (red.eliminarExperiencia(idSesion, posiciones[seleccion - 1])) GestorArchivos::guardarTodo(red);
+            }
+        }
+    }
+}
+
+// ---------- Historial de acciones (Pila) ----------
+
+// Muestra la pila sin desapilar. ENTER deshace la accion del tope.
+// Las flechas izquierda/derecha cambian el orden (la copia se invierte con Pila::invertir).
+void seccionHistorialAcciones(RedProfesional& red, int idSesion) {
+    bool masAntiguaPrimero = false;
+    while (true) {
+        const Usuario* usuario = red.buscarUsuario(idSesion);
+        if (usuario == nullptr) return;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "HISTORIAL DE ACCIONES (" << usuario->totalAcciones() << ")   Red: "
+            << usuario->contarAcciones("Red") << "   Perfil: " << usuario->contarAcciones("Perfil");
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 13); cout << "Orden: " << (masAntiguaPrimero ? "mas antigua primero (pila invertida)" : "mas reciente primero (tope)");
+
+        if (usuario->totalAcciones() == 0) {
+            ubicar(58, 15); cout << "No hay acciones en esta sesion";
+        }
+        int i = 0;
+        usuario->paraCadaAccion([&i](const Accion& a) {
+            if (i < 8) {
+                ubicar(58, 15 + i); cout << "[" << a.getCategoria() << "] " << recortar(a.getDescripcion(), 50);
+            }
+            i++;
+            }, masAntiguaPrimero);
+
+        ubicar(55, 24); cout << "Pila (LIFO): ENTER deshace la mas reciente";
+        ubicar(55, 25); cout << "<- ->: cambiar orden     ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_IZQUIERDA || tecla == TECLA_DERECHA) masAntiguaPrimero = !masAntiguaPrimero;
+        else if (tecla == TECLA_ENTER && usuario->totalAcciones() > 0) {
+            limpiarZonaContenido();
+            ubicar(55, 11); cout << "DESHACER";
+            if (!confirmarZona(14, "Deshacer: " + recortar(usuario->ultimaAccion().getDescripcion(), 50))) continue;
+            string descripcion;
+            if (red.deshacerUltimaAccion(idSesion, descripcion)) GestorArchivos::guardarTodo(red);
+        }
+    }
+}
+
+// Menu interno de Mi perfil.
 void seccionMiPerfil(RedProfesional& red, int idSesion) {
-    mostrarPerfil(red, idSesion, "MI PERFIL");
+    int opcion = 0;
+    const int totalOpciones = 4;
+    while (true) {
+        const Usuario* usuario = red.buscarUsuario(idSesion);
+        if (usuario == nullptr) return;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "MI PERFIL";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(58, 14); cout << "Ver mis datos";
+        ubicar(58, 16); cout << "Mis habilidades (" << usuario->totalHabilidades() << ")";
+        ubicar(58, 18); cout << "Mi experiencia laboral (" << usuario->totalExperiencias() << ")";
+        ubicar(58, 20); cout << "Historial de acciones (" << usuario->totalAcciones() << ")";
+        ubicar(55, 14 + opcion * 2); cout << "->";
+        ubicar(55, 25); cout << "Lista, Lista doble y Pila     ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && opcion > 0) opcion--;
+        else if (tecla == TECLA_ABAJO && opcion < totalOpciones - 1) opcion++;
+        else if (tecla == TECLA_ENTER) {
+            if (opcion == 0) mostrarPerfil(red, idSesion, "MI PERFIL");
+            else if (opcion == 1) seccionHabilidades(red, idSesion);
+            else if (opcion == 2) seccionExperiencia(red, idSesion);
+            else if (opcion == 3) seccionHistorialAcciones(red, idSesion);
+        }
+    }
 }
 
 // ======================= Individuo: Mis certificaciones =======================
@@ -157,7 +423,7 @@ void seccionMisCertificaciones(RedProfesional& red, int idSesion) {
         limpiarZonaContenido();
         ubicar(55, 11); cout << "MIS CERTIFICACIONES (" << total << ")";
         if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden("MergeSort por fecha");
 
         if (total == 0) {
             ubicar(55, 13); cout << "Aun no tienes certificaciones";
@@ -186,10 +452,7 @@ void seccionMisCertificaciones(RedProfesional& red, int idSesion) {
 }
 
 // ======================= Individuo: Publicaciones =======================
-// Todas las publicaciones de la red. Se conectan por ids:
-//   publicaciones.txt  id | idAutor | texto | fecha
-//   comentarios.txt    id | idAutor | idPublicacion | idPadre | texto | fecha
-//   me_gusta.txt       idPublicacion | idUsuario
+// Todas las publicaciones de la red. Comentarios y me gusta se enlazan por ids.
 
 // Escribe el texto de una publicacion en dos lineas.
 // Si no cabe en una, corta en el ultimo espacio antes de la columna 60
@@ -356,7 +619,7 @@ void seccionPublicaciones(RedProfesional& red, int idSesion, bool soloMias) {
         limpiarZonaContenido();
         ubicar(55, 11); cout << (soloMias ? "MIS PUBLICACIONES (" : "PUBLICACIONES (") << total << ")";
         if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden(porPopularidad ? "MergeSort por me gusta" : "MergeSort por fecha");
         ubicar(58, 13); cout << "Nueva publicacion";
         ubicar(58, 14); cout << "Ordenar por: " << (porPopularidad ? "popularidad" : "fecha");
 
@@ -669,7 +932,7 @@ void listaRecomendaciones(RedProfesional& red, int idSesion, bool recibidas) {
         limpiarZonaContenido();
         ubicar(55, 11); cout << (recibidas ? "RECOMENDACIONES RECIBIDAS (" : "RECOMENDACIONES ENVIADAS (") << total << ")";
         if (paginas > 1) cout << "  Pag. " << pagina + 1 << "/" << paginas;
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden("MergeSort por fecha");
 
         if (total == 0) {
             ubicar(55, 15); cout << (recibidas ? "Aun no has recibido recomendaciones" : "Aun no has escrito recomendaciones");
@@ -757,7 +1020,7 @@ void seleccionarContactoParaRecomendar(RedProfesional& red, int idSesion) {
 
         limpiarZonaContenido();
         ubicar(55, 11); cout << "ELEGIR CONTACTO PARA RECOMENDAR";
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden("QuickSort por nombre");
 
         if (total == 0) {
             ubicar(55, 15); cout << "Necesitas al menos un contacto para recomendarlo";
@@ -949,9 +1212,9 @@ void seccionContactosRed(RedProfesional& red, int idSesion) {
         else if (seleccion >= enPagina) seleccion = enPagina - 1;
 
         limpiarZonaContenido();
-        ubicar(55, 11); cout << "MIS CONTACTOS - QUICKSORT (" << total << ")";
+        ubicar(55, 11); cout << "MIS CONTACTOS (" << total << ")";
         if (paginas > 1) cout << "  Pagina " << pagina + 1 << " de " << paginas << " (<- ->)";
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden("QuickSort por nombre");
 
         if (total == 0) {
             ubicar(55, 14); cout << "Aun no tienes contactos";
@@ -1061,7 +1324,7 @@ void seccionBuscarPersonasRed(RedProfesional& red, int idSesion) {
         limpiarZonaContenido();
         ubicar(55, 11); cout << "RESULTADOS PARA: " << recortar(consulta, 30) << " (" << total << ")";
         if (paginas > 1) cout << "  Pag. " << pagina + 1 << "/" << paginas;
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden("QuickSort por nombre");
 
         if (total == 0) ubicar(55, 15), cout << "No se encontraron personas";
 
@@ -1117,9 +1380,9 @@ void seccionSugerenciasRed(RedProfesional& red, int idSesion) {
         else if (seleccion >= enPagina) seleccion = enPagina - 1;
 
         limpiarZonaContenido();
-        ubicar(55, 11); cout << "SUGERENCIAS DE CONEXION - QUICKSORT (" << total << ")";
+        ubicar(55, 11); cout << "SUGERENCIAS DE CONEXION (" << total << ")";
         if (paginas > 1) cout << "  Pag. " << pagina + 1 << "/" << paginas;
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden("QuickSort por contactos en comun");
 
         if (total == 0) {
             ubicar(55, 14); cout << "No hay sugerencias nuevas por ahora";
@@ -1159,7 +1422,7 @@ void seccionSugerenciasRed(RedProfesional& red, int idSesion) {
 void deshacerAccionRed(RedProfesional& red, int idSesion) {
     limpiarZonaContenido();
     ubicar(55, 14); cout << "DESHACER ULTIMA ACCION DE RED";
-    ubicar(55, 16); cout << "Esto revierte la ultima conexion aceptada o contacto eliminado.";
+    ubicar(55, 16); cout << "Revierte la ultima accion de la pila (red o perfil).";
     ubicar(55, 19); cout << "ENTER: confirmar     ESC: cancelar";
     if (leerTecla() != TECLA_ENTER) return;
 
@@ -1332,7 +1595,7 @@ void seccionMensajes(RedProfesional& red, int idSesion) {
         limpiarZonaContenido();
         ubicar(55, 11); cout << "MENSAJES (" << noLeidosTotal << " sin leer)";
         if (paginas > 1) cout << "  Pagina " << pagina + 1 << " de " << paginas << " (<- ->)";
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden("QuickSort por nombre");
 
         if (total == 0) {
             ubicar(55, 14); cout << "No tienes contactos para iniciar una conversacion";
@@ -1495,8 +1758,8 @@ void dibujarEncabezadoIndividuo(RedProfesional& red, int idSesion) {
     if (usuario == nullptr) return;
 
     ubicar(108, 1); cout << RedProfesional::fechaHoy();
-    ubicar(100, 2); cout << "Notificaciones nuevas (" << usuario->cantidadNotificacionesNoLeidas() << ")";
-    ubicar(100, 3); cout << "Mensajes nuevos (" << red.cantidadMensajesNoLeidos(idSesion) << ")";
+    ubicar(92, 2); cout << "Notificaciones nuevas (" << usuario->cantidadNotificacionesNoLeidas() << ")";
+    ubicar(92, 3); cout << "Mensajes nuevos (" << red.cantidadMensajesNoLeidos(idSesion) << ")";
 
     ubicar(1, 6); cout << usuario->getNombreCompleto();
     ubicar(1, 7); cout << usuario->getTitular();
@@ -1738,10 +2001,7 @@ void seccionMisVacantes(RedProfesional& red, int idSesion) {
     int seleccion = 0;
     int pagina = 0;
     while (true) {
-        red.ordenarVacantesHeap();   // HeapSort de Piero, por titulo
-
-        Lista<Vacante> mias;
-        red.paraCadaVacanteDe(idSesion, [&mias](const Vacante& v) { mias.agregaFinal(v); });
+        Lista<Vacante> mias = red.vacantesOrdenadasDe(idSesion);   // HeapSort por titulo
 
         int total = (int)mias.longitud();
         int paginas = (total + 3) / 4;          // 4 vacantes por pagina
@@ -1754,7 +2014,7 @@ void seccionMisVacantes(RedProfesional& red, int idSesion) {
         limpiarZonaContenido();
         ubicar(55, 11); cout << "MIS VACANTES (" << total << ")";
         if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden("HeapSort por titulo");
 
         if (total == 0) {
             ubicar(55, 14); cout << "Aun no has publicado vacantes";
@@ -1840,7 +2100,7 @@ void mostrarResultadosBusqueda(RedProfesional& red, Lista<Coincidencia>& resulta
         limpiarZonaContenido();
         ubicar(55, 11); cout << "RESULTADOS: " << total << " profesionales";
         if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden("HeapSort por coincidencias");
 
         if (total == 0) {
             ubicar(55, 14); cout << "No se encontraron profesionales con esas palabras clave";
@@ -1908,7 +2168,7 @@ void seccionMiEmpresa(RedProfesional& red, int idSesion) {
         if (v.estaActiva()) activas++;
         else canceladas++;
         });
-    red.paraCadaContratacion(idSesion, [&contrataciones](const Postulacion& p) { contrataciones++; });
+    red.paraCadaContratacion(idSesion, [&contrataciones](const Postulacion&) { contrataciones++; });
 
     limpiarZonaContenido();
     ubicar(55, 11); cout << "MI EMPRESA";

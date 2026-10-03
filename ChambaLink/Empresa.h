@@ -39,7 +39,7 @@ public:
     std::string getUbicacion() const { return ubicacion; }
     std::string getCorreo() const { return correo; }
 
-    // Solo la usa GestorArchivos para guardar la cuenta en empresas.csv.
+    // Solo la usa GestorArchivos para guardar la cuenta.
     std::string getContrasena() const { return contrasena; }
 
     void setSector(std::string pSector) { sector = pSector; }

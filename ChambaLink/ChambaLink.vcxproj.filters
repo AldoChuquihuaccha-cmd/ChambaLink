@@ -95,13 +95,10 @@
     <ClInclude Include="GestorArchivos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Consola.h">
+    <ClInclude Include="FuncionesInicio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Login.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MenuPrincipal.h">
+    <ClInclude Include="FuncionesMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
