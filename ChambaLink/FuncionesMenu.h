@@ -398,6 +398,1096 @@ void seccionPublicaciones(RedProfesional& red, int idSesion, bool soloMias) {
     }
 }
 
+
+// ======================= Individuo: Empleos y postulaciones =======================
+
+// Busca la postulacion del usuario para una vacante concreta.
+// Devuelve nullptr cuando aun no ha postulado.
+const Postulacion* obtenerPostulacionUsuarioVacante(RedProfesional& red, int idUsuario, int idVacante) {
+    const Postulacion* encontrada = nullptr;
+    red.paraCadaPostulacionDe(idUsuario, [&encontrada, idVacante](const Postulacion& p) {
+        if (p.esDeVacante(idVacante)) encontrada = &p;
+        });
+    return encontrada;
+}
+
+// Detalle de una oferta para el usuario. Si la vacante esta activa y todavia
+// no postulo, ENTER permite confirmar la postulacion.
+void detalleEmpleoUsuario(RedProfesional& red, int idSesion, int idVacante) {
+    while (true) {
+        const Vacante* vacante = red.obtenerVacante(idVacante);
+        if (vacante == nullptr) return;
+
+        const Postulacion* postulacion = obtenerPostulacionUsuarioVacante(red, idSesion, idVacante);
+        int compatibilidad = red.calcularCompatibilidad(idSesion, idVacante);
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << recortar(vacante->getTitulo(), 63);
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 13); cout << "Empresa: " << recortar(red.nombreEmpresa(vacante->getIdEmpresa()), 54);
+        ubicar(55, 14); cout << "Modalidad: " << valorOVacio(vacante->getModalidad());
+        ubicar(55, 15); cout << "Compatibilidad: " << compatibilidad << "%";
+        ubicar(55, 16); cout << "Vacante: " << (vacante->estaActiva() ? "Activa" : "Cerrada");
+
+        ubicar(55, 18); cout << "Descripcion:";
+        escribirTextoPublicacion(recortar(valorOVacio(vacante->getDescripcion()), 118), 57, 19);
+        ubicar(55, 21); cout << "Requisitos: " << recortar(valorOVacio(vacante->getRequisitos()), 51);
+
+        if (postulacion != nullptr) {
+            ubicar(55, 23); cout << "Postulacion: " << postulacion->estadoToString()
+                << "     Fecha: " << postulacion->getFecha();
+            ubicar(55, 24); cout << "ESC: volver";
+
+            while (leerTecla() != TECLA_ESC) {}
+            return;
+        }
+
+        if (!vacante->estaActiva()) {
+            ubicar(55, 23); cout << "Esta vacante ya no recibe postulaciones";
+            ubicar(55, 24); cout << "ESC: volver";
+            while (leerTecla() != TECLA_ESC) {}
+            return;
+        }
+
+        ubicar(55, 23); cout << "-> Postular a esta vacante";
+        ubicar(55, 24); cout << "ENTER: postular     ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        if (tecla != TECLA_ENTER) continue;
+
+        limpiarZonaContenido();
+        ubicar(55, 14); cout << "CONFIRMAR POSTULACION";
+        ubicar(55, 16); cout << recortar(vacante->getTitulo(), 60);
+        ubicar(55, 17); cout << recortar(red.nombreEmpresa(vacante->getIdEmpresa()), 60);
+        ubicar(55, 20); cout << "ENTER: confirmar     ESC: cancelar";
+
+        int confirmar = leerTecla();
+        if (confirmar == TECLA_ESC) continue;
+        if (confirmar != TECLA_ENTER) continue;
+
+        if (red.postular(idSesion, idVacante) != -1) {
+            GestorArchivos::guardarTodo(red);
+            limpiarZonaContenido();
+            ubicar(55, 15); cout << "Postulacion realizada correctamente";
+            ubicar(55, 17); cout << "ENTER: continuar";
+            while (leerTecla() != TECLA_ENTER) {}
+        }
+        else {
+            if (!mostrarErrorZona(red.getUltimoError())) return;
+        }
+    }
+}
+
+// Lista las vacantes activas. ENTER abre el detalle y permite postular.
+// Se muestran 4 ofertas por pagina.
+void seccionEmpleos(RedProfesional& red, int idSesion) {
+    int pagina = 0;
+    int seleccion = 0;
+
+    while (true) {
+        Lista<Vacante> disponibles;
+        red.paraCadaVacanteActiva([&disponibles](const Vacante& v) {
+            disponibles.agregaFinal(v);
+            });
+
+        int total = (int)disponibles.longitud();
+        int paginas = (total + 3) / 4;
+        if (paginas == 0) pagina = 0;
+        else if (pagina >= paginas) pagina = paginas - 1;
+
+        int inicio = pagina * 4;
+        int enPagina = total - inicio;
+        if (enPagina > 4) enPagina = 4;
+        if (enPagina <= 0) seleccion = 0;
+        else if (seleccion >= enPagina) seleccion = enPagina - 1;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "EMPLEOS DISPONIBLES (" << total << ")";
+        if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(55, 14); cout << "No hay vacantes activas por el momento";
+            ubicar(55, 16); cout << "ESC: volver";
+        }
+
+        int idsPagina[4] = { 0, 0, 0, 0 };
+        int i = 0;
+        for (Vacante& v : disponibles) {
+            if (i >= inicio && i < inicio + 4) {
+                int pos = i - inicio;
+                int y = 14 + pos * 3;
+                idsPagina[pos] = v.getId();
+
+                const Postulacion* p = obtenerPostulacionUsuarioVacante(red, idSesion, v.getId());
+                ubicar(58, y); cout << recortar(v.getTitulo(), 43);
+                if (p != nullptr) cout << "  [" << p->estadoToString() << "]";
+                ubicar(58, y + 1); cout << recortar(red.nombreEmpresa(v.getIdEmpresa())
+                    + " - " + valorOVacio(v.getModalidad()), 42);
+                ubicar(104, y + 1); cout << "Compat. " << red.calcularCompatibilidad(idSesion, v.getId()) << "%";
+            }
+            i++;
+        }
+
+        if (enPagina > 0) {
+            ubicar(55, 14 + seleccion * 3); cout << "->";
+        }
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER && enPagina > 0)
+            detalleEmpleoUsuario(red, idSesion, idsPagina[seleccion]);
+    }
+}
+
+// Historial de postulaciones del usuario. Muestra el puesto, empresa,
+// fecha y estado actual. ENTER abre nuevamente el detalle de la vacante.
+void seccionMisPostulaciones(RedProfesional& red, int idSesion) {
+    int pagina = 0;
+    int seleccion = 0;
+
+    while (true) {
+        Lista<Postulacion> mias;
+        red.paraCadaPostulacionDe(idSesion, [&mias](const Postulacion& p) {
+            mias.agregaFinal(p);
+            });
+
+        int total = (int)mias.longitud();
+        int paginas = (total + 3) / 4;
+        if (paginas == 0) pagina = 0;
+        else if (pagina >= paginas) pagina = paginas - 1;
+
+        int inicio = pagina * 4;
+        int enPagina = total - inicio;
+        if (enPagina > 4) enPagina = 4;
+        if (enPagina <= 0) seleccion = 0;
+        else if (seleccion >= enPagina) seleccion = enPagina - 1;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "MIS POSTULACIONES (" << total << ")";
+        if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(55, 14); cout << "Aun no has postulado a ninguna vacante";
+            ubicar(55, 16); cout << "Puedes hacerlo desde la seccion Empleos";
+        }
+
+        int idsVacante[4] = { 0, 0, 0, 0 };
+        int i = 0;
+        for (Postulacion& p : mias) {
+            if (i >= inicio && i < inicio + 4) {
+                int pos = i - inicio;
+                int y = 14 + pos * 3;
+                const Vacante* v = red.obtenerVacante(p.getIdVacante());
+                idsVacante[pos] = p.getIdVacante();
+
+                string titulo = (v != nullptr ? v->getTitulo() : string("Vacante no disponible"));
+                string empresa = (v != nullptr ? red.nombreEmpresa(v->getIdEmpresa()) : string("Empresa no disponible"));
+
+                ubicar(58, y); cout << recortar(titulo, 42) << "  [" << p.estadoToString() << "]";
+                ubicar(58, y + 1); cout << recortar(empresa + " - Postulo: " + p.getFecha(), 58);
+            }
+            i++;
+        }
+
+        if (enPagina > 0) {
+            ubicar(55, 14 + seleccion * 3); cout << "->";
+        }
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER && enPagina > 0 && idsVacante[seleccion] != 0)
+            detalleEmpleoUsuario(red, idSesion, idsVacante[seleccion]);
+    }
+}
+
+// ======================= Individuo: Recomendaciones =======================
+
+void avisoRecomendaciones(string mensaje) {
+    limpiarZonaContenido();
+    ubicar(55, 15); cout << mensaje;
+    ubicar(55, 18); cout << "ENTER: continuar     ESC: volver";
+    while (true) {
+        int tecla = leerTecla();
+        if (tecla == TECLA_ENTER || tecla == TECLA_ESC) return;
+    }
+}
+
+// Muestra una recomendacion completa. Solo se abre desde las listas recibidas
+// o enviadas del usuario que tiene la sesion activa.
+void detalleRecomendacion(RedProfesional& red, int idSesion, int idRecomendacion) {
+    const Recomendacion* r = red.obtenerRecomendacion(idRecomendacion);
+    if (r == nullptr) return;
+    if (r->getIdEmisor() != idSesion && r->getIdReceptor() != idSesion) return;
+
+    limpiarZonaContenido();
+    ubicar(55, 11); cout << "DETALLE DE RECOMENDACION";
+    ubicar(55, 12); cout << "----------------------------------------------------------------";
+    ubicar(55, 14); cout << "De:   " << recortar(red.nombreDe(r->getIdEmisor()), 55);
+    ubicar(55, 15); cout << "Para: " << recortar(red.nombreDe(r->getIdReceptor()), 55);
+    ubicar(55, 16); cout << "Fecha: " << r->getFecha();
+    ubicar(55, 18); cout << "Recomendacion:";
+    escribirTextoPublicacion(r->getTexto(), 55, 19);
+    ubicar(55, 23); cout << "ESC: volver";
+
+    while (leerTecla() != TECLA_ESC) {}
+}
+
+// Recibidas o enviadas, ordenadas por fecha descendente desde RedProfesional.
+// Se muestran tres por pagina y ENTER abre el texto completo.
+void listaRecomendaciones(RedProfesional& red, int idSesion, bool recibidas) {
+    int pagina = 0;
+    int seleccion = 0;
+    const int porPagina = 3;
+
+    while (true) {
+        Lista<Recomendacion> lista = recibidas
+            ? red.recomendacionesRecibidas(idSesion)
+            : red.recomendacionesEnviadas(idSesion);
+
+        int total = (int)lista.longitud();
+        int paginas = total == 0 ? 1 : (total + porPagina - 1) / porPagina;
+        if (pagina >= paginas) pagina = paginas - 1;
+        if (pagina < 0) pagina = 0;
+
+        int inicio = pagina * porPagina;
+        int enPagina = total - inicio;
+        if (enPagina > porPagina) enPagina = porPagina;
+        if (enPagina <= 0) seleccion = 0;
+        else if (seleccion >= enPagina) seleccion = enPagina - 1;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << (recibidas ? "RECOMENDACIONES RECIBIDAS (" : "RECOMENDACIONES ENVIADAS (") << total << ")";
+        if (paginas > 1) cout << "  Pag. " << pagina + 1 << "/" << paginas;
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(55, 15); cout << (recibidas ? "Aun no has recibido recomendaciones" : "Aun no has escrito recomendaciones");
+        }
+
+        int idsPagina[3] = { 0, 0, 0 };
+        for (int i = 0; i < enPagina; i++) {
+            const Recomendacion& r = lista.obtenerPos(inicio + i);
+            idsPagina[i] = r.getId();
+            int y = 14 + i * 4;
+            string persona = recibidas ? red.nombreDe(r.getIdEmisor()) : red.nombreDe(r.getIdReceptor());
+            ubicar(58, y); cout << (recibidas ? "De: " : "Para: ") << recortar(persona, 48);
+            ubicar(58, y + 1); cout << recortar(r.getTexto(), 57);
+            ubicar(58, y + 2); cout << r.getFecha();
+        }
+
+        if (enPagina > 0) ubicar(55, 14 + seleccion * 4), cout << "->";
+        ubicar(55, 25); cout << "ENTER: ver detalle   <- -> pagina   ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER && enPagina > 0)
+            detalleRecomendacion(red, idSesion, idsPagina[seleccion]);
+    }
+}
+
+// Formulario de dos lineas, igual que una publicacion, para no desbordar la
+// consola. RedProfesional valida otra vez la relacion y la longitud.
+void formularioRecomendacion(RedProfesional& red, int idSesion, int idContacto) {
+    const Usuario* contacto = red.buscarUsuario(idContacto);
+    if (contacto == nullptr) return;
+
+    while (true) {
+        string linea1, linea2;
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "ESCRIBIR RECOMENDACION";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 13); cout << "Para: " << recortar(contacto->getNombreCompleto(), 55);
+        ubicar(55, 15); cout << "Linea 1:";
+        ubicar(55, 18); cout << "Linea 2 (opcional):";
+
+        if (!leerCampoEn(55, 16, 60, linea1)) return;
+        if (!leerCampoEn(55, 19, 60, linea2)) return;
+
+        string texto = linea1;
+        if (linea2 != "") texto = texto + " " + linea2;
+
+        limpiarZonaContenido();
+        ubicar(55, 14); cout << "Enviar recomendacion a " << recortar(contacto->getNombreCompleto(), 36) << "?";
+        ubicar(55, 17); escribirTextoPublicacion(texto, 55, 17);
+        ubicar(55, 21); cout << "ENTER: confirmar     ESC: cancelar";
+        if (leerTecla() != TECLA_ENTER) return;
+
+        if (red.recomendar(idSesion, idContacto, texto) != -1) {
+            GestorArchivos::guardarTodo(red);
+            avisoRecomendaciones("Recomendacion enviada correctamente");
+            return;
+        }
+        if (!mostrarErrorZona(red.getUltimoError())) return;
+    }
+}
+
+// Seleccion de un contacto directo. Se reutiliza la lista alfabetica que ya
+// usa QuickSort en el modulo Mi red.
+void seleccionarContactoParaRecomendar(RedProfesional& red, int idSesion) {
+    int pagina = 0;
+    int seleccion = 0;
+    const int porPagina = 4;
+
+    while (true) {
+        Lista<int> contactos = red.contactosOrdenadosPorNombre(idSesion);
+        int total = (int)contactos.longitud();
+        int paginas = total == 0 ? 1 : (total + porPagina - 1) / porPagina;
+        if (pagina >= paginas) pagina = paginas - 1;
+
+        int inicio = pagina * porPagina;
+        int enPagina = total - inicio;
+        if (enPagina > porPagina) enPagina = porPagina;
+        if (enPagina <= 0) seleccion = 0;
+        else if (seleccion >= enPagina) seleccion = enPagina - 1;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "ELEGIR CONTACTO PARA RECOMENDAR";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(55, 15); cout << "Necesitas al menos un contacto para recomendarlo";
+            ubicar(55, 17); cout << "Puedes agregar contactos desde Mi red";
+        }
+
+        int idsPagina[4] = { 0, 0, 0, 0 };
+        int i = 0;
+        for (int& idContacto : contactos) {
+            if (i >= inicio && i < inicio + porPagina) {
+                int pos = i - inicio;
+                int y = 14 + pos * 3;
+                idsPagina[pos] = idContacto;
+                const Usuario* u = red.buscarUsuario(idContacto);
+                if (u != nullptr) {
+                    ubicar(58, y); cout << recortar(u->getNombreCompleto(), 55);
+                    ubicar(58, y + 1); cout << recortar(valorOVacio(u->getTitular()), 55);
+                }
+            }
+            i++;
+        }
+
+        if (enPagina > 0) ubicar(55, 14 + seleccion * 3), cout << "->";
+        ubicar(55, 25); cout << "ENTER: seleccionar   <- -> pagina   ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER && enPagina > 0) {
+            formularioRecomendacion(red, idSesion, idsPagina[seleccion]);
+            return;
+        }
+    }
+}
+
+// Menu del modulo. Las recomendaciones recibidas y enviadas se conservan como
+// historial; escribir una nueva solo esta permitido para contactos directos.
+void seccionRecomendaciones(RedProfesional& red, int idSesion) {
+    int opcion = 0;
+    const int totalOpciones = 3;
+
+    while (true) {
+        Lista<Recomendacion> recibidas = red.recomendacionesRecibidas(idSesion);
+        Lista<Recomendacion> enviadas = red.recomendacionesEnviadas(idSesion);
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "RECOMENDACIONES";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(58, 14); cout << "Recibidas (" << recibidas.longitud() << ")";
+        ubicar(58, 16); cout << "Enviadas (" << enviadas.longitud() << ")";
+        ubicar(58, 18); cout << "Escribir recomendacion";
+        ubicar(55, 14 + opcion * 2); cout << "->";
+        ubicar(55, 22); cout << "Solo puedes recomendar a contactos directos";
+        ubicar(55, 25); cout << "Flechas: moverse   ENTER: abrir   ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && opcion > 0) opcion--;
+        else if (tecla == TECLA_ABAJO && opcion < totalOpciones - 1) opcion++;
+        else if (tecla == TECLA_ENTER) {
+            if (opcion == 0) listaRecomendaciones(red, idSesion, true);
+            else if (opcion == 1) listaRecomendaciones(red, idSesion, false);
+            else seleccionarContactoParaRecomendar(red, idSesion);
+        }
+    }
+}
+
+// ======================= Individuo: Mi red =======================
+
+// Muestra un aviso corto dentro del panel derecho y espera ENTER o ESC.
+void avisoRed(string mensaje) {
+    limpiarZonaContenido();
+    ubicar(55, 15); cout << mensaje;
+    ubicar(55, 18); cout << "ENTER: continuar     ESC: volver";
+    while (true) {
+        int tecla = leerTecla();
+        if (tecla == TECLA_ENTER || tecla == TECLA_ESC) return;
+    }
+}
+
+// Formulario sencillo para enviar una solicitud de conexion.
+void formularioSolicitudConexion(RedProfesional& red, int idSesion, int idDestino) {
+    const Usuario* destino = red.buscarUsuario(idDestino);
+    if (destino == nullptr) return;
+
+    while (true) {
+        string mensaje;
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "ENVIAR SOLICITUD DE CONEXION";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 14); cout << "A: " << recortar(destino->getNombreCompleto(), 57);
+        ubicar(55, 15); cout << recortar(valorOVacio(destino->getTitular()), 60);
+        ubicar(55, 17); cout << "Mensaje (opcional, max. 55):";
+        ubicar(55, 20); cout << "ENTER: enviar     ESC: cancelar";
+
+        if (!leerCampoEn(55, 18, 55, mensaje)) return;
+        if (mensaje == "") mensaje = "Me gustaria conectar contigo";
+
+        if (red.enviarSolicitud(idSesion, idDestino, mensaje)) {
+            GestorArchivos::guardarTodo(red);
+            avisoRed("Solicitud enviada correctamente a " + recortar(destino->getNombreCompleto(), 36));
+            return;
+        }
+        if (!mostrarErrorZona(red.getUltimoError())) return;
+    }
+}
+
+// Ficha de una persona dentro de Mi red. Desde aqui se puede enviar una
+// solicitud o eliminar el contacto existente.
+void detallePersonaRed(RedProfesional& red, int idSesion, int idPersona) {
+    while (true) {
+        const Usuario* persona = red.buscarUsuario(idPersona);
+        if (persona == nullptr) return;
+
+        bool contacto = red.sonContactos(idSesion, idPersona);
+        bool pendiente = red.existeSolicitudPendienteEntre(idSesion, idPersona);
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "PERFIL DE RED";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 14); cout << "Nombre:";       ubicar(68, 14); cout << recortar(persona->getNombreCompleto(), 48);
+        ubicar(55, 15); cout << "Titular:";      ubicar(68, 15); cout << recortar(valorOVacio(persona->getTitular()), 48);
+        ubicar(55, 16); cout << "Distrito:";     ubicar(68, 16); cout << recortar(valorOVacio(persona->getUbicacion()), 48);
+        ubicar(55, 17); cout << "ID:";           ubicar(68, 17); cout << persona->getId();
+        ubicar(55, 19); cout << "Relacion:";
+        ubicar(68, 19);
+        if (contacto) cout << "Contacto directo";
+        else if (pendiente) cout << "Solicitud pendiente";
+        else cout << "Sin conexion";
+
+        if (contacto) {
+            ubicar(55, 22); cout << "-> Eliminar de mis contactos";
+            ubicar(55, 24); cout << "ENTER: eliminar     ESC: volver";
+        }
+        else if (!pendiente) {
+            ubicar(55, 22); cout << "-> Enviar solicitud de conexion";
+            ubicar(55, 24); cout << "ENTER: conectar     ESC: volver";
+        }
+        else {
+            ubicar(55, 22); cout << "Ya existe una solicitud pendiente entre ambos";
+            ubicar(55, 24); cout << "ESC: volver";
+        }
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        if (tecla != TECLA_ENTER) continue;
+
+        if (!contacto && pendiente) continue;
+        if (!contacto) {
+            formularioSolicitudConexion(red, idSesion, idPersona);
+            continue;
+        }
+
+        limpiarZonaContenido();
+        ubicar(55, 15); cout << "Eliminar a " << recortar(persona->getNombreCompleto(), 43) << " de tus contactos?";
+        ubicar(55, 18); cout << "ENTER: confirmar     ESC: cancelar";
+        int confirmar = leerTecla();
+        if (confirmar != TECLA_ENTER) continue;
+
+        if (red.eliminarContacto(idSesion, idPersona)) {
+            GestorArchivos::guardarTodo(red);
+            avisoRed("Contacto eliminado correctamente");
+            return;
+        }
+        if (!mostrarErrorZona(red.getUltimoError())) return;
+    }
+}
+
+// Contactos directos. La lista viene ordenada alfabeticamente mediante
+// QuickSort desde RedProfesional::contactosOrdenadosPorNombre.
+void seccionContactosRed(RedProfesional& red, int idSesion) {
+    int pagina = 0;
+    int seleccion = 0;
+
+    while (true) {
+        Lista<int> contactos = red.contactosOrdenadosPorNombre(idSesion);
+        int total = (int)contactos.longitud();
+        int paginas = (total + 3) / 4;
+        if (paginas == 0) pagina = 0;
+        else if (pagina >= paginas) pagina = paginas - 1;
+
+        int inicio = pagina * 4;
+        int enPagina = total - inicio;
+        if (enPagina > 4) enPagina = 4;
+        if (enPagina <= 0) seleccion = 0;
+        else if (seleccion >= enPagina) seleccion = enPagina - 1;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "MIS CONTACTOS - QUICKSORT (" << total << ")";
+        if (paginas > 1) cout << "  Pagina " << pagina + 1 << " de " << paginas << " (<- ->)";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(55, 14); cout << "Aun no tienes contactos";
+            ubicar(55, 16); cout << "Busca personas o revisa las sugerencias de conexion";
+        }
+
+        int idsPagina[4] = { 0, 0, 0, 0 };
+        int i = 0;
+        for (int& idContacto : contactos) {
+            if (i >= inicio && i < inicio + 4) {
+                int pos = i - inicio;
+                int y = 14 + pos * 3;
+                idsPagina[pos] = idContacto;
+                const Usuario* u = red.buscarUsuario(idContacto);
+                if (u != nullptr) {
+                    ubicar(58, y); cout << recortar(u->getNombreCompleto(), 55);
+                    ubicar(58, y + 1); cout << recortar(valorOVacio(u->getTitular()), 55);
+                }
+            }
+            i++;
+        }
+
+        if (enPagina > 0) ubicar(55, 14 + seleccion * 3), cout << "->";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER && enPagina > 0)
+            detallePersonaRed(red, idSesion, idsPagina[seleccion]);
+    }
+}
+
+// Las solicitudes se atienden en el mismo orden en que llegaron porque
+// Usuario las guarda en una Cola. Se muestra la solicitud mas antigua.
+void seccionSolicitudesRed(RedProfesional& red, int idSesion) {
+    int seleccion = 0; // 0 aceptar, 1 rechazar
+
+    while (true) {
+        const Usuario* usuario = red.buscarUsuario(idSesion);
+        if (usuario == nullptr) return;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "SOLICITUDES RECIBIDAS (" << usuario->cantidadSolicitudesPendientes() << ")";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (!usuario->tieneSolicitudesPendientes()) {
+            ubicar(55, 15); cout << "No tienes solicitudes pendientes";
+            ubicar(55, 18); cout << "ESC: volver";
+            while (leerTecla() != TECLA_ESC) {}
+            return;
+        }
+
+        const SolicitudConexion& solicitud = usuario->verSiguienteSolicitud();
+        const Usuario* emisor = red.buscarUsuario(solicitud.getIdEmisor());
+        string nombre = (emisor != nullptr ? emisor->getNombreCompleto() : string("Usuario no disponible"));
+
+        ubicar(55, 14); cout << "De: " << recortar(nombre, 58);
+        ubicar(55, 15); cout << "Fecha: " << solicitud.getFecha();
+        ubicar(55, 17); cout << "Mensaje:";
+        ubicar(57, 18); cout << recortar(valorOVacio(solicitud.getMensaje()), 58);
+        ubicar(58, 21); cout << "Aceptar solicitud";
+        ubicar(58, 22); cout << "Rechazar solicitud";
+        ubicar(55, 21 + seleccion); cout << "->";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA) seleccion = 0;
+        else if (tecla == TECLA_ABAJO) seleccion = 1;
+        else if (tecla == TECLA_ENTER) {
+            bool aceptar = seleccion == 0;
+            if (red.responderSiguienteSolicitud(idSesion, aceptar)) {
+                GestorArchivos::guardarTodo(red);
+                avisoRed(aceptar ? "Solicitud aceptada. Ahora son contactos." : "Solicitud rechazada.");
+            }
+            else if (!mostrarErrorZona(red.getUltimoError())) return;
+        }
+    }
+}
+
+// Busca usuarios por nombre o titular. Los resultados tambien se entregan
+// ordenados con QuickSort para mantener una presentacion alfabetica.
+void seccionBuscarPersonasRed(RedProfesional& red, int idSesion) {
+    string consulta;
+    limpiarZonaContenido();
+    ubicar(55, 11); cout << "BUSCAR PERSONAS";
+    ubicar(55, 12); cout << "----------------------------------------------------------------";
+    ubicar(55, 14); cout << "Nombre o titular:";
+    ubicar(55, 17); cout << "ENTER: buscar     ESC: volver";
+    if (!leerCampoEn(74, 14, 35, consulta)) return;
+
+    Lista<int> resultados = red.buscarPersonas(idSesion, consulta);
+    int pagina = 0;
+    int seleccion = 0;
+
+    while (true) {
+        int total = (int)resultados.longitud();
+        int paginas = (total + 3) / 4;
+        int inicio = pagina * 4;
+        int enPagina = total - inicio;
+        if (enPagina > 4) enPagina = 4;
+        if (enPagina <= 0) seleccion = 0;
+        else if (seleccion >= enPagina) seleccion = enPagina - 1;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "RESULTADOS PARA: " << recortar(consulta, 30) << " (" << total << ")";
+        if (paginas > 1) cout << "  Pag. " << pagina + 1 << "/" << paginas;
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) ubicar(55, 15), cout << "No se encontraron personas";
+
+        int idsPagina[4] = { 0, 0, 0, 0 };
+        int i = 0;
+        for (int& idPersona : resultados) {
+            if (i >= inicio && i < inicio + 4) {
+                int pos = i - inicio;
+                int y = 14 + pos * 3;
+                idsPagina[pos] = idPersona;
+                const Usuario* u = red.buscarUsuario(idPersona);
+                if (u != nullptr) {
+                    string estado = red.sonContactos(idSesion, idPersona) ? " [Contacto]" :
+                        (red.existeSolicitudPendienteEntre(idSesion, idPersona) ? " [Pendiente]" : "");
+                    ubicar(58, y); cout << recortar(u->getNombreCompleto() + estado, 58);
+                    ubicar(58, y + 1); cout << recortar(valorOVacio(u->getTitular()), 58);
+                }
+            }
+            i++;
+        }
+
+        if (enPagina > 0) ubicar(55, 14 + seleccion * 3), cout << "->";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER && enPagina > 0)
+            detallePersonaRed(red, idSesion, idsPagina[seleccion]);
+    }
+}
+
+// Personas de segundo grado. RedProfesional las obtiene con un recorrido
+// recursivo con control de visitados y luego las ordena con QuickSort:
+// mas contactos en comun primero y, en empate, alfabeticamente.
+void seccionSugerenciasRed(RedProfesional& red, int idSesion) {
+    int pagina = 0;
+    int seleccion = 0;
+
+    while (true) {
+        Lista<SugerenciaConexion> sugerencias = red.sugerenciasConexion(idSesion);
+        int total = (int)sugerencias.longitud();
+        int paginas = (total + 3) / 4;
+        if (paginas == 0) pagina = 0;
+        else if (pagina >= paginas) pagina = paginas - 1;
+
+        int inicio = pagina * 4;
+        int enPagina = total - inicio;
+        if (enPagina > 4) enPagina = 4;
+        if (enPagina <= 0) seleccion = 0;
+        else if (seleccion >= enPagina) seleccion = enPagina - 1;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "SUGERENCIAS DE CONEXION - QUICKSORT (" << total << ")";
+        if (paginas > 1) cout << "  Pag. " << pagina + 1 << "/" << paginas;
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(55, 14); cout << "No hay sugerencias nuevas por ahora";
+            ubicar(55, 16); cout << "Las sugerencias se basan en contactos en comun";
+        }
+
+        int idsPagina[4] = { 0, 0, 0, 0 };
+        int i = 0;
+        for (SugerenciaConexion& sug : sugerencias) {
+            if (i >= inicio && i < inicio + 4) {
+                int pos = i - inicio;
+                int y = 14 + pos * 3;
+                idsPagina[pos] = sug.idUsuario;
+                const Usuario* u = red.buscarUsuario(sug.idUsuario);
+                if (u != nullptr) {
+                    ubicar(58, y); cout << recortar(u->getNombreCompleto(), 40);
+                    ubicar(101, y); cout << sug.contactosEnComun << " en comun";
+                    ubicar(58, y + 1); cout << recortar(valorOVacio(u->getTitular()), 58);
+                }
+            }
+            i++;
+        }
+
+        if (enPagina > 0) ubicar(55, 14 + seleccion * 3), cout << "->";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER && enPagina > 0)
+            detallePersonaRed(red, idSesion, idsPagina[seleccion]);
+    }
+}
+
+void deshacerAccionRed(RedProfesional& red, int idSesion) {
+    limpiarZonaContenido();
+    ubicar(55, 14); cout << "DESHACER ULTIMA ACCION DE RED";
+    ubicar(55, 16); cout << "Esto revierte la ultima conexion aceptada o contacto eliminado.";
+    ubicar(55, 19); cout << "ENTER: confirmar     ESC: cancelar";
+    if (leerTecla() != TECLA_ENTER) return;
+
+    string descripcion;
+    if (red.deshacerUltimaAccion(idSesion, descripcion)) {
+        GestorArchivos::guardarTodo(red);
+        avisoRed("Deshecho: " + recortar(descripcion, 48));
+    }
+    else {
+        mostrarErrorZona(red.getUltimoError());
+    }
+}
+
+// Menu interno de Mi red. Mantiene juntas las operaciones relacionadas con
+// conexiones y deja visible el uso de QuickSort en contactos y sugerencias.
+void seccionMiRed(RedProfesional& red, int idSesion) {
+    int opcion = 0;
+    const int totalOpciones = 5;
+
+    while (true) {
+        const Usuario* usuario = red.buscarUsuario(idSesion);
+        if (usuario == nullptr) return;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "MI RED";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(58, 14); cout << "Mis contactos (" << usuario->totalContactos() << ")";
+        ubicar(58, 16); cout << "Solicitudes recibidas (" << usuario->cantidadSolicitudesPendientes() << ")";
+        ubicar(58, 18); cout << "Buscar personas";
+        ubicar(58, 20); cout << "Sugerencias para ti";
+        ubicar(58, 22); cout << "Deshacer ultima accion";
+        ubicar(55, 14 + opcion * 2); cout << "->";
+        ubicar(55, 25); cout << "QuickSort: contactos y sugerencias     ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && opcion > 0) opcion--;
+        else if (tecla == TECLA_ABAJO && opcion < totalOpciones - 1) opcion++;
+        else if (tecla == TECLA_ENTER) {
+            if (opcion == 0) seccionContactosRed(red, idSesion);
+            else if (opcion == 1) seccionSolicitudesRed(red, idSesion);
+            else if (opcion == 2) seccionBuscarPersonasRed(red, idSesion);
+            else if (opcion == 3) seccionSugerenciasRed(red, idSesion);
+            else if (opcion == 4) deshacerAccionRed(red, idSesion);
+        }
+    }
+}
+
+// ======================= Individuo: Mensajes =======================
+
+void avisoMensajes(string mensaje) {
+    limpiarZonaContenido();
+    ubicar(55, 15); cout << mensaje;
+    ubicar(55, 18); cout << "ENTER: continuar     ESC: volver";
+    while (true) {
+        int tecla = leerTecla();
+        if (tecla == TECLA_ENTER || tecla == TECLA_ESC) return;
+    }
+}
+
+// Formulario de una sola linea para enviar un mensaje a un contacto.
+// RedProfesional vuelve a validar que ambos sean contactos antes de guardarlo.
+void formularioNuevoMensaje(RedProfesional& red, int idSesion, int idContacto) {
+    const Usuario* contacto = red.buscarUsuario(idContacto);
+    if (contacto == nullptr) return;
+
+    while (true) {
+        string texto;
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "NUEVO MENSAJE";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 14); cout << "Para: " << recortar(contacto->getNombreCompleto(), 55);
+        ubicar(55, 16); cout << "Mensaje (max. 58 caracteres):";
+        ubicar(55, 20); cout << "ENTER: enviar     ESC: cancelar";
+
+        if (!leerCampoEn(55, 17, RedProfesional::MAX_MENSAJE, texto)) return;
+
+        int idMensaje = red.enviarMensaje(idSesion, idContacto, texto);
+        if (idMensaje >= 0) {
+            GestorArchivos::guardarTodo(red);
+            avisoMensajes("Mensaje enviado correctamente");
+            return;
+        }
+        if (!mostrarErrorZona(red.getUltimoError())) return;
+    }
+}
+
+// Historial entre dos contactos. Se muestran cuatro mensajes por pagina.
+// Al abrir la conversacion, los mensajes recibidos pendientes pasan a leidos.
+void conversacionMensajes(RedProfesional& red, int idSesion, int idContacto) {
+    const Usuario* contacto = red.buscarUsuario(idContacto);
+    if (contacto == nullptr) return;
+
+    uint marcados = red.marcarConversacionLeida(idSesion, idContacto);
+    if (marcados > 0) GestorArchivos::guardarTodo(red);
+
+    int pagina = -1; // -1 significa abrir directamente en los mensajes mas recientes.
+
+    while (true) {
+        Lista<Mensaje> conversacion = red.obtenerConversacion(idSesion, idContacto);
+        int total = (int)conversacion.longitud();
+        int paginas = (total + 3) / 4;
+
+        if (pagina < 0) pagina = (paginas > 0 ? paginas - 1 : 0);
+        if (paginas == 0) pagina = 0;
+        else if (pagina >= paginas) pagina = paginas - 1;
+
+        int inicio = pagina * 4;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "CONVERSACION CON " << recortar(contacto->getNombreCompleto(), 42);
+        if (paginas > 1) cout << "  " << pagina + 1 << "/" << paginas;
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(55, 15); cout << "Aun no hay mensajes en esta conversacion";
+            ubicar(55, 17); cout << "Presiona ENTER para enviar el primero";
+        }
+
+        int i = 0;
+        for (Mensaje& m : conversacion) {
+            if (i >= inicio && i < inicio + 4) {
+                int pos = i - inicio;
+                int y = 13 + pos * 3;
+                bool mio = m.getIdEmisor() == idSesion;
+                string autor = mio ? "Tu" : contacto->getNombre();
+
+                ubicar(55, y); cout << recortar(autor, 23) << "  [" << m.getFecha() << "]";
+                ubicar(57, y + 1); cout << recortar(m.getTexto(), 59);
+            }
+            i++;
+        }
+
+        ubicar(55, 25); cout << "<- -> historial     ENTER: escribir     ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) pagina--;
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) pagina++;
+        else if (tecla == TECLA_ENTER) {
+            formularioNuevoMensaje(red, idSesion, idContacto);
+            // Despues de enviar, volver a la ultima pagina para ver el mensaje nuevo.
+            pagina = -1;
+        }
+    }
+}
+
+// Bandeja de mensajes. Como solo se puede escribir a conexiones directas,
+// los contactos funcionan como lista de conversaciones. Tambien se muestran
+// contactos sin historial para poder iniciar un chat nuevo desde aqui.
+void seccionMensajes(RedProfesional& red, int idSesion) {
+    int pagina = 0;
+    int seleccion = 0;
+
+    while (true) {
+        Lista<int> contactos = red.contactosOrdenadosPorNombre(idSesion);
+        int total = (int)contactos.longitud();
+        int paginas = (total + 3) / 4;
+        if (paginas == 0) pagina = 0;
+        else if (pagina >= paginas) pagina = paginas - 1;
+
+        int inicio = pagina * 4;
+        int enPagina = total - inicio;
+        if (enPagina > 4) enPagina = 4;
+        if (enPagina <= 0) seleccion = 0;
+        else if (seleccion >= enPagina) seleccion = enPagina - 1;
+
+        uint noLeidosTotal = red.cantidadMensajesNoLeidos(idSesion);
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "MENSAJES (" << noLeidosTotal << " sin leer)";
+        if (paginas > 1) cout << "  Pagina " << pagina + 1 << " de " << paginas << " (<- ->)";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(55, 14); cout << "No tienes contactos para iniciar una conversacion";
+            ubicar(55, 16); cout << "Primero agrega conexiones desde Mi red";
+        }
+
+        int idsPagina[4] = { 0, 0, 0, 0 };
+        int i = 0;
+        for (int& idContacto : contactos) {
+            if (i >= inicio && i < inicio + 4) {
+                int pos = i - inicio;
+                int y = 14 + pos * 3;
+                idsPagina[pos] = idContacto;
+                const Usuario* u = red.buscarUsuario(idContacto);
+
+                if (u != nullptr) {
+                    uint nuevos = red.cantidadMensajesNoLeidosDe(idSesion, idContacto);
+                    uint cantidad = red.cantidadMensajesEntre(idSesion, idContacto);
+                    string estado;
+                    if (nuevos > 0) estado = " [" + std::to_string(nuevos) + " nuevo" + (nuevos == 1 ? "" : "s") + "]";
+                    else if (cantidad == 0) estado = " [sin mensajes]";
+                    else estado = " [" + std::to_string(cantidad) + " mensajes]";
+
+                    ubicar(58, y); cout << recortar(u->getNombreCompleto() + estado, 58);
+                    ubicar(58, y + 1); cout << recortar(valorOVacio(u->getTitular()), 58);
+                }
+            }
+            i++;
+        }
+
+        if (enPagina > 0) ubicar(55, 14 + seleccion * 3), cout << "->";
+        ubicar(55, 25); cout << "ENTER: abrir conversacion     ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER && enPagina > 0 && idsPagina[seleccion] != 0)
+            conversacionMensajes(red, idSesion, idsPagina[seleccion]);
+    }
+}
+
+// ======================= Individuo: Notificaciones =======================
+
+// Muestra el contenido completo de una notificacion. Al abrirla se marca como leida
+// y se guarda el cambio para que el estado se conserve al reiniciar el programa.
+void detalleNotificacion(RedProfesional& red, int idSesion, int idNotificacion) {
+    Usuario* usuario = red.buscarUsuario(idSesion);
+    if (usuario == nullptr) return;
+
+    usuario->marcarNotificacionLeida(idNotificacion);
+    GestorArchivos::guardarTodo(red);
+
+    Notificacion seleccionada;
+    bool encontrada = false;
+    usuario->paraCadaNotificacion([&](const Notificacion& n) {
+        if (n.getId() == idNotificacion) {
+            seleccionada = n;
+            encontrada = true;
+        }
+        });
+    if (!encontrada) return;
+
+    limpiarZonaContenido();
+    ubicar(55, 11); cout << "DETALLE DE NOTIFICACION";
+    ubicar(55, 12); cout << "----------------------------------------------------------------";
+    ubicar(55, 14); cout << "Tipo:";
+    ubicar(67, 14); cout << seleccionada.tipoToString();
+    ubicar(55, 15); cout << "Fecha:";
+    ubicar(67, 15); cout << seleccionada.getFecha();
+    ubicar(55, 17); cout << "Mensaje:";
+
+    string mensaje = seleccionada.getMensaje();
+    const int ancho = 58;
+    int y = 18;
+    for (int inicio = 0; inicio < (int)mensaje.length() && y <= 22; inicio += ancho, y++)
+        ubicar(58, y), cout << mensaje.substr(inicio, ancho);
+
+    ubicar(55, 25); cout << "ESC: volver a notificaciones";
+    while (leerTecla() != TECLA_ESC) {}
+}
+
+// Bandeja de notificaciones. Se muestran primero las mas recientes.
+// ENTER abre y marca una como leida; L marca todo el historial como leido.
+void seccionNotificaciones(RedProfesional& red, int idSesion) {
+    Usuario* usuario = red.buscarUsuario(idSesion);
+    if (usuario == nullptr) return;
+
+    int pagina = 0;
+    int seleccion = 0;
+    const int porPagina = 4;
+
+    while (true) {
+        // La cola se conserva en FIFO, pero para la interfaz se copia a una lista
+        // insertando al inicio, de modo que lo mas nuevo aparezca primero.
+        Lista<Notificacion> ordenadas;
+        usuario->paraCadaNotificacion([&](const Notificacion& n) {
+            ordenadas.agregaInicial(n);
+            });
+
+        int total = (int)ordenadas.longitud();
+        int paginas = total == 0 ? 1 : (total + porPagina - 1) / porPagina;
+        if (pagina >= paginas) pagina = paginas - 1;
+        if (pagina < 0) pagina = 0;
+
+        int inicio = pagina * porPagina;
+        int enPagina = total - inicio;
+        if (enPagina > porPagina) enPagina = porPagina;
+        if (enPagina <= 0) seleccion = 0;
+        else if (seleccion >= enPagina) seleccion = enPagina - 1;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "NOTIFICACIONES";
+        ubicar(55, 12); cout << "Nuevas: " << usuario->cantidadNotificacionesNoLeidas()
+                            << "   Total: " << usuario->cantidadNotificaciones();
+
+        if (total == 0) {
+            ubicar(55, 15); cout << "No tienes notificaciones.";
+        }
+        else {
+            for (int i = 0; i < enPagina; i++) {
+                const Notificacion& n = ordenadas.obtenerPos(inicio + i);
+                int y = 14 + i * 2;
+                ubicar(58, y);
+                cout << (n.estaLeida() ? "[LEIDA] " : "[NUEVA] ")
+                     << recortar(n.tipoToString(), 46);
+                ubicar(58, y + 1);
+                cout << recortar(n.getMensaje(), 52) << "  " << n.getFecha();
+            }
+            ubicar(55, 14 + seleccion * 2); cout << "->";
+        }
+
+        ubicar(55, 23); cout << "Pagina " << (pagina + 1) << "/" << paginas;
+        ubicar(55, 24); cout << "ENTER: abrir   L: marcar todas leidas";
+        ubicar(55, 25); cout << "Flechas: navegar/cambiar pagina   ESC: volver";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if ((tecla == 'l' || tecla == 'L') && total > 0) {
+            usuario->marcarTodasNotificacionesLeidas();
+            GestorArchivos::guardarTodo(red);
+        }
+        else if (tecla == TECLA_ENTER && enPagina > 0) {
+            int idNotificacion = ordenadas.obtenerPos(inicio + seleccion).getId();
+            detalleNotificacion(red, idSesion, idNotificacion);
+        }
+    }
+}
+
 // ======================= Individuo =======================
 
 void dibujarEncabezadoIndividuo(RedProfesional& red, int idSesion) {
@@ -405,7 +1495,8 @@ void dibujarEncabezadoIndividuo(RedProfesional& red, int idSesion) {
     if (usuario == nullptr) return;
 
     ubicar(108, 1); cout << RedProfesional::fechaHoy();
-    ubicar(100, 2); cout << "Notificaciones (" << usuario->cantidadNotificaciones() << ")";
+    ubicar(100, 2); cout << "Notificaciones nuevas (" << usuario->cantidadNotificacionesNoLeidas() << ")";
+    ubicar(100, 3); cout << "Mensajes nuevos (" << red.cantidadMensajesNoLeidos(idSesion) << ")";
 
     ubicar(1, 6); cout << usuario->getNombreCompleto();
     ubicar(1, 7); cout << usuario->getTitular();
@@ -433,20 +1524,19 @@ int filaOpcionIndividuo(int opcion) {
     return 11 + opcion;
 }
 
-// Aqui se conecta cada opcion con su seccion.
-// Cuando una seccion este lista, se reemplaza su mostrarSeccionPendiente.
+// Aqui se conecta cada opcion del menu de individuo con su seccion funcional.
 void abrirSeccionIndividuo(RedProfesional& red, int idSesion, int opcion) {
     switch (opcion) {
     case 0: seccionMiPerfil(red, idSesion); break;
     case 1: seccionMisCertificaciones(red, idSesion); break;
-    case 2: mostrarSeccionPendiente("Mis postulaciones"); break;
-    case 3: mostrarSeccionPendiente("Ver recomendaciones"); break;
-    case 4: mostrarSeccionPendiente("Mi red"); break;
+    case 2: seccionMisPostulaciones(red, idSesion); break;
+    case 3: seccionRecomendaciones(red, idSesion); break;
+    case 4: seccionMiRed(red, idSesion); break;
     case 5: seccionPublicaciones(red, idSesion, false); break;   // todas las de la red
     case 6: seccionPublicaciones(red, idSesion, true); break;    // solo las mias
-    case 7: mostrarSeccionPendiente("Empleos"); break;
-    case 8: mostrarSeccionPendiente("Mensajes"); break;
-    case 9: mostrarSeccionPendiente("Notificaciones"); break;
+    case 7: seccionEmpleos(red, idSesion); break;
+    case 8: seccionMensajes(red, idSesion); break;
+    case 9: seccionNotificaciones(red, idSesion); break;
     default: break;
     }
 }

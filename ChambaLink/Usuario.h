@@ -213,9 +213,43 @@ public:
 
     uint cantidadNotificaciones() const { return notificaciones.longitud(); }
 
+    // Cuenta solo las notificaciones que aun no han sido abiertas.
+    uint cantidadNotificacionesNoLeidas() const {
+        uint total = 0;
+        notificaciones.paraCada([&total](const Notificacion& n) {
+            if (!n.estaLeida()) total++;
+            });
+        return total;
+    }
+
     // Recorre las notificaciones sin retirarlas de la cola.
     void paraCadaNotificacion(std::function<void(const Notificacion&)> accion) const {
         notificaciones.paraCada(accion);
+    }
+
+    // Marca una notificacion sin alterar el orden FIFO de la cola.
+    bool marcarNotificacionLeida(int idNotificacion) {
+        bool encontrada = false;
+        uint total = notificaciones.longitud();
+        for (uint i = 0; i < total; i++) {
+            Notificacion n = notificaciones.desencolar();
+            if (n.getId() == idNotificacion) {
+                n.marcarLeida();
+                encontrada = true;
+            }
+            notificaciones.encolar(n);
+        }
+        return encontrada;
+    }
+
+    // Conserva el historial, pero deja todas las notificaciones como leidas.
+    void marcarTodasNotificacionesLeidas() {
+        uint total = notificaciones.longitud();
+        for (uint i = 0; i < total; i++) {
+            Notificacion n = notificaciones.desencolar();
+            n.marcarLeida();
+            notificaciones.encolar(n);
+        }
     }
 
     Notificacion leerSiguienteNotificacion() {

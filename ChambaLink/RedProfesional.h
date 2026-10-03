@@ -45,6 +45,13 @@ struct Coincidencia {
     int cantidad = 0;
 };
 
+// Resultado para la seccion Mi red. Guarda el usuario sugerido y
+// cuantos contactos directos tiene en comun con la sesion actual.
+struct SugerenciaConexion {
+    int idUsuario = 0;
+    int contactosEnComun = 0;
+};
+
 class RedProfesional {
     friend class GestorArchivos;
 
@@ -188,6 +195,51 @@ private:
         if (b != nullptr) b->eliminarContacto(idA);
     }
 
+    // Convierte texto a minusculas para realizar busquedas sin distinguir
+    // mayusculas de minusculas. Se trabaja caracter por caracter.
+    static std::string textoMinusculas(std::string texto) {
+        for (size_t i = 0; i < texto.length(); i++)
+            texto[i] = (char)std::tolower((unsigned char)texto[i]);
+        return texto;
+    }
+
+    bool haySolicitudPendienteEntre(int idA, int idB) const {
+        const Usuario* a = buscarUsuario(idA);
+        const Usuario* b = buscarUsuario(idB);
+        if (a == nullptr || b == nullptr) return false;
+        return a->tieneSolicitudDe(idB) || b->tieneSolicitudDe(idA);
+    }
+
+    int contactosEnComun(int idA, int idB) const {
+        const Usuario* a = buscarUsuario(idA);
+        const Usuario* b = buscarUsuario(idB);
+        if (a == nullptr || b == nullptr) return 0;
+
+        int total = 0;
+        a->paraCadaContacto([b, &total](const int& idContacto) {
+            if (b->esContactoDirecto(idContacto)) total++;
+            });
+        return total;
+    }
+
+    // Recorre la red de forma recursiva hasta la profundidad indicada.
+    // visitados evita volver a entrar a un usuario y formar ciclos.
+    void explorarConexionesRec(int idActual, int profundidad,
+        Lista<int>& visitados, Lista<int>& descubiertos) const {
+        if (profundidad <= 0) return;
+        const Usuario* actual = buscarUsuario(idActual);
+        if (actual == nullptr) return;
+
+        actual->paraCadaContacto([this, profundidad, &visitados, &descubiertos](const int& idContacto) {
+            bool yaVisitado = visitados.existe([idContacto](const int& id) { return id == idContacto; });
+            if (yaVisitado) return;
+
+            visitados.agregaFinal(idContacto);
+            descubiertos.agregaFinal(idContacto);
+            explorarConexionesRec(idContacto, profundidad - 1, visitados, descubiertos);
+            });
+    }
+
     Empresa* buscarEmpresa(int idEmpresa) {
         return empresas.buscarPtr([idEmpresa](const Empresa& e) { return e.getId() == idEmpresa; });
     }
@@ -271,6 +323,8 @@ public:
     static const int MAX_CODIGO = 30;
     static const int MAX_PUBLICACION = 121;    // dos lineas de 60 en pantalla
     static const int MAX_COMENTARIO = 60;
+    static const int MAX_MENSAJE = 58;
+    static const int MAX_RECOMENDACION = 121; // dos lineas de 60 en pantalla
 
     RedProfesional() {
         // Las cuentas empiezan en 1000 para que su id siempre tenga 4 cifras.
@@ -475,8 +529,94 @@ public:
             });
     }
 
-    // Pendiente (Joao): busqueda recursiva de conexiones con control de visitados,
-    // sugerencias por contactos en comun y ordenamiento con QuickSort.
+    // Contactos directos ordenados alfabeticamente con QuickSort.
+    // Se devuelve una copia de ids para no alterar el orden en contactos.txt.
+    Lista<int> contactosOrdenadosPorNombre(int idUsuario) const {
+        Lista<int> copia;
+        const Usuario* usuario = buscarUsuario(idUsuario);
+        if (usuario == nullptr) return copia;
+
+        usuario->paraCadaContacto([&copia](const int& idContacto) {
+            copia.agregaFinal(idContacto);
+            });
+
+        return quickSort<int>(copia, [this](const int& a, const int& b) {
+            std::string nombreA = textoMinusculas(nombreDe(a));
+            std::string nombreB = textoMinusculas(nombreDe(b));
+            if (nombreA == nombreB) return a < b;
+            return nombreA < nombreB;
+            });
+    }
+
+    // Busca por nombre completo o titular y ordena los resultados con QuickSort.
+    // No incluye al propio usuario.
+    Lista<int> buscarPersonas(int idUsuario, std::string texto) const {
+        Lista<int> encontrados;
+        std::string consulta = textoMinusculas(texto);
+        if (consulta == "") return encontrados;
+
+        usuarios.paraCada([&](const Usuario& u) {
+            if (u.getId() == idUsuario) return;
+            std::string nombre = textoMinusculas(u.getNombreCompleto());
+            std::string titular = textoMinusculas(u.getTitular());
+            if (nombre.find(consulta) != std::string::npos ||
+                titular.find(consulta) != std::string::npos)
+                encontrados.agregaFinal(u.getId());
+            });
+
+        return quickSort<int>(encontrados, [this](const int& a, const int& b) {
+            std::string nombreA = textoMinusculas(nombreDe(a));
+            std::string nombreB = textoMinusculas(nombreDe(b));
+            if (nombreA == nombreB) return a < b;
+            return nombreA < nombreB;
+            });
+    }
+
+    // Obtiene personas de hasta segundo grado mediante recorrido recursivo.
+    // Luego calcula contactos en comun y usa QuickSort para dejar primero
+    // las sugerencias mas cercanas. En empate, ordena alfabeticamente.
+    Lista<SugerenciaConexion> sugerenciasConexion(int idUsuario) const {
+        Lista<SugerenciaConexion> sugerencias;
+        const Usuario* usuario = buscarUsuario(idUsuario);
+        if (usuario == nullptr) return sugerencias;
+
+        Lista<int> visitados;
+        Lista<int> descubiertos;
+        visitados.agregaFinal(idUsuario);
+        explorarConexionesRec(idUsuario, 2, visitados, descubiertos);
+
+        descubiertos.paraCada([&](const int& idCandidato) {
+            if (idCandidato == idUsuario) return;
+            if (usuario->esContactoDirecto(idCandidato)) return;
+            if (haySolicitudPendienteEntre(idUsuario, idCandidato)) return;
+
+            int comunes = contactosEnComun(idUsuario, idCandidato);
+            if (comunes <= 0) return;
+
+            SugerenciaConexion s;
+            s.idUsuario = idCandidato;
+            s.contactosEnComun = comunes;
+            sugerencias.agregaFinal(s);
+            });
+
+        return quickSort<SugerenciaConexion>(sugerencias, [this](const SugerenciaConexion& a, const SugerenciaConexion& b) {
+            if (a.contactosEnComun != b.contactosEnComun)
+                return a.contactosEnComun > b.contactosEnComun;
+            std::string nombreA = textoMinusculas(nombreDe(a.idUsuario));
+            std::string nombreB = textoMinusculas(nombreDe(b.idUsuario));
+            if (nombreA == nombreB) return a.idUsuario < b.idUsuario;
+            return nombreA < nombreB;
+            });
+    }
+
+    bool sonContactos(int idA, int idB) const {
+        const Usuario* a = buscarUsuario(idA);
+        return a != nullptr && a->esContactoDirecto(idB);
+    }
+
+    bool existeSolicitudPendienteEntre(int idA, int idB) const {
+        return haySolicitudPendienteEntre(idA, idB);
+    }
 
     // ==================== Contenido y comunicacion (Aldo) ====================
 
@@ -581,6 +721,8 @@ public:
         const Usuario* emisor = buscarUsuario(idEmisor);
         if (emisor == nullptr || !existeUsuario(idReceptor)) { fallar("El usuario no existe"); return -1; }
         if (!emisor->esContactoDirecto(idReceptor)) { fallar("Solo puedes recomendar a tus contactos"); return -1; }
+        if (texto == "") { fallar("La recomendacion no puede estar vacia"); return -1; }
+        if ((int)texto.length() > MAX_RECOMENDACION) { fallar("La recomendacion es demasiado larga"); return -1; }
         int id = sigRecomendacion;
         sigRecomendacion++;
         recomendaciones.agregaFinal(Recomendacion(id, idEmisor, idReceptor, texto, fechaHoy()));
@@ -594,6 +736,7 @@ public:
         if (emisor == nullptr || !existeUsuario(idReceptor)) { fallar("El usuario no existe"); return -1; }
         if (!emisor->esContactoDirecto(idReceptor)) { fallar("Solo puedes escribir a tus contactos"); return -1; }
         if (texto == "") { fallar("El mensaje no puede estar vacio"); return -1; }
+        if ((int)texto.length() > MAX_MENSAJE) { fallar("El mensaje es demasiado largo"); return -1; }
         int id = sigMensaje;
         sigMensaje++;
         mensajes.agregaFinal(Mensaje(id, idEmisor, idReceptor, texto, fechaHoy()));
@@ -612,6 +755,47 @@ public:
             }
         }
         return marcados;
+    }
+
+    // Devuelve cuantos mensajes recibidos por el usuario siguen sin leer.
+    // No se cuentan los mensajes que el propio usuario envio.
+    uint cantidadMensajesNoLeidos(int idUsuario) const {
+        const Usuario* usuario = buscarUsuario(idUsuario);
+        if (usuario == nullptr) return 0;
+
+        uint total = 0;
+        mensajes.paraCada([idUsuario, usuario, &total](const Mensaje& m) {
+            if (m.getIdReceptor() == idUsuario && !m.fueLeido()
+                && usuario->esContactoDirecto(m.getIdEmisor())) total++;
+            });
+        return total;
+    }
+
+    // Mensajes no leidos que llegaron especificamente desde un contacto.
+    uint cantidadMensajesNoLeidosDe(int idUsuario, int idContacto) const {
+        uint total = 0;
+        mensajes.paraCada([idUsuario, idContacto, &total](const Mensaje& m) {
+            if (m.getIdEmisor() == idContacto && m.getIdReceptor() == idUsuario && !m.fueLeido()) total++;
+            });
+        return total;
+    }
+
+    uint cantidadMensajesEntre(int idA, int idB) const {
+        uint total = 0;
+        mensajes.paraCada([idA, idB, &total](const Mensaje& m) {
+            if (m.esConversacionEntre(idA, idB)) total++;
+            });
+        return total;
+    }
+
+    // Copia solo los mensajes de una conversacion. La lista conserva el orden
+    // de insercion, que coincide con el orden en que fueron enviados.
+    Lista<Mensaje> obtenerConversacion(int idA, int idB) const {
+        Lista<Mensaje> resultado;
+        mensajes.paraCada([idA, idB, &resultado](const Mensaje& m) {
+            if (m.esConversacionEntre(idA, idB)) resultado.agregaFinal(m);
+            });
+        return resultado;
     }
 
     void paraCadaPublicacion(std::function<void(const Publicacion&)> accion) const {
@@ -636,6 +820,42 @@ public:
             });
     }
 
+    void paraCadaRecomendacionDe(int idEmisor, std::function<void(const Recomendacion&)> accion) const {
+        recomendaciones.paraCada([idEmisor, &accion](const Recomendacion& r) {
+            if (r.getIdEmisor() == idEmisor) accion(r);
+            });
+    }
+
+    const Recomendacion* obtenerRecomendacion(int idRecomendacion) const {
+        return recomendaciones.buscarPtr([idRecomendacion](const Recomendacion& r) {
+            return r.getId() == idRecomendacion;
+            });
+    }
+
+    // Copias ordenadas de forma descendente por fecha e id para que las mas
+    // recientes aparezcan primero sin alterar el orden del archivo original.
+    Lista<Recomendacion> recomendacionesRecibidas(int idReceptor) const {
+        Lista<Recomendacion> resultado;
+        paraCadaRecomendacionPara(idReceptor, [&resultado](const Recomendacion& r) {
+            resultado.agregaFinal(r);
+            });
+        return mergeSort<Recomendacion>(resultado, [](const Recomendacion& a, const Recomendacion& b) {
+            if (a.getFecha() != b.getFecha()) return a.getFecha() > b.getFecha();
+            return a.getId() > b.getId();
+            });
+    }
+
+    Lista<Recomendacion> recomendacionesEnviadas(int idEmisor) const {
+        Lista<Recomendacion> resultado;
+        paraCadaRecomendacionDe(idEmisor, [&resultado](const Recomendacion& r) {
+            resultado.agregaFinal(r);
+            });
+        return mergeSort<Recomendacion>(resultado, [](const Recomendacion& a, const Recomendacion& b) {
+            if (a.getFecha() != b.getFecha()) return a.getFecha() > b.getFecha();
+            return a.getId() > b.getId();
+            });
+    }
+
     // Junta en una sola lista las publicaciones, comentarios y recomendaciones
     // que escribio el usuario. Como se guardan punteros a la clase base, cada
     // elemento responde segun su clase real: esto es el polimorfismo.
@@ -654,8 +874,8 @@ public:
         return actividad;
     }
 
-    // Pendiente (Aldo): mostrar los hilos de comentarios de forma recursiva
-    // usando idPadre y ordenar las publicaciones con MergeSort.
+    // Los hilos de comentarios se recorren de forma recursiva usando idPadre,
+    // y las publicaciones se ordenan con MergeSort en los metodos anteriores.
 
     // ==================== Empleo y grupos (Piero) ====================
 
