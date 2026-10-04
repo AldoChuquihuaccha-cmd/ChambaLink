@@ -1,11 +1,14 @@
 #pragma once
 #include <string>
 #include <fstream>
-#include <cstdio>
 #include "RedProfesional.h"
+
+
 
 #define ARCHIVO_BINARIO "chambalink.bin"
 #define FIRMA "CHAMBA02"     // 8 letras al inicio del binario para reconocerlo
+
+
 
 // Persistencia de ChambaLink. Cada vez que se guarda, los datos quedan en dos formatos:
 //

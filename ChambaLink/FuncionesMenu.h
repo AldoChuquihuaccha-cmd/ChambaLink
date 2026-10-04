@@ -1751,6 +1751,81 @@ void seccionNotificaciones(RedProfesional& red, int idSesion) {
     }
 }
 
+// ======================= Individuo: Grupos =======================
+
+// Grupos profesionales, 3 por pagina. Cada grupo muestra su especialidad,
+// la cantidad de miembros y sus nombres. ENTER une o saca al usuario del grupo.
+void seccionGrupos(RedProfesional& red, int idSesion) {
+    int seleccion = 0;
+    int pagina = 0;
+    while (true) {
+        Lista<GrupoProfesional> grupos;
+        red.paraCadaGrupo([&grupos](const GrupoProfesional& g) { grupos.agregaFinal(g); });
+
+        int total = (int)grupos.longitud();
+        int paginas = total == 0 ? 1 : (total + 2) / 3;
+        if (pagina >= paginas) pagina = paginas - 1;
+        int enPagina = total - pagina * 3;
+        if (enPagina > 3) enPagina = 3;
+        if (seleccion >= enPagina) seleccion = enPagina - 1;
+        if (seleccion < 0) seleccion = 0;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "GRUPOS PROFESIONALES (" << total << ")";
+        if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+
+        if (total == 0) {
+            ubicar(58, 14); cout << "Todavia no hay grupos en la red";
+            while (leerTecla() != TECLA_ESC) {}
+            return;
+        }
+
+        // Cada grupo ocupa 3 filas y deja 1 libre: filas 14, 18 y 22.
+        int idsPagina[3] = { 0, 0, 0 };
+        bool esMiembro[3] = { false, false, false };
+        int i = 0;
+        for (GrupoProfesional& g : grupos) {
+            if (i >= pagina * 3 && i < pagina * 3 + 3) {
+                int posicion = i - pagina * 3;
+                int y = 14 + posicion * 4;
+                idsPagina[posicion] = g.getId();
+                esMiembro[posicion] = g.esMiembro(idSesion);
+
+                string nombres = "";
+                g.paraCadaMiembro([&red, &nombres](const int& idMiembro) {
+                    if (nombres != "") nombres = nombres + ", ";
+                    nombres = nombres + red.nombreDe(idMiembro);
+                    });
+
+                ubicar(58, y);     cout << recortar(g.getNombre() + " (" + g.getEspecialidad() + ")", 44);
+                ubicar(104, y);    cout << (esMiembro[posicion] ? "Miembro" : "");
+                ubicar(60, y + 1); cout << recortar(valorOVacio(g.getDescripcion()), 58);
+                ubicar(60, y + 2); cout << g.getCantidadMiembros() << " miembro(s): " << recortar(nombres, 44);
+            }
+            i++;
+        }
+        ubicar(55, 14 + seleccion * 4); cout << "->";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER) {
+            int idGrupo = idsPagina[seleccion];
+            bool salir = esMiembro[seleccion];
+            limpiarZonaContenido();
+            ubicar(55, 11); cout << "GRUPOS PROFESIONALES";
+            if (!confirmarZona(14, salir ? "Salir de este grupo?" : "Unirte a este grupo?")) continue;
+            bool correcto = salir ? red.salirDeGrupo(idSesion, idGrupo) : red.unirseAGrupo(idSesion, idGrupo);
+            if (correcto) GestorArchivos::guardarTodo(red);
+            else mostrarErrorZona(red.getUltimoError());
+        }
+    }
+}
+
 // ======================= Individuo =======================
 
 void dibujarEncabezadoIndividuo(RedProfesional& red, int idSesion) {
@@ -1778,12 +1853,13 @@ void dibujarOpcionesIndividuo() {
     ubicar(4, 18); cout << "Empleos";
     ubicar(4, 19); cout << "Mensajes";
     ubicar(4, 20); cout << "Notificaciones";
+    ubicar(4, 21); cout << "Grupos";
     ubicar(4, 22); cout << "Cerrar sesion";
 }
 
-// Fila de cada opcion: 0 a 9 van de la fila 11 a la 20; Cerrar sesion (10) va en la 22.
+// Fila de cada opcion: 0 a 10 van de la fila 11 a la 21; Cerrar sesion (11) va en la 22.
 int filaOpcionIndividuo(int opcion) {
-    if (opcion == 10) return 22;
+    if (opcion == 11) return 22;
     return 11 + opcion;
 }
 
@@ -1800,6 +1876,7 @@ void abrirSeccionIndividuo(RedProfesional& red, int idSesion, int opcion) {
     case 7: seccionEmpleos(red, idSesion); break;
     case 8: seccionMensajes(red, idSesion); break;
     case 9: seccionNotificaciones(red, idSesion); break;
+    case 10: seccionGrupos(red, idSesion); break;
     default: break;
     }
 }
@@ -1825,7 +1902,7 @@ void menuIndividuo(RedProfesional& red, int idSesion) {
 
             int anterior = opcion;
             if (tecla == TECLA_ARRIBA && opcion > 0) opcion--;
-            else if (tecla == TECLA_ABAJO && opcion < 10) opcion++;
+            else if (tecla == TECLA_ABAJO && opcion < 11) opcion++;
 
             // Se borra la flecha de la opcion anterior.
             if (opcion != anterior) {
@@ -1833,7 +1910,7 @@ void menuIndividuo(RedProfesional& red, int idSesion) {
             }
         }
 
-        if (opcion == 10) return;   // Cerrar sesion: vuelve al inicio de todo
+        if (opcion == 11) return;   // Cerrar sesion: vuelve al inicio de todo
         abrirSeccionIndividuo(red, idSesion, opcion);
     }
 }
