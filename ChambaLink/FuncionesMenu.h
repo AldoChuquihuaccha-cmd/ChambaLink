@@ -1753,8 +1753,36 @@ void seccionNotificaciones(RedProfesional& red, int idSesion) {
 
 // ======================= Individuo: Grupos =======================
 
+// Formulario para crear un grupo. Quien lo crea queda como su primer miembro.
+// Devuelve true si el grupo se creo.
+bool formularioGrupo(RedProfesional& red, int idSesion) {
+    string nombre, especialidad, descripcion;
+    while (true) {
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "CREAR GRUPO";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 14); cout << "Nombre:";
+        ubicar(55, 16); cout << "Especialidad:";
+        ubicar(55, 18); cout << "Descripcion:";
+        ubicar(55, 20); cout << "(la descripcion es opcional)";
+
+        if (!leerCampoEn(69, 14, RedProfesional::MAX_GRUPO, nombre)) return false;
+        if (!leerCampoEn(69, 16, RedProfesional::MAX_ESPECIALIDAD, especialidad)) return false;
+        if (!leerCampoEn(69, 18, RedProfesional::MAX_DESCRIPCION_GRUPO, descripcion)) return false;
+
+        int idGrupo = red.crearGrupo(nombre, descripcion, especialidad);
+        if (idGrupo != -1) {
+            red.unirseAGrupo(idSesion, idGrupo);
+            GestorArchivos::guardarTodo(red);
+            return true;
+        }
+        if (!mostrarErrorZona(red.getUltimoError())) return false;
+    }
+}
+
 // Grupos profesionales, 3 por pagina. Cada grupo muestra su especialidad,
 // la cantidad de miembros y sus nombres. ENTER une o saca al usuario del grupo.
+// La ultima opcion de cada pagina es Crear grupo.
 void seccionGrupos(RedProfesional& red, int idSesion) {
     int seleccion = 0;
     int pagina = 0;
@@ -1767,28 +1795,23 @@ void seccionGrupos(RedProfesional& red, int idSesion) {
         if (pagina >= paginas) pagina = paginas - 1;
         int enPagina = total - pagina * 3;
         if (enPagina > 3) enPagina = 3;
-        if (seleccion >= enPagina) seleccion = enPagina - 1;
+        if (seleccion > enPagina) seleccion = enPagina;   // enPagina = Crear grupo
         if (seleccion < 0) seleccion = 0;
 
         limpiarZonaContenido();
         ubicar(55, 11); cout << "GRUPOS PROFESIONALES (" << total << ")";
         if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
         ubicar(55, 12); cout << "----------------------------------------------------------------";
+        if (total == 0) { ubicar(58, 14); cout << "Todavia no hay grupos en la red"; }
 
-        if (total == 0) {
-            ubicar(58, 14); cout << "Todavia no hay grupos en la red";
-            while (leerTecla() != TECLA_ESC) {}
-            return;
-        }
-
-        // Cada grupo ocupa 3 filas y deja 1 libre: filas 14, 18 y 22.
+        // Cada grupo ocupa 3 filas y deja 1 libre: filas 13, 17 y 21.
         int idsPagina[3] = { 0, 0, 0 };
         bool esMiembro[3] = { false, false, false };
         int i = 0;
         for (GrupoProfesional& g : grupos) {
             if (i >= pagina * 3 && i < pagina * 3 + 3) {
                 int posicion = i - pagina * 3;
-                int y = 14 + posicion * 4;
+                int y = 13 + posicion * 4;
                 idsPagina[posicion] = g.getId();
                 esMiembro[posicion] = g.esMiembro(idSesion);
 
@@ -1805,14 +1828,19 @@ void seccionGrupos(RedProfesional& red, int idSesion) {
             }
             i++;
         }
-        ubicar(55, 14 + seleccion * 4); cout << "->";
+        ubicar(58, 25); cout << "Crear grupo";
+        ubicar(55, seleccion == enPagina ? 25 : 13 + seleccion * 4); cout << "->";
 
         int tecla = leerTecla();
         if (tecla == TECLA_ESC) return;
         else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
-        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina) seleccion++;
         else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
         else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER && seleccion == enPagina) {
+            // El grupo nuevo queda al final: se muestra la ultima pagina.
+            if (formularioGrupo(red, idSesion)) { pagina = total / 3; seleccion = total % 3; }
+        }
         else if (tecla == TECLA_ENTER) {
             int idGrupo = idsPagina[seleccion];
             bool salir = esMiembro[seleccion];

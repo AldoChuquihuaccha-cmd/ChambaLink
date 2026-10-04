@@ -284,6 +284,9 @@ public:
     static const int MAX_RECOMENDACION = 121; // dos lineas de 60 en pantalla
     static const int MAX_HABILIDAD = 30;
     static const int MAX_CARGO = 40;
+    static const int MAX_GRUPO = 40;
+    static const int MAX_ESPECIALIDAD = 20;
+    static const int MAX_DESCRIPCION_GRUPO = 48;
 
     RedProfesional() {
         // Las cuentas empiezan en 1000 para que su id siempre tenga 4 cifras.
@@ -1045,7 +1048,14 @@ public:
         return true;
     }
     int crearGrupo(std::string nombre, std::string descripcion, std::string especialidad) {
-        if (nombre == "") { fallar("El nombre del grupo es obligatorio"); return -1; }
+        if (!validarCampo(nombre, "nombre", MAX_GRUPO, true)) return -1;
+        if (!validarCampo(especialidad, "especialidad", MAX_ESPECIALIDAD, true)) return -1;
+        if (!validarCampo(descripcion, "descripcion", MAX_DESCRIPCION_GRUPO, false)) return -1;
+        std::string buscado = textoMinusculas(nombre);
+        bool repetido = grupos.existe([&buscado](const GrupoProfesional& g) {
+            return textoMinusculas(g.getNombre()) == buscado;
+            });
+        if (repetido) { fallar("Ya existe un grupo con ese nombre"); return -1; }
         int id = sigGrupo;
         sigGrupo++;
         grupos.agregaFinal(GrupoProfesional(id, nombre, descripcion, especialidad));
