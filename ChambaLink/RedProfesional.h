@@ -5,6 +5,8 @@
 #include <cctype>
 #include <sstream>
 #include "Lista.h"
+#include "ArbolAVL.h"
+#include "ArbolBB.h"
 #include "Usuario.h"
 #include "Ordenamiento.h"
 #include "Empresa.h"
@@ -39,18 +41,91 @@
 // para poder guardarlos y volver a cargarlos con sus ids originales.
 class GestorArchivos;
 
+// Claves auxiliares de los indices genericos. Se usan clases (no struct)
+// para mantener el mismo criterio de encapsulamiento del proyecto.
+class IndiceHabilidad {
+private:
+    std::string nombre;
+    Lista<int> idsUsuarios;
+public:
+    IndiceHabilidad() : nombre("") {}
+    explicit IndiceHabilidad(const std::string& pNombre) : nombre(pNombre) {}
+
+    const std::string& getNombre() const { return nombre; }
+    void agregarUsuario(int id) {
+        if (!idsUsuarios.existe([id](const int& actual) { return actual == id; }))
+            idsUsuarios.agregaFinal(id);
+    }
+    bool eliminarUsuario(int id) {
+        return idsUsuarios.eliminaSi([id](const int& actual) { return actual == id; });
+    }
+    bool sinUsuarios() const { return idsUsuarios.esVacia(); }
+    void paraCadaUsuario(std::function<void(const int&)> accion) const {
+        idsUsuarios.paraCada(accion);
+    }
+};
+
+class IndiceVacante {
+private:
+    std::string titulo;
+    Lista<int> idsVacantes;
+public:
+    IndiceVacante() : titulo("") {}
+    explicit IndiceVacante(const std::string& pTitulo) : titulo(pTitulo) {}
+
+    const std::string& getTitulo() const { return titulo; }
+    void agregarVacante(int id) {
+        if (!idsVacantes.existe([id](const int& actual) { return actual == id; }))
+            idsVacantes.agregaFinal(id);
+    }
+    void paraCadaVacante(std::function<void(const int&)> accion) const {
+        idsVacantes.paraCada(accion);
+    }
+};
+
+class IndiceEmpresa {
+private:
+    int id;
+    std::string nombre;
+public:
+    IndiceEmpresa() : id(0), nombre("") {}
+    IndiceEmpresa(int pId, const std::string& pNombre) : id(pId), nombre(pNombre) {}
+
+    int getId() const { return id; }
+    const std::string& getNombre() const { return nombre; }
+};
+
 // Resultado de buscarProfesionales: el usuario y cuantas palabras clave le coincidieron.
-struct Coincidencia {
+class Coincidencia {
+public:
     int idUsuario = 0;
     int cantidad = 0;
 };
 
 // Resultado para la seccion Mi red. Guarda el usuario sugerido y
 // cuantos contactos directos tiene en comun con la sesion actual.
-struct SugerenciaConexion {
+class SugerenciaConexion {
+public:
     int idUsuario = 0;
     int contactosEnComun = 0;
 };
+
+namespace ChambaLinkIndice {
+    inline std::string normalizar(const std::string& texto) {
+        std::string resultado = texto;
+        for (size_t i = 0; i < resultado.size(); ++i)
+            resultado[i] = (char)std::tolower((unsigned char)resultado[i]);
+        return resultado;
+    }
+
+    inline int compararTexto(const std::string& a, const std::string& b) {
+        const std::string na = normalizar(a);
+        const std::string nb = normalizar(b);
+        if (na < nb) return -1;
+        if (na > nb) return 1;
+        return 0;
+    }
+}
 
 class RedProfesional {
     friend class GestorArchivos;
@@ -65,6 +140,12 @@ private:
     Lista<Comentario> comentarios;
     Lista<Recomendacion> recomendaciones;
     Lista<Mensaje> mensajes;
+
+    // Indices del TB2: empresas por ABB y habilidades/vacantes por AVL.
+    ArbolBB<IndiceEmpresa> indiceEmpresas;
+    ArbolAVL<IndiceHabilidad> indiceHabilidades;
+    ArbolAVL<IndiceVacante> indiceVacantes;
+    bool indicesConstruidos;
 
     // Contadores de ids. Al cargar desde archivo hay que dejarlos en el id
     // mas alto encontrado mas uno.
@@ -82,6 +163,63 @@ private:
     int sigCertificacion;
 
     std::string ultimoError;
+
+    void agregarUsuarioAIndiceHabilidad(const std::string& nombre, int idUsuario) {
+        IndiceHabilidad clave(nombre);
+        IndiceHabilidad* entrada = indiceHabilidades.buscar(clave);
+        if (entrada != nullptr) {
+            entrada->agregarUsuario(idUsuario);
+        }
+        else {
+            clave.agregarUsuario(idUsuario);
+            indiceHabilidades.insertar(clave);
+        }
+    }
+
+    void quitarUsuarioDeIndiceHabilidad(const std::string& nombre, int idUsuario) {
+        IndiceHabilidad clave(nombre);
+        IndiceHabilidad* entrada = indiceHabilidades.buscar(clave);
+        if (entrada == nullptr) return;
+        entrada->eliminarUsuario(idUsuario);
+        if (entrada->sinUsuarios()) indiceHabilidades.eliminar(clave);
+    }
+
+    void agregarVacanteAlIndice(const Vacante& vacante) {
+        IndiceVacante clave(vacante.getTitulo());
+        IndiceVacante* entrada = indiceVacantes.buscar(clave);
+        if (entrada != nullptr) {
+            entrada->agregarVacante(vacante.getId());
+        }
+        else {
+            clave.agregarVacante(vacante.getId());
+            indiceVacantes.insertar(clave);
+        }
+    }
+
+    // Se reconstruyen los indices al primer uso. Esto tambien cubre las cargas
+    // de GestorArchivos, que inserta directamente en las listas por ser friend.
+    void reconstruirIndices() {
+        indiceEmpresas.vaciar();
+        indiceHabilidades.vaciar();
+        indiceVacantes.vaciar();
+
+        empresas.paraCada([this](const Empresa& empresa) {
+            indiceEmpresas.insertar(IndiceEmpresa(empresa.getId(), empresa.getNombre()));
+            });
+        usuarios.paraCada([this](const Usuario& usuario) {
+            usuario.paraCadaHabilidad([this, &usuario](const Habilidad& habilidad) {
+                agregarUsuarioAIndiceHabilidad(habilidad.getNombre(), usuario.getId());
+                });
+            });
+        vacantes.paraCada([this](const Vacante& vacante) {
+            agregarVacanteAlIndice(vacante);
+            });
+        indicesConstruidos = true;
+    }
+
+    void asegurarIndices() {
+        if (!indicesConstruidos) reconstruirIndices();
+    }
 
     // Convierte "C++, SQL,Java" en la lista ["C++", "SQL", "Java"]. O(n)
     Lista<std::string> separarRequisitos(std::string texto) const {
@@ -288,7 +426,17 @@ public:
     static const int MAX_ESPECIALIDAD = 20;
     static const int MAX_DESCRIPCION_GRUPO = 48;
 
-    RedProfesional() {
+    RedProfesional()
+        : indiceEmpresas([](const IndiceEmpresa& a, const IndiceEmpresa& b) {
+        return ChambaLinkIndice::compararTexto(a.getNombre(), b.getNombre());
+            }),
+        indiceHabilidades([](const IndiceHabilidad& a, const IndiceHabilidad& b) {
+        return ChambaLinkIndice::compararTexto(a.getNombre(), b.getNombre());
+            }),
+        indiceVacantes([](const IndiceVacante& a, const IndiceVacante& b) {
+        return ChambaLinkIndice::compararTexto(a.getTitulo(), b.getTitulo());
+            }),
+        indicesConstruidos(false) {
         // Las cuentas empiezan en 1000 para que su id siempre tenga 4 cifras.
         sigUsuario = 1000;
         sigEmpresa = 1000;
@@ -324,6 +472,11 @@ public:
     }
 
     std::string getUltimoError() const { return ultimoError; }
+
+    // Permite a GestorArchivos invalidar los indices cuando vacia o carga
+    // catalogos directamente. Se reconstruyen automaticamente al consultarlos.
+    void invalidarIndices() { indicesConstruidos = false; }
+    void reconstruirIndicesPublico() { reconstruirIndices(); }
 
     // ==================== Usuarios ====================
 
@@ -452,6 +605,7 @@ public:
     // nivel: 1 Basico, 2 Intermedio, 3 Avanzado, 4 Experto.
     // Se registra como Accion en la pila para poder deshacerla.
     bool agregarHabilidad(int idUsuario, std::string nombre, int nivel) {
+        asegurarIndices();
         Usuario* usuario = buscarUsuario(idUsuario);
         if (usuario == nullptr) return fallar("El usuario no existe");
         if (!validarCampo(nombre, "habilidad", MAX_HABILIDAD, true)) return false;
@@ -460,13 +614,22 @@ public:
 
         Habilidad h(nombre, (NivelHabilidad)(nivel - 1));
         Accion accion("Perfil", "Agregar habilidad " + nombre,
-            [this, idUsuario, h]() { buscarUsuario(idUsuario)->agregarHabilidad(h); },
-            [this, idUsuario, nombre]() { buscarUsuario(idUsuario)->eliminarHabilidad(nombre); });
+            [this, idUsuario, h]() {
+                Usuario* objetivo = buscarUsuario(idUsuario);
+                if (objetivo != nullptr && objetivo->agregarHabilidad(h))
+                    agregarUsuarioAIndiceHabilidad(h.getNombre(), idUsuario);
+            },
+            [this, idUsuario, nombre]() {
+                Usuario* objetivo = buscarUsuario(idUsuario);
+                if (objetivo != nullptr && objetivo->eliminarHabilidad(nombre))
+                    quitarUsuarioDeIndiceHabilidad(nombre, idUsuario);
+            });
         usuario->registrarAccion(accion);
         return true;
     }
 
     bool eliminarHabilidad(int idUsuario, std::string nombre) {
+        asegurarIndices();
         Usuario* usuario = buscarUsuario(idUsuario);
         if (usuario == nullptr) return fallar("El usuario no existe");
         const Habilidad* guardada = usuario->buscarHabilidad(nombre);
@@ -474,8 +637,16 @@ public:
 
         Habilidad h = *guardada;   // copia para poder restaurarla con el mismo nivel
         Accion accion("Perfil", "Quitar habilidad " + nombre,
-            [this, idUsuario, nombre]() { buscarUsuario(idUsuario)->eliminarHabilidad(nombre); },
-            [this, idUsuario, h]() { buscarUsuario(idUsuario)->agregarHabilidad(h); });
+            [this, idUsuario, nombre]() {
+                Usuario* objetivo = buscarUsuario(idUsuario);
+                if (objetivo != nullptr && objetivo->eliminarHabilidad(nombre))
+                    quitarUsuarioDeIndiceHabilidad(nombre, idUsuario);
+            },
+            [this, idUsuario, h]() {
+                Usuario* objetivo = buscarUsuario(idUsuario);
+                if (objetivo != nullptr && objetivo->agregarHabilidad(h))
+                    agregarUsuarioAIndiceHabilidad(h.getNombre(), idUsuario);
+            });
         usuario->registrarAccion(accion);
         return true;
     }
@@ -920,9 +1091,13 @@ public:
     // Sector y distrito son opcionales.
     int registrarEmpresa(std::string nombre, std::string sector, std::string ubicacion,
         std::string correo, std::string contrasena) {
+        asegurarIndices();
         if (!validarCampo(nombre, "nombre", MAX_NOMBRE_EMPRESA, true)) return -1;
-        bool repetida = empresas.existe([nombre](const Empresa& e) { return e.getNombre() == nombre; });
-        if (repetida) { fallar("Ya existe una empresa con ese nombre"); return -1; }
+        IndiceEmpresa claveEmpresa(0, nombre);
+        if (indiceEmpresas.contiene(claveEmpresa)) {
+            fallar("Ya existe una empresa con ese nombre");
+            return -1;
+        }
         if (!validarCampo(sector, "sector", MAX_SECTOR, false)) return -1;
         if (!validarCampo(ubicacion, "distrito", MAX_UBICACION, false)) return -1;
         if (!validarCredenciales(correo, contrasena)) return -1;
@@ -930,6 +1105,7 @@ public:
         int id = sigEmpresa;
         sigEmpresa++;
         empresas.agregaFinal(Empresa(id, nombre, sector, ubicacion, correo, contrasena));
+        indiceEmpresas.insertar(IndiceEmpresa(id, nombre));
         return id;
     }
 
@@ -946,11 +1122,13 @@ public:
 
     int publicarVacante(int idEmpresa, std::string titulo, std::string descripcion,
         std::string requisitos, std::string modalidad) {
+        asegurarIndices();
         if (buscarEmpresa(idEmpresa) == nullptr) { fallar("La empresa no existe"); return -1; }
         if (titulo == "") { fallar("El titulo es obligatorio"); return -1; }
         int id = sigVacante;
         sigVacante++;
         vacantes.agregaFinal(Vacante(id, idEmpresa, titulo, descripcion, requisitos, modalidad));
+        agregarVacanteAlIndice(vacantes.obtenerFinal());
         return id;
     }
 
@@ -1089,6 +1267,24 @@ public:
         empresas.paraCada(accion);
     }
 
+    // RF18: consulta del directorio indexado por nombre mediante ABB.
+    // Devuelve el id de la empresa o -1 si no existe.
+    int buscarIdEmpresaPorNombre(const std::string& nombre) {
+        asegurarIndices();
+        const IndiceEmpresa* encontrada = indiceEmpresas.buscar(IndiceEmpresa(0, nombre));
+        return encontrada == nullptr ? -1 : encontrada->getId();
+    }
+
+    // Copia del directorio en orden alfabetico (recorrido inorden del ABB).
+    Lista<IndiceEmpresa> directorioEmpresasOrdenado() {
+        asegurarIndices();
+        Lista<IndiceEmpresa> resultado;
+        indiceEmpresas.enOrden([&resultado](const IndiceEmpresa& empresa) {
+            resultado.agregaFinal(empresa);
+            });
+        return resultado;
+    }
+
     void paraCadaVacanteActiva(std::function<void(const Vacante&)> accion) const {
         vacantes.paraCada([&accion](const Vacante& v) {
             if (v.estaActiva()) accion(v);
@@ -1123,49 +1319,127 @@ public:
         return textoMinusculas(texto).find(textoMinusculas(palabra)) != std::string::npos;
     }
 
-    // Busqueda lineal: por cada usuario se revisa si cada palabra clave aparece en
-    // su titular o en alguna de sus habilidades. Entra si coincide al menos una.
-    // Los resultados se ordenan con HeapSort: mas coincidencias primero.
-    // Complejidad: O(u * k * h) la busqueda + O(r log r) el ordenamiento.
-    // En totalPalabras deja cuantas palabras clave se buscaron.
+    // Busca por palabras clave utilizando el indice AVL de habilidades.
+    // El titular se sigue revisando en los perfiles; las habilidades se consultan
+    // desde el indice, evitando recorrer la lista de habilidades de cada usuario.
+    // Se conserva la busqueda parcial y el orden por coincidencias con HeapSort.
     Lista<Coincidencia> buscarProfesionales(std::string palabrasClave, int& totalPalabras) {
+        asegurarIndices();
         Lista<std::string> palabras = separarRequisitos(palabrasClave);
         totalPalabras = (int)palabras.longitud();
-
         Lista<Coincidencia> resultados;
-        usuarios.paraCada([&palabras, &resultados](const Usuario& u) {
-            int cantidad = 0;
-            palabras.paraCada([&u, &cantidad](const std::string& palabra) {
-                bool encontrada = contiene(u.getTitular(), palabra);
-                u.paraCadaHabilidad([&palabra, &encontrada](const Habilidad& h) {
-                    if (contiene(h.getNombre(), palabra)) encontrada = true;
-                    });
-                if (encontrada) cantidad++;
+
+        auto incrementarResultado = [&resultados](const int& idUsuario) {
+            Coincidencia* actual = resultados.buscarPtr([idUsuario](const Coincidencia& c) {
+                return c.idUsuario == idUsuario;
                 });
-            if (cantidad > 0) {
-                Coincidencia c;
-                c.idUsuario = u.getId();
-                c.cantidad = cantidad;
-                resultados.agregaFinal(c);
+            if (actual != nullptr) {
+                actual->cantidad++;
             }
+            else {
+                Coincidencia nueva;
+                nueva.idUsuario = idUsuario;
+                nueva.cantidad = 1;
+                resultados.agregaFinal(nueva);
+            }
+            };
+
+        palabras.paraCada([this, &incrementarResultado](const std::string& palabra) {
+            Lista<int> idsCoincidentes;
+
+            // El titular forma parte del criterio de busqueda original.
+            usuarios.paraCada([&idsCoincidentes, &palabra](const Usuario& usuario) {
+                if (contiene(usuario.getTitular(), palabra))
+                    idsCoincidentes.agregaFinal(usuario.getId());
+                });
+
+            // Primero se consulta la clave exacta en el AVL.
+            const IndiceHabilidad* exacta = indiceHabilidades.buscar(IndiceHabilidad(palabra));
+            if (exacta != nullptr) {
+                exacta->paraCadaUsuario([&idsCoincidentes](const int& id) {
+                    if (!idsCoincidentes.existe([id](const int& actual) { return actual == id; }))
+                        idsCoincidentes.agregaFinal(id);
+                    });
+            }
+
+            // Se conserva la coincidencia parcial que tenia el TB1 (p. ej. "py" con "Python").
+            indiceHabilidades.enOrden([&](const IndiceHabilidad& habilidad) {
+                if (!contiene(habilidad.getNombre(), palabra)) return;
+                habilidad.paraCadaUsuario([&idsCoincidentes](const int& id) {
+                    if (!idsCoincidentes.existe([id](const int& actual) { return actual == id; }))
+                        idsCoincidentes.agregaFinal(id);
+                    });
+                });
+
+            idsCoincidentes.paraCada(incrementarResultado);
             });
 
         std::function<bool(const Coincidencia&, const Coincidencia&)> criterio =
-            [](const Coincidencia& a, const Coincidencia& b) { return a.cantidad > b.cantidad; };
+            [](const Coincidencia& a, const Coincidencia& b) {
+            if (a.cantidad != b.cantidad) return a.cantidad > b.cantidad;
+            return a.idUsuario < b.idUsuario;
+            };
         return heapSort(resultados, criterio);
     }
-    // Vacantes de una empresa ordenadas por titulo con HeapSort.
-    // Devuelve una copia: la lista principal de vacantes no cambia de orden.
-    Lista<Vacante> vacantesOrdenadasDe(int idEmpresa) const {
-        Lista<Vacante> copia;
-        vacantes.paraCada([idEmpresa, &copia](const Vacante& v) {
-            if (v.esDeEmpresa(idEmpresa)) copia.agregaFinal(v);
+
+    // RF16: busqueda exacta por habilidad y nivel declarado (1 Basico,
+    // 2 Intermedio, 3 Avanzado, 4 Experto). El AVL localiza los usuarios
+    // asociados a la habilidad y luego se verifica el nivel en cada perfil.
+    Lista<Coincidencia> buscarProfesionales(std::string habilidad, int nivelRequerido,
+        int& totalPalabras) {
+        asegurarIndices();
+        totalPalabras = 1;
+        Lista<Coincidencia> resultados;
+        if (nivelRequerido < 1 || nivelRequerido > 4) {
+            fallar("El nivel debe ser 1, 2, 3 o 4");
+            totalPalabras = 0;
+            return resultados;
+        }
+
+        const IndiceHabilidad* entrada = indiceHabilidades.buscar(IndiceHabilidad(habilidad));
+        if (entrada == nullptr) return resultados;
+
+        entrada->paraCadaUsuario([this, &resultados, &habilidad, nivelRequerido](const int& idUsuario) {
+            const Usuario* usuario = buscarUsuario(idUsuario);
+            if (usuario == nullptr) return;
+
+            bool cumpleNivel = false;
+            usuario->paraCadaHabilidad([&](const Habilidad& actual) {
+                if (ChambaLinkIndice::compararTexto(actual.getNombre(), habilidad) == 0 &&
+                    (int)actual.getNivel() + 1 == nivelRequerido)
+                    cumpleNivel = true;
+                });
+
+            if (cumpleNivel) {
+                Coincidencia coincidencia;
+                coincidencia.idUsuario = idUsuario;
+                coincidencia.cantidad = 1;
+                resultados.agregaFinal(coincidencia);
+            }
             });
-        std::function<bool(const Vacante&, const Vacante&)> criterio =
-            [](const Vacante& a, const Vacante& b) { return a.getTitulo() < b.getTitulo(); };
-        return heapSort(copia, criterio);
+
+        std::function<bool(const Coincidencia&, const Coincidencia&)> porId =
+            [](const Coincidencia& a, const Coincidencia& b) {
+            return a.idUsuario < b.idUsuario;
+            };
+        return heapSort(resultados, porId);
     }
 
+    // RF17: las vacantes salen directamente en orden alfabetico mediante
+    // el recorrido inorden del AVL; no se vuelve a ordenar con HeapSort.
+    // Devuelve vacantes activas y canceladas, igual que la version anterior.
+    Lista<Vacante> vacantesOrdenadasDe(int idEmpresa) {
+        asegurarIndices();
+        Lista<Vacante> resultado;
+        indiceVacantes.enOrden([this, idEmpresa, &resultado](const IndiceVacante& indice) {
+            indice.paraCadaVacante([this, idEmpresa, &resultado](const int& idVacante) {
+                const Vacante* vacante = obtenerVacante(idVacante);
+                if (vacante != nullptr && vacante->esDeEmpresa(idEmpresa))
+                    resultado.agregaFinal(*vacante);
+                });
+            });
+        return resultado;
+    }
     void paraCadaPostulacionDe(int idUsuario, std::function<void(const Postulacion&)> accion) const {
         postulaciones.paraCada([idUsuario, &accion](const Postulacion& p) {
             if (p.esDeUsuario(idUsuario)) accion(p);

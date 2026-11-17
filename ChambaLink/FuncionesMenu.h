@@ -1712,7 +1712,7 @@ void seccionNotificaciones(RedProfesional& red, int idSesion) {
         limpiarZonaContenido();
         ubicar(55, 11); cout << "NOTIFICACIONES";
         ubicar(55, 12); cout << "Nuevas: " << usuario->cantidadNotificacionesNoLeidas()
-                            << "   Total: " << usuario->cantidadNotificaciones();
+            << "   Total: " << usuario->cantidadNotificaciones();
 
         if (total == 0) {
             ubicar(55, 15); cout << "No tienes notificaciones.";
@@ -1723,7 +1723,7 @@ void seccionNotificaciones(RedProfesional& red, int idSesion) {
                 int y = 14 + i * 2;
                 ubicar(58, y);
                 cout << (n.estaLeida() ? "[LEIDA] " : "[NUEVA] ")
-                     << recortar(n.tipoToString(), 46);
+                    << recortar(n.tipoToString(), 46);
                 ubicar(58, y + 1);
                 cout << recortar(n.getMensaje(), 52) << "  " << n.getFecha();
             }
@@ -1854,6 +1854,117 @@ void seccionGrupos(RedProfesional& red, int idSesion) {
     }
 }
 
+// ---------- Directorio de empresas (ABB por nombre) ----------
+
+void mostrarDetalleEmpresaDirectorio(RedProfesional& red, int idEmpresa) {
+    const Empresa* empresa = red.obtenerEmpresa(idEmpresa);
+    if (empresa == nullptr) return;
+
+    Lista<Vacante> vacantes;
+    red.paraCadaVacanteDe(idEmpresa, [&vacantes](const Vacante& vacante) {
+        vacantes.agregaFinal(vacante);
+        });
+
+    int total = (int)vacantes.longitud();
+    int pagina = 0;
+    const int porPagina = 3;
+    int paginas = total == 0 ? 1 : (total + porPagina - 1) / porPagina;
+
+    while (true) {
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "DETALLE DE EMPRESA";
+        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        ubicar(55, 14); cout << "Nombre:";   ubicar(68, 14); cout << recortar(empresa->getNombre(), 48);
+        ubicar(55, 15); cout << "Sector:";   ubicar(68, 15); cout << valorOVacio(empresa->getSector());
+        ubicar(55, 16); cout << "Distrito:"; ubicar(68, 16); cout << valorOVacio(empresa->getUbicacion());
+        ubicar(55, 17); cout << "Vacantes registradas: " << total;
+        if (paginas > 1) cout << "   Pagina " << pagina + 1 << " de " << paginas << " (<- ->)";
+
+        if (total == 0) {
+            ubicar(55, 20); cout << "Esta empresa aun no registra vacantes";
+        }
+        else {
+            int i = 0;
+            for (Vacante& vacante : vacantes) {
+                if (i >= pagina * porPagina && i < pagina * porPagina + porPagina) {
+                    int y = 19 + (i - pagina * porPagina) * 2;
+                    ubicar(58, y); cout << recortar(vacante.getTitulo(), 42);
+                    ubicar(103, y); cout << (vacante.estaActiva() ? "Activa" : "Cerrada");
+                    ubicar(58, y + 1); cout << "Modalidad: " << recortar(valorOVacio(vacante.getModalidad()), 24);
+                }
+                i++;
+            }
+        }
+        ubicar(55, 25); cout << "Flechas: cambiar pagina     ESC: volver al directorio";
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) pagina--;
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) pagina++;
+    }
+}
+
+// El ABB entrega las empresas en orden alfabetico mediante recorrido inorden.
+void seccionDirectorioEmpresas(RedProfesional& red) {
+    Lista<IndiceEmpresa> empresas = red.directorioEmpresasOrdenado();
+    int total = (int)empresas.longitud();
+    const int porPagina = 8;
+    int paginas = total == 0 ? 1 : (total + porPagina - 1) / porPagina;
+    int pagina = 0;
+    int seleccion = 0;
+
+    while (true) {
+        int enPagina = total - pagina * porPagina;
+        if (enPagina > porPagina) enPagina = porPagina;
+        if (seleccion >= enPagina) seleccion = enPagina > 0 ? enPagina - 1 : 0;
+
+        limpiarZonaContenido();
+        ubicar(55, 11); cout << "DIRECTORIO DE EMPRESAS (" << total << ")";
+        if (paginas > 1) cout << "   Pagina " << pagina + 1 << " de " << paginas << " (<- ->)";
+        separadorConOrden("ABB: recorrido inorden por nombre");
+
+        if (total == 0) {
+            ubicar(55, 15); cout << "No hay empresas registradas";
+            ubicar(55, 25); cout << "ESC: volver";
+        }
+        else {
+            int idsPagina[porPagina] = { 0 };
+            int i = 0;
+            for (IndiceEmpresa& empresa : empresas) {
+                if (i >= pagina * porPagina && i < pagina * porPagina + porPagina) {
+                    int posicion = i - pagina * porPagina;
+                    int y = 14 + posicion;
+                    idsPagina[posicion] = empresa.getId();
+                    ubicar(58, y); cout << recortar(empresa.getNombre(), 48);
+                    ubicar(108, y); cout << "ID " << empresa.getId();
+                }
+                i++;
+            }
+            ubicar(55, 14 + seleccion); cout << "->";
+            ubicar(55, 25); cout << "ENTER: ver empresa     ESC: volver";
+        }
+
+        int tecla = leerTecla();
+        if (tecla == TECLA_ESC) return;
+        else if (tecla == TECLA_ARRIBA && seleccion > 0) seleccion--;
+        else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
+        else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
+        else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == TECLA_ENTER && enPagina > 0) {
+            int idSeleccionado = 0;
+            int i = 0;
+            for (IndiceEmpresa& empresa : empresas) {
+                if (i == pagina * porPagina + seleccion) {
+                    idSeleccionado = empresa.getId();
+                    break;
+                }
+                i++;
+            }
+            if (idSeleccionado != 0) mostrarDetalleEmpresaDirectorio(red, idSeleccionado);
+        }
+    }
+}
+
 // ======================= Individuo =======================
 
 void dibujarEncabezadoIndividuo(RedProfesional& red, int idSesion) {
@@ -1882,12 +1993,13 @@ void dibujarOpcionesIndividuo() {
     ubicar(4, 19); cout << "Mensajes";
     ubicar(4, 20); cout << "Notificaciones";
     ubicar(4, 21); cout << "Grupos";
-    ubicar(4, 22); cout << "Cerrar sesion";
+    ubicar(4, 22); cout << "Directorio empresas";
+    ubicar(4, 23); cout << "Cerrar sesion";
 }
 
-// Fila de cada opcion: 0 a 10 van de la fila 11 a la 21; Cerrar sesion (11) va en la 22.
+// Fila de cada opcion: 0 a 11 van de la fila 11 a la 22; Cerrar sesion (12) va en la 23.
 int filaOpcionIndividuo(int opcion) {
-    if (opcion == 11) return 22;
+    if (opcion == 12) return 23;
     return 11 + opcion;
 }
 
@@ -1905,6 +2017,7 @@ void abrirSeccionIndividuo(RedProfesional& red, int idSesion, int opcion) {
     case 8: seccionMensajes(red, idSesion); break;
     case 9: seccionNotificaciones(red, idSesion); break;
     case 10: seccionGrupos(red, idSesion); break;
+    case 11: seccionDirectorioEmpresas(red); break;
     default: break;
     }
 }
@@ -1930,7 +2043,7 @@ void menuIndividuo(RedProfesional& red, int idSesion) {
 
             int anterior = opcion;
             if (tecla == TECLA_ARRIBA && opcion > 0) opcion--;
-            else if (tecla == TECLA_ABAJO && opcion < 11) opcion++;
+            else if (tecla == TECLA_ABAJO && opcion < 12) opcion++;
 
             // Se borra la flecha de la opcion anterior.
             if (opcion != anterior) {
@@ -1938,7 +2051,7 @@ void menuIndividuo(RedProfesional& red, int idSesion) {
             }
         }
 
-        if (opcion == 11) return;   // Cerrar sesion: vuelve al inicio de todo
+        if (opcion == 12) return;   // Cerrar sesion: vuelve al inicio de todo
         abrirSeccionIndividuo(red, idSesion, opcion);
     }
 }
@@ -2100,13 +2213,13 @@ void detalleVacante(RedProfesional& red, int idSesion, int idVacante) {
     }
 }
 
-// ---------- Mis vacantes (HeapSort por titulo) ----------
+// ---------- Mis vacantes (AVL por titulo) ----------
 
 void seccionMisVacantes(RedProfesional& red, int idSesion) {
     int seleccion = 0;
     int pagina = 0;
     while (true) {
-        Lista<Vacante> mias = red.vacantesOrdenadasDe(idSesion);   // HeapSort por titulo
+        Lista<Vacante> mias = red.vacantesOrdenadasDe(idSesion);   // Recorrido inorden del AVL
 
         int total = (int)mias.longitud();
         int paginas = (total + 3) / 4;          // 4 vacantes por pagina
@@ -2119,7 +2232,7 @@ void seccionMisVacantes(RedProfesional& red, int idSesion) {
         limpiarZonaContenido();
         ubicar(55, 11); cout << "MIS VACANTES (" << total << ")";
         if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
-        separadorConOrden("HeapSort por titulo");
+        separadorConOrden("AVL: recorrido inorden por titulo");
 
         if (total == 0) {
             ubicar(55, 14); cout << "Aun no has publicado vacantes";
@@ -2192,12 +2305,15 @@ void seccionMisContrataciones(RedProfesional& red, int idSesion) {
 
 // ---------- Buscar profesionales ----------
 
-// Resultados de la busqueda (ya ordenados con HeapSort). ENTER ve el perfil.
-void mostrarResultadosBusqueda(RedProfesional& red, Lista<Coincidencia>& resultados, int totalPalabras) {
+// Resultados de la busqueda por habilidad y nivel usando el indice AVL.
+// ENTER permite abrir el perfil del profesional seleccionado.
+void mostrarResultadosBusqueda(RedProfesional& red, Lista<Coincidencia>& resultados,
+    const string& habilidad, int nivelRequerido) {
     int seleccion = 0;
     int pagina = 0;
     int total = (int)resultados.longitud();
-    int paginas = (total + 2) / 3;              // 3 por pagina
+    int paginas = total == 0 ? 1 : (total + 2) / 3;  // 3 por pagina
+
     while (true) {
         int enPagina = total - pagina * 3;
         if (enPagina > 3) enPagina = 3;
@@ -2205,33 +2321,36 @@ void mostrarResultadosBusqueda(RedProfesional& red, Lista<Coincidencia>& resulta
         limpiarZonaContenido();
         ubicar(55, 11); cout << "RESULTADOS: " << total << " profesionales";
         if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
-        separadorConOrden("HeapSort por coincidencias");
+        separadorConOrden("AVL por habilidad y nivel");
+        ubicar(55, 13); cout << "Habilidad: " << recortar(habilidad, 25)
+            << "   Nivel: " << RedProfesional::nombreNivel(nivelRequerido);
 
         if (total == 0) {
-            ubicar(55, 14); cout << "No se encontraron profesionales con esas palabras clave";
+            ubicar(55, 16); cout << "No se encontraron profesionales con ese nivel";
+            ubicar(55, 18); cout << "Prueba otra habilidad o nivel";
             while (leerTecla() != TECLA_ESC) {}
             return;
         }
 
-        // Cada resultado ocupa 3 filas y deja 1 libre: filas 14, 18 y 22.
+        // Cada resultado ocupa 3 filas y deja una libre: filas 15, 19 y 23.
         int idsPagina[3] = { 0, 0, 0 };
         int i = 0;
         for (Coincidencia& c : resultados) {
             if (i >= pagina * 3 && i < pagina * 3 + 3) {
                 int posicion = i - pagina * 3;
-                int y = 14 + posicion * 4;
+                int y = 15 + posicion * 3;
                 idsPagina[posicion] = c.idUsuario;
                 const Usuario* u = red.buscarUsuario(c.idUsuario);
                 if (u != nullptr) {
-                    ubicar(58, y);     cout << recortar(u->getNombreCompleto(), 40);
-                    ubicar(100, y);    cout << "Coincide: " << c.cantidad << " de " << totalPalabras;
+                    ubicar(58, y);     cout << recortar(u->getNombreCompleto(), 42);
                     ubicar(60, y + 1); cout << recortar(valorOVacio(u->getTitular()) + " - " + valorOVacio(u->getUbicacion()), 58);
-                    ubicar(60, y + 2); cout << "Habilidades: " << recortar(valorOVacio(textoHabilidades(red, c.idUsuario)), 45);
+                    ubicar(60, y + 2); cout << "Habilidades: " << recortar(valorOVacio(textoHabilidades(red, c.idUsuario)), 43);
                 }
             }
             i++;
         }
-        ubicar(55, 14 + seleccion * 4); cout << "->";
+        ubicar(55, 15 + seleccion * 3); cout << "->";
+        ubicar(55, 25); cout << "ENTER: ver perfil     ESC: volver a buscar";
 
         int tecla = leerTecla();
         if (tecla == TECLA_ESC) return;
@@ -2239,26 +2358,36 @@ void mostrarResultadosBusqueda(RedProfesional& red, Lista<Coincidencia>& resulta
         else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
         else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
         else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
-        else if (tecla == TECLA_ENTER) mostrarPerfil(red, idsPagina[seleccion], "PERFIL DEL PROFESIONAL");
+        else if (tecla == TECLA_ENTER && enPagina > 0)
+            mostrarPerfil(red, idsPagina[seleccion], "PERFIL DEL PROFESIONAL");
     }
 }
 
-// Pide las palabras clave y muestra los resultados. ESC en los resultados
-// vuelve a pedir palabras; ESC en las palabras vuelve al menu.
+// RF16: solicita una habilidad y un nivel (1 Basico, 2 Intermedio,
+// 3 Avanzado, 4 Experto). La busqueda se realiza mediante el indice AVL.
 void seccionBuscarProfesionales(RedProfesional& red) {
-    string palabras;
+    string habilidad;
+    string nivelTexto;
     while (true) {
         limpiarZonaContenido();
-        ubicar(55, 11); cout << "BUSCAR PROFESIONALES";
+        ubicar(55, 11); cout << "BUSCAR PROFESIONALES POR HABILIDAD";
         ubicar(55, 12); cout << "----------------------------------------------------------------";
-        ubicar(55, 14); cout << "Palabras clave:";
-        ubicar(55, 15); cout << "(separadas por comas, ej: sql, python)";
+        ubicar(55, 14); cout << "Habilidad exacta:";
+        ubicar(55, 16); cout << "Nivel requerido:";
+        ubicar(55, 17); cout << "1 Basico  2 Intermedio  3 Avanzado  4 Experto";
 
-        if (!leerCampoEn(71, 14, 45, palabras)) return;
+        if (!leerCampoEn(74, 14, RedProfesional::MAX_HABILIDAD, habilidad)) return;
+        if (!leerCampoEn(74, 16, 1, nivelTexto)) return;
+
+        int nivel = (nivelTexto.length() == 1 ? nivelTexto[0] - '0' : 0);
+        if (nivel < 1 || nivel > 4) {
+            if (!mostrarErrorZona("Ingrese un nivel valido: 1, 2, 3 o 4")) return;
+            continue;
+        }
 
         int totalPalabras = 0;
-        Lista<Coincidencia> resultados = red.buscarProfesionales(palabras, totalPalabras);
-        mostrarResultadosBusqueda(red, resultados, totalPalabras);
+        Lista<Coincidencia> resultados = red.buscarProfesionales(habilidad, nivel, totalPalabras);
+        mostrarResultadosBusqueda(red, resultados, habilidad, nivel);
     }
 }
 

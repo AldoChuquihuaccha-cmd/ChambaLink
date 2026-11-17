@@ -101,5 +101,11 @@
     <ClInclude Include="FuncionesMenu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ArbolBB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ArbolAVL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

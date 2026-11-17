@@ -233,7 +233,7 @@ private:
             if (c.longitud() < 6) return;
             Usuario* destino = red.buscarUsuario(entero(c, 1));
             int tipo = entero(c, 2);
-            if (destino == nullptr || tipo < 0 || tipo > (int)TipoNotificacion::EstadoPostulacion) return;
+            if (destino == nullptr || tipo < 0 || tipo >(int)TipoNotificacion::EstadoPostulacion) return;
             int id = entero(c, 0);
             Notificacion n(id, entero(c, 1), (TipoNotificacion)tipo, campo(c, 3), campo(c, 4));
             if (campo(c, 5) == "1") n.marcarLeida();
@@ -688,6 +688,8 @@ private:
         red.comentarios.vaciar();
         red.recomendaciones.vaciar();
         red.mensajes.vaciar();
+        // Los indices del ABB y de los AVL ya no representan los catalogos.
+        red.invalidarIndices();
     }
 
 public:
@@ -699,9 +701,20 @@ public:
 
     // Texto primero; si no hay .txt, el binario; si tampoco, los datos de ejemplo.
     static void cargarTodo(RedProfesional& red) {
-        if (cargarTexto(red)) return;
-        if (cargarBinario(red)) return;
+        if (cargarTexto(red)) {
+            // La carga escribe directamente en las listas; los indices se
+            // reconstruiran con los catalogos ya completos en el primer uso.
+            red.invalidarIndices();
+            return;
+        }
+        if (cargarBinario(red)) {
+            red.invalidarIndices();
+            return;
+        }
         cargarDatosDeEjemplo(red);
+        // Los datos de ejemplo agregan habilidades directamente a los usuarios.
+        // Invalidar evita conservar indices construidos antes de esta carga.
+        red.invalidarIndices();
         guardarTodo(red);
     }
 

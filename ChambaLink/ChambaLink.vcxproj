@@ -127,6 +127,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Accion.h" />
+    <ClInclude Include="ArbolAVL.h" />
+    <ClInclude Include="ArbolBB.h" />
     <ClInclude Include="Certificacion.h" />
     <ClInclude Include="Cola.h" />
     <ClInclude Include="Comentario.h" />
