@@ -12,7 +12,7 @@ using std::string;
 // Mismo estilo que FuncionesInicio.h: funciones sueltas y posiciones fijas.
 //
 // Distribucion (30 filas x 120 columnas):
-//   filas 1-4   logo pequeno              arriba a la derecha: fecha y notificaciones
+//   filas 0-5   logo pequeno pintado      arriba a la derecha: fecha y notificaciones
 //   filas 6-8   nombre, titular (o sector y distrito) e ID
 //   fila 9      linea separadora
 //   filas 11+   menu lateral con flecha en la columna 1
@@ -23,15 +23,62 @@ using std::string;
 
 // ======================= Partes comunes =======================
 
+// Logo pequeno pintado: filas 0 a 5, columnas 1 a 60.
+// 1 = terracota ("Link" y un eslabon), 2 = arena ("Chamba" y el otro eslabon), 0 = nada.
+int logoPequeno[6][60] = {
+    {0,0,0,0,0,2,2,2,2,0,0,0,0,2,2,2,2,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0},
+    {0,0,0,0,2,0,0,0,0,2,0,0,2,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0},
+    {0,1,1,1,1,0,0,0,0,2,0,0,2,0,0,0,0,0,2,2,2,0,0,0,2,2,0,0,2,2,2,2,0,0,2,2,2,0,0,0,2,2,0,0,1,0,0,0,0,1,0,1,1,1,0,0,1,0,0,1},
+    {1,0,0,0,0,2,2,2,2,0,0,0,2,0,0,0,0,0,2,0,0,2,0,0,0,0,2,0,2,0,2,0,2,0,2,0,0,2,0,0,0,0,2,0,1,0,0,0,0,1,0,1,0,0,1,0,1,0,1,0},
+    {1,0,0,0,0,1,0,0,0,0,0,0,2,0,0,0,0,0,2,0,0,2,0,2,2,2,2,0,2,0,2,0,2,0,2,0,0,2,0,2,2,2,2,0,1,0,0,0,0,1,0,1,0,0,1,0,1,1,1,0},
+    {0,1,1,1,1,0,0,0,0,0,0,0,0,2,2,2,2,0,2,0,0,2,0,0,2,2,2,0,2,0,2,0,2,0,2,2,2,0,0,0,2,2,2,0,1,1,1,1,0,1,0,1,0,0,1,0,1,0,0,1}
+};
+
 void dibujarLogoPequeno() {
-    ubicar(1, 1); cout << "  ___ _               _          _    _      _";
-    ubicar(1, 2); cout << " / __| |_  __ _ _ __ | |__  __ _| |  (_)_ _ | |__";
-    ubicar(1, 3); cout << "| (__| ' \\/ _` | '  \\| '_ \\/ _` | |__| | ' \\| / /";
-    ubicar(1, 4); cout << " \\___|_||_\\__,_|_|_|_|_.__/\\__,_|____|_|_||_|_\\_\\";
+    for (int fila = 0; fila < 6; fila++) {
+        for (int columna = 0; columna < 60; columna++) {
+            if (logoPequeno[fila][columna] != 0) {
+                ubicar(1 + columna, fila);
+                if (logoPequeno[fila][columna] == 1) cout << COLOR_TERRACOTA;
+                else cout << COLOR_ARENA;
+                cout << ' ';
+            }
+        }
+    }
+    cout << COLOR_NORMAL;
+    colorBlanco();
+}
+
+// Escribe un texto con un color de letra y vuelve al blanco de siempre.
+void escribirColor(string texto, string color) {
+    cout << color << texto << COLOR_NORMAL;
+    colorBlanco();
 }
 
 void dibujarPie() {
-    ubicar(1, 28); cout << "Flechas: moverse     ENTER: abrir     ESC: volver";
+    ubicar(1, 28);
+    escribirColor("Flechas", TEXTO_ARENA);
+    escribirColor(": moverse     ", TEXTO_GRIS);
+    escribirColor("ENTER", TEXTO_ARENA);
+    escribirColor(": abrir     ", TEXTO_GRIS);
+    escribirColor("ESC", TEXTO_ARENA);
+    escribirColor(": volver", TEXTO_GRIS);
+}
+
+// Dibuja una opcion del menu lateral en su fila.
+// Elegida: flecha terracota (columnas 1 y 2) y barra arena con letra oscura (columnas 3 a 28).
+// No elegida: borra la flecha y la barra, y deja el texto normal en la columna 4.
+void dibujarOpcionMenu(int fila, string texto, bool elegida) {
+    string relleno((int)(25 - texto.length()), ' ');
+    ubicar(1, fila);
+    if (elegida) {
+        escribirColor("->", TEXTO_TERRACOTA);
+        cout << COLOR_ARENA << TEXTO_OSCURO << " " << texto << relleno << COLOR_NORMAL;
+        colorBlanco();
+    }
+    else {
+        cout << "   " << texto << relleno;
+    }
 }
 
 // Borra la zona de contenido (columnas 55 a 118, filas 11 a 25).
@@ -1972,13 +2019,18 @@ void dibujarEncabezadoIndividuo(RedProfesional& red, int idSesion) {
     if (usuario == nullptr) return;
 
     ubicar(108, 1); cout << RedProfesional::fechaHoy();
-    ubicar(92, 2); cout << "Notificaciones nuevas (" << usuario->cantidadNotificacionesNoLeidas() << ")";
-    ubicar(92, 3); cout << "Mensajes nuevos (" << red.cantidadMensajesNoLeidos(idSesion) << ")";
+    // El numero va en terracota si hay algo nuevo y en gris si es 0.
+    int notificaciones = (int)usuario->cantidadNotificacionesNoLeidas();
+    int mensajes = (int)red.cantidadMensajesNoLeidos(idSesion);
+    ubicar(92, 2); cout << "Notificaciones nuevas ";
+    escribirColor("(" + std::to_string(notificaciones) + ")", notificaciones > 0 ? TEXTO_TERRACOTA : TEXTO_GRIS);
+    ubicar(92, 3); cout << "Mensajes nuevos ";
+    escribirColor("(" + std::to_string(mensajes) + ")", mensajes > 0 ? TEXTO_TERRACOTA : TEXTO_GRIS);
 
-    ubicar(1, 6); cout << usuario->getNombreCompleto();
+    ubicar(1, 6); escribirColor(usuario->getNombreCompleto(), TEXTO_ARENA);
     ubicar(1, 7); cout << usuario->getTitular();
-    ubicar(1, 8); cout << "ID: " << usuario->getId();
-    ubicar(1, 9); cout << "------------------------------------------------";
+    ubicar(1, 8); escribirColor("ID: " + std::to_string(usuario->getId()), TEXTO_GRIS);
+    ubicar(1, 9); escribirColor("------------------------------------------------", TEXTO_TERRACOTA);
 }
 
 void dibujarOpcionesIndividuo() {
@@ -2022,6 +2074,13 @@ void abrirSeccionIndividuo(RedProfesional& red, int idSesion, int opcion) {
     }
 }
 
+// Textos del menu lateral de persona, en el mismo orden que filaOpcionIndividuo.
+string opcionesIndividuo[13] = {
+    "Mi perfil", "Mis certificaciones", "Mis postulaciones", "Ver recomendaciones",
+    "Mi red", "Publicaciones", "Mis publicaciones", "Empleos", "Mensajes",
+    "Notificaciones", "Grupos", "Directorio empresas", "Cerrar sesion"
+};
+
 // Menu del individuo. Termina cuando elige Cerrar sesion.
 void menuIndividuo(RedProfesional& red, int idSesion) {
     int opcion = 0;
@@ -2034,9 +2093,9 @@ void menuIndividuo(RedProfesional& red, int idSesion) {
         dibujarOpcionesIndividuo();
         dibujarPie();
 
-        // Mover la flecha hasta que se presione ENTER.
+        // Mover la flecha y la barra hasta que se presione ENTER.
         while (true) {
-            ubicar(1, filaOpcionIndividuo(opcion)); cout << "->";
+            dibujarOpcionMenu(filaOpcionIndividuo(opcion), opcionesIndividuo[opcion], true);
 
             int tecla = leerTecla();
             if (tecla == TECLA_ENTER) break;
@@ -2045,9 +2104,9 @@ void menuIndividuo(RedProfesional& red, int idSesion) {
             if (tecla == TECLA_ARRIBA && opcion > 0) opcion--;
             else if (tecla == TECLA_ABAJO && opcion < 12) opcion++;
 
-            // Se borra la flecha de la opcion anterior.
+            // Se borra la flecha y la barra de la opcion anterior.
             if (opcion != anterior) {
-                ubicar(1, filaOpcionIndividuo(anterior)); cout << "  ";
+                dibujarOpcionMenu(filaOpcionIndividuo(anterior), opcionesIndividuo[anterior], false);
             }
         }
 
@@ -2064,12 +2123,12 @@ void dibujarEncabezadoEmpresa(RedProfesional& red, int idSesion) {
 
     ubicar(108, 1); cout << RedProfesional::fechaHoy();
 
-    ubicar(1, 6); cout << empresa->getNombre();
+    ubicar(1, 6); escribirColor(empresa->getNombre(), TEXTO_ARENA);
     ubicar(1, 7); cout << empresa->getSector();
     if (empresa->getSector() != "" && empresa->getUbicacion() != "") cout << " - ";
     cout << empresa->getUbicacion();
-    ubicar(1, 8); cout << "ID: " << empresa->getId();
-    ubicar(1, 9); cout << "------------------------------------------------";
+    ubicar(1, 8); escribirColor("ID: " + std::to_string(empresa->getId()), TEXTO_GRIS);
+    ubicar(1, 9); escribirColor("------------------------------------------------", TEXTO_TERRACOTA);
 }
 
 // Espera ENTER o ESC (para avisos que solo hay que leer).
@@ -2446,6 +2505,12 @@ void abrirSeccionEmpresa(RedProfesional& red, int idSesion, int opcion) {
     }
 }
 
+// Textos del menu lateral de empresa, en el mismo orden que filaOpcionEmpresa.
+string opcionesEmpresa[6] = {
+    "Publicar vacante", "Mis vacantes", "Mis contrataciones",
+    "Buscar profesionales", "Ver mi empresa", "Cerrar sesion"
+};
+
 void menuEmpresa(RedProfesional& red, int idSesion) {
     int opcion = 0;
     while (true) {
@@ -2456,7 +2521,7 @@ void menuEmpresa(RedProfesional& red, int idSesion) {
         dibujarPie();
 
         while (true) {
-            ubicar(1, filaOpcionEmpresa(opcion)); cout << "->";
+            dibujarOpcionMenu(filaOpcionEmpresa(opcion), opcionesEmpresa[opcion], true);
 
             int tecla = leerTecla();
             if (tecla == TECLA_ENTER) break;
@@ -2466,7 +2531,7 @@ void menuEmpresa(RedProfesional& red, int idSesion) {
             else if (tecla == TECLA_ABAJO && opcion < 5) opcion++;
 
             if (opcion != anterior) {
-                ubicar(1, filaOpcionEmpresa(anterior)); cout << "  ";
+                dibujarOpcionMenu(filaOpcionEmpresa(anterior), opcionesEmpresa[anterior], false);
             }
         }
 
