@@ -107,5 +107,11 @@
     <ClInclude Include="ArbolAVL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="HashEntidad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HashTable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

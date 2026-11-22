@@ -7,3 +7,4 @@
 1006|diego@demo.pe|1234|Diego|Salas|Practicante de sistemas|Comas
 1007|lucia@demo.pe|1234|Lucia|Ramos|Product Manager|San Borja
 1008|aldo@aldo|aldo|Aldo|Aldo|Aldo|Aldo
+1009|Aldo@gmail|Aldo|Aldo|Aldo|Aldo|Aldo

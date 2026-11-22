@@ -140,6 +140,8 @@
     <ClInclude Include="GestorArchivos.h" />
     <ClInclude Include="GrupoProfesional.h" />
     <ClInclude Include="Habilidad.h" />
+    <ClInclude Include="HashEntidad.h" />
+    <ClInclude Include="HashTable.h" />
     <ClInclude Include="Lista.h" />
     <ClInclude Include="ListaDoble.h" />
     <ClInclude Include="Mensaje.h" />

@@ -6,6 +6,7 @@
 #include <sstream>
 #include "Lista.h"
 #include "ArbolAVL.h"
+#include "HashTable.h"
 #include "ArbolBB.h"
 #include "Usuario.h"
 #include "Ordenamiento.h"
@@ -145,6 +146,9 @@ private:
     ArbolBB<IndiceEmpresa> indiceEmpresas;
     ArbolAVL<IndiceHabilidad> indiceHabilidades;
     ArbolAVL<IndiceVacante> indiceVacantes;
+    // Hash tables por correo (TB2): correo -> id. Login y registro en O(1) promedio.
+    HashTable correosUsuarios;
+    HashTable correosEmpresas;
     bool indicesConstruidos;
 
     // Contadores de ids. Al cargar desde archivo hay que dejarlos en el id
@@ -202,11 +206,15 @@ private:
         indiceEmpresas.vaciar();
         indiceHabilidades.vaciar();
         indiceVacantes.vaciar();
+        correosUsuarios.vaciar();
+        correosEmpresas.vaciar();
 
         empresas.paraCada([this](const Empresa& empresa) {
             indiceEmpresas.insertar(IndiceEmpresa(empresa.getId(), empresa.getNombre()));
+            correosEmpresas.Insertar(empresa.getCorreo(), empresa.getId());
             });
         usuarios.paraCada([this](const Usuario& usuario) {
+            correosUsuarios.Insertar(usuario.getCorreo(), usuario.getId());
             usuario.paraCadaHabilidad([this, &usuario](const Habilidad& habilidad) {
                 agregarUsuarioAIndiceHabilidad(habilidad.getNombre(), usuario.getId());
                 });
@@ -389,10 +397,11 @@ private:
     }
 
     // Un correo no puede usarse en dos cuentas, sea de individuo o de empresa.
-    bool correoEnUso(const std::string& correo) const {
-        bool enUsuarios = usuarios.existe([&correo](const Usuario& u) { return u.tieneCorreo(correo); });
-        bool enEmpresas = empresas.existe([&correo](const Empresa& e) { return e.tieneCorreo(correo); });
-        return enUsuarios || enEmpresas;
+    // Busca el correo en las dos hash tables: O(L) promedio (L = largo del correo).
+    // Antes recorria las dos listas: O(n + m).
+    bool correoEnUso(const std::string& correo) {
+        asegurarIndices();
+        return correosUsuarios.buscar(correo) != -1 || correosEmpresas.buscar(correo) != -1;
     }
 
     bool validarCredenciales(const std::string& correo, const std::string& contrasena) {
@@ -493,15 +502,19 @@ public:
         int id = sigUsuario;
         sigUsuario++;
         usuarios.agregaFinal(Usuario(id, nombre, apellido, titular, ubicacion, correo, contrasena));
+        correosUsuarios.Insertar(correo, id);
         return id;
     }
 
-    // Busqueda lineal O(n) en la lista de usuarios.
+    // El correo se busca en la hash table (O(1) promedio) y se obtiene el id.
     // Devuelve el id del usuario, o -1 si el correo o la contrasena no coinciden.
     // El mensaje es el mismo en los dos casos para no revelar que correos existen.
     int iniciarSesionUsuario(std::string correo, std::string contrasena) {
         if (correo == "" || contrasena == "") { fallar("Ingrese su correo y su contrasena"); return -1; }
-        const Usuario* u = usuarios.buscarPtr([&correo](const Usuario& x) { return x.tieneCorreo(correo); });
+        asegurarIndices();
+        int posicion = correosUsuarios.buscar(correo);
+        const Usuario* u = nullptr;
+        if (posicion != -1) u = buscarUsuario(correosUsuarios.obtenerValor(posicion));
         if (u == nullptr || !u->contrasenaCorrecta(contrasena)) {
             fallar("Correo o contrasena incorrectos");
             return -1;
@@ -1106,13 +1119,17 @@ public:
         sigEmpresa++;
         empresas.agregaFinal(Empresa(id, nombre, sector, ubicacion, correo, contrasena));
         indiceEmpresas.insertar(IndiceEmpresa(id, nombre));
+        correosEmpresas.Insertar(correo, id);
         return id;
     }
 
-    // Igual que iniciarSesionUsuario, pero busca en la lista de empresas.
+    // Igual que iniciarSesionUsuario, pero con la hash table de empresas.
     int iniciarSesionEmpresa(std::string correo, std::string contrasena) {
         if (correo == "" || contrasena == "") { fallar("Ingrese su correo y su contrasena"); return -1; }
-        const Empresa* e = empresas.buscarPtr([&correo](const Empresa& x) { return x.tieneCorreo(correo); });
+        asegurarIndices();
+        int posicion = correosEmpresas.buscar(correo);
+        const Empresa* e = nullptr;
+        if (posicion != -1) e = obtenerEmpresa(correosEmpresas.obtenerValor(posicion));
         if (e == nullptr || !e->contrasenaCorrecta(contrasena)) {
             fallar("Correo o contrasena incorrectos");
             return -1;
