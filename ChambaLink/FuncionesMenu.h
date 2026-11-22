@@ -789,17 +789,26 @@ void detalleEmpleoUsuario(RedProfesional& red, int idSesion, int idVacante) {
     }
 }
 
+// Km con un decimal, sin librerias extra: 8.46 -> "8.5 km". Si es -1: "? km".
+string textoKm(double km) {
+    if (km < 0) return "? km";
+    int decimas = (int)(km * 10 + 0.5);
+    return std::to_string(decimas / 10) + "." + std::to_string(decimas % 10) + " km";
+}
+
 // Lista las vacantes activas. ENTER abre el detalle y permite postular.
-// Se muestran 4 ofertas por pagina.
+// Se muestran 4 ofertas por pagina. La tecla O cambia el orden:
+//   distancia: de la mas cercana a la mas lejana a tu distrito (Dijkstra + ShellSort)
+//   fecha:     de la mas reciente a la mas antigua (MergeSort)
 void seccionEmpleos(RedProfesional& red, int idSesion) {
     int pagina = 0;
     int seleccion = 0;
+    bool porDistancia = true;
 
     while (true) {
         Lista<Vacante> disponibles;
-        red.paraCadaVacanteActiva([&disponibles](const Vacante& v) {
-            disponibles.agregaFinal(v);
-            });
+        if (porDistancia) disponibles = red.vacantesPorDistancia(idSesion);
+        else disponibles = red.vacantesPorFecha();
 
         int total = (int)disponibles.longitud();
         int paginas = (total + 3) / 4;
@@ -815,7 +824,7 @@ void seccionEmpleos(RedProfesional& red, int idSesion) {
         limpiarZonaContenido();
         ubicar(55, 11); cout << "EMPLEOS DISPONIBLES (" << total << ")";
         if (paginas > 1) cout << "     Pagina " << pagina + 1 << " de " << paginas << "  (<- ->)";
-        ubicar(55, 12); cout << "----------------------------------------------------------------";
+        separadorConOrden(porDistancia ? "ShellSort por distancia a tu distrito" : "MergeSort por fecha de publicacion");
 
         if (total == 0) {
             ubicar(55, 14); cout << "No hay vacantes activas por el momento";
@@ -833,6 +842,7 @@ void seccionEmpleos(RedProfesional& red, int idSesion) {
                 const Postulacion* p = obtenerPostulacionUsuarioVacante(red, idSesion, v.getId());
                 ubicar(58, y); cout << recortar(v.getTitulo(), 43);
                 if (p != nullptr) cout << "  [" << p->estadoToString() << "]";
+                ubicar(104, y); cout << textoKm(red.distanciaUsuarioVacante(idSesion, v.getId()));
                 ubicar(58, y + 1); cout << recortar(red.nombreEmpresa(v.getIdEmpresa())
                     + " - " + valorOVacio(v.getModalidad()), 42);
                 ubicar(104, y + 1); cout << "Compat. " << red.calcularCompatibilidad(idSesion, v.getId()) << "%";
@@ -843,6 +853,7 @@ void seccionEmpleos(RedProfesional& red, int idSesion) {
         if (enPagina > 0) {
             ubicar(55, 14 + seleccion * 3); cout << "->";
         }
+        ubicar(55, 25); cout << "ENTER: ver   O: ordenar por " << (porDistancia ? "fecha" : "distancia") << "   ESC: volver";
 
         int tecla = leerTecla();
         if (tecla == TECLA_ESC) return;
@@ -850,6 +861,7 @@ void seccionEmpleos(RedProfesional& red, int idSesion) {
         else if (tecla == TECLA_ABAJO && seleccion < enPagina - 1) seleccion++;
         else if (tecla == TECLA_IZQUIERDA && pagina > 0) { pagina--; seleccion = 0; }
         else if (tecla == TECLA_DERECHA && pagina < paginas - 1) { pagina++; seleccion = 0; }
+        else if (tecla == 'o' || tecla == 'O') { porDistancia = !porDistancia; pagina = 0; seleccion = 0; }
         else if (tecla == TECLA_ENTER && enPagina > 0)
             detalleEmpleoUsuario(red, idSesion, idsPagina[seleccion]);
     }

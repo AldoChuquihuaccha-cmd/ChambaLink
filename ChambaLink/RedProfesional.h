@@ -7,6 +7,7 @@
 #include "Lista.h"
 #include "ArbolAVL.h"
 #include "HashTable.h"
+#include "GrafoDistritos.h"
 #include "ArbolBB.h"
 #include "Usuario.h"
 #include "Ordenamiento.h"
@@ -149,6 +150,9 @@ private:
     // Hash tables por correo (TB2): correo -> id. Login y registro en O(1) promedio.
     HashTable correosUsuarios;
     HashTable correosEmpresas;
+
+    // Grafo de distritos de Lima y Callao (TB2): para ordenar vacantes por cercania.
+    GrafoDistritos mapaDistritos;
     bool indicesConstruidos;
 
     // Contadores de ids. Al cargar desde archivo hay que dejarlos en el id
@@ -1305,6 +1309,65 @@ public:
     void paraCadaVacanteActiva(std::function<void(const Vacante&)> accion) const {
         vacantes.paraCada([&accion](const Vacante& v) {
             if (v.estaActiva()) accion(v);
+            });
+    }
+
+    // ---------- Vacantes por distancia o por fecha (Aldo: grafo y ShellSort) ----------
+
+    // Km desde el origen (ya calculado con Dijkstra) hasta el distrito de la empresa.
+    // Si el distrito de la empresa no esta en el mapa, se devuelve un valor muy grande.
+    double kmHastaVacante(const Vacante& vacante, const double distanciaMinima[]) const {
+        const Empresa* empresa = obtenerEmpresa(vacante.getIdEmpresa());
+        if (empresa == nullptr) return 1000000;
+        int destino = mapaDistritos.indiceDistrito(empresa->getUbicacion());
+        if (destino == -1) return 1000000;
+        return distanciaMinima[destino];
+    }
+
+    // Distancia en km del distrito del usuario al de la empresa de la vacante.
+    // Devuelve -1 si alguno de los dos distritos no esta en el mapa. O(V^2) por Dijkstra.
+    double distanciaUsuarioVacante(int idUsuario, int idVacante) const {
+        const Usuario* usuario = buscarUsuario(idUsuario);
+        const Vacante* vacante = obtenerVacante(idVacante);
+        if (usuario == nullptr || vacante == nullptr) return -1;
+        int origen = mapaDistritos.indiceDistrito(usuario->getUbicacion());
+        if (origen == -1) return -1;
+
+        double distanciaMinima[TOTAL_DISTRITOS];
+        mapaDistritos.dijkstra(origen, distanciaMinima);
+        double km = kmHastaVacante(*vacante, distanciaMinima);
+        if (km >= 1000000) return -1;
+        return km;
+    }
+
+    // Vacantes activas de la mas cercana a la mas lejana al distrito del usuario.
+    // Dijkstra desde el distrito del usuario: O(V^2), V = 50 distritos.
+    // ShellSort de las vacantes por esa distancia: O(n^1.5) aprox., n = vacantes activas.
+    // Si el distrito del usuario no esta en el mapa, quedan en orden de publicacion.
+    Lista<Vacante> vacantesPorDistancia(int idUsuario) const {
+        Lista<Vacante> activas;
+        paraCadaVacanteActiva([&activas](const Vacante& v) { activas.agregaFinal(v); });
+
+        const Usuario* usuario = buscarUsuario(idUsuario);
+        if (usuario == nullptr) return activas;
+        int origen = mapaDistritos.indiceDistrito(usuario->getUbicacion());
+        if (origen == -1) return activas;
+
+        double distanciaMinima[TOTAL_DISTRITOS];
+        mapaDistritos.dijkstra(origen, distanciaMinima);
+        return shellSort<Vacante>(activas, [this, &distanciaMinima](const Vacante& a, const Vacante& b) {
+            return kmHastaVacante(a, distanciaMinima) < kmHastaVacante(b, distanciaMinima);
+            });
+    }
+
+    // Vacantes activas de la mas reciente a la mas antigua.
+    // Las vacantes no guardan fecha: los ids crecen al publicar, asi que el id
+    // mayor es la publicada mas recientemente. MergeSort: O(n log n).
+    Lista<Vacante> vacantesPorFecha() const {
+        Lista<Vacante> activas;
+        paraCadaVacanteActiva([&activas](const Vacante& v) { activas.agregaFinal(v); });
+        return mergeSort<Vacante>(activas, [](const Vacante& a, const Vacante& b) {
+            return a.getId() > b.getId();
             });
     }
 

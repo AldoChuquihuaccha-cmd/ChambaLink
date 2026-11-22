@@ -15,7 +15,7 @@
 // a debe quedar antes que b. Asi la misma funcion sirve para ordenar
 // contactos por nombre, publicaciones por fecha o vacantes por titulo.
 //
-// Reparto: QuickSort (Joao), MergeSort (Aldo), HeapSort (Piero).
+// Reparto: QuickSort (Joao), MergeSort y ShellSort (Aldo), HeapSort (Piero).
 
 // ---------- Funciones de apoyo ----------
 
@@ -197,6 +197,53 @@ Lista<T> mergeSort(const Lista<T>& lista, std::function<bool(const T&, const T&)
     mergeSortArreglo(arreglo, auxiliar, 0, (int)cantidad - 1, antesQue);
     Lista<T> resultado = arregloALista(arreglo, cantidad);
     delete[] auxiliar;
+    delete[] arreglo;
+    return resultado;
+}
+
+// ---------- ShellSort (Aldo) ----------
+
+// Igual que el ShellSort de clase: compara elementos separados por un intervalo,
+// que empieza en n/2 y se divide entre 2 hasta llegar a 1.
+// Con intervalo 1 es un ordenamiento por insercion, pero ya casi ordenado.
+template <class T>
+void shellSortArreglo(T* a, int n, std::function<bool(const T&, const T&)> antesQue) {
+    int i, j, k, intervalo = n / 2;
+    T temp;
+    while (intervalo > 0)
+    {
+        for (i = intervalo; i < n; i++)
+        {
+            j = i - intervalo;
+            while (j >= 0)
+            {
+                k = j + intervalo;
+                if (!antesQue(a[k], a[j]))
+                    j = -1;
+                else
+                {
+                    temp = a[j];
+                    a[j] = a[k];
+                    a[k] = temp;
+                    j -= intervalo;
+                }
+            }
+        }
+        intervalo = intervalo / 2;
+    }
+}
+
+// Devuelve una lista nueva ordenada con ShellSort; la original no cambia.
+// Con la secuencia n/2, n/4, ..., 1: peor caso O(n^2), en la practica cerca de O(n^1.5).
+// No usa memoria extra aparte del arreglo de copia. No es estable.
+template <class T>
+Lista<T> shellSort(const Lista<T>& lista, std::function<bool(const T&, const T&)> antesQue) {
+    uint cantidad = lista.longitud();
+    if (cantidad < 2) return lista;
+
+    T* arreglo = listaAArreglo(lista);
+    shellSortArreglo(arreglo, (int)cantidad, antesQue);
+    Lista<T> resultado = arregloALista(arreglo, cantidad);
     delete[] arreglo;
     return resultado;
 }

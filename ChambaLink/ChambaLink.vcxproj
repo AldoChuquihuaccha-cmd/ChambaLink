@@ -138,6 +138,7 @@
     <ClInclude Include="FuncionesInicio.h" />
     <ClInclude Include="FuncionesMenu.h" />
     <ClInclude Include="GestorArchivos.h" />
+    <ClInclude Include="GrafoDistritos.h" />
     <ClInclude Include="GrupoProfesional.h" />
     <ClInclude Include="Habilidad.h" />
     <ClInclude Include="HashEntidad.h" />
