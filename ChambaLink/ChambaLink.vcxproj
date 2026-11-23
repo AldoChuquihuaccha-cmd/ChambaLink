@@ -137,6 +137,7 @@
     <ClInclude Include="ExperienciaLaboral.h" />
     <ClInclude Include="FuncionesInicio.h" />
     <ClInclude Include="FuncionesMenu.h" />
+    <ClInclude Include="GeneradorDataset.h" />
     <ClInclude Include="GestorArchivos.h" />
     <ClInclude Include="GrafoDistritos.h" />
     <ClInclude Include="GrupoProfesional.h" />
