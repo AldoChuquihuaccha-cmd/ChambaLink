@@ -97,6 +97,13 @@ public:
     const std::string& getNombre() const { return nombre; }
 };
 
+// Posicion de una vacante y su distancia en km al usuario; se ordena por km.
+class VacanteDistancia {
+public:
+    int posicion = 0;
+    double km = 0;
+};
+
 // Resultado de buscarProfesionales: el usuario y cuantas palabras clave le coincidieron.
 class Coincidencia {
 public:
@@ -148,8 +155,8 @@ private:
     ArbolAVL<IndiceHabilidad> indiceHabilidades;
     ArbolAVL<IndiceVacante> indiceVacantes;
     // Hash tables por correo (TB2): correo -> id. Login y registro en O(1) promedio.
-    HashTable correosUsuarios;
-    HashTable correosEmpresas;
+    HashTable<int> correosUsuarios;
+    HashTable<int> correosEmpresas;
 
     // Grafo de distritos de Lima y Callao (TB2): para ordenar vacantes por cercania.
     GrafoDistritos mapaDistritos;
@@ -1288,7 +1295,7 @@ public:
         empresas.paraCada(accion);
     }
 
-    // RF18: consulta del directorio indexado por nombre mediante ABB.
+    // RF17: consulta del directorio indexado por nombre mediante ABB.
     // Devuelve el id de la empresa o -1 si no existe.
     int buscarIdEmpresaPorNombre(const std::string& nombre) {
         asegurarIndices();
@@ -1342,7 +1349,8 @@ public:
 
     // Vacantes activas de la mas cercana a la mas lejana al distrito del usuario.
     // Dijkstra desde el distrito del usuario: O(V^2), V = 50 distritos.
-    // ShellSort de las vacantes por esa distancia: O(n^1.5) aprox., n = vacantes activas.
+    // Los km de cada vacante se calculan una sola vez: O(n * (m + V)), m = empresas.
+    // ShellSort por km: peor caso O(n^2), cada comparacion es O(1).
     // Si el distrito del usuario no esta en el mapa, quedan en orden de publicacion.
     Lista<Vacante> vacantesPorDistancia(int idUsuario) const {
         Lista<Vacante> activas;
@@ -1355,9 +1363,47 @@ public:
 
         double distanciaMinima[TOTAL_DISTRITOS];
         mapaDistritos.dijkstra(origen, distanciaMinima);
-        return shellSort<Vacante>(activas, [this, &distanciaMinima](const Vacante& a, const Vacante& b) {
-            return kmHastaVacante(a, distanciaMinima) < kmHastaVacante(b, distanciaMinima);
+
+        // Se calculan los km de cada vacante una sola vez y luego se ordena por ese valor.
+        int cantidad = (int)activas.longitud();
+        Vacante* arreglo = listaAArreglo(activas);
+        Lista<VacanteDistancia> porOrdenar;
+        for (int i = 0; i < cantidad; i++) {
+            VacanteDistancia par;
+            par.posicion = i;
+            par.km = kmHastaVacante(arreglo[i], distanciaMinima);
+            porOrdenar.agregaFinal(par);
+        }
+        Lista<VacanteDistancia> ordenadas = shellSort<VacanteDistancia>(porOrdenar,
+            [](const VacanteDistancia& a, const VacanteDistancia& b) { return a.km < b.km; });
+
+        Lista<Vacante> resultado;
+        ordenadas.paraCada([&resultado, arreglo](const VacanteDistancia& par) {
+            resultado.agregaFinal(arreglo[par.posicion]);
             });
+        delete[] arreglo;
+        return resultado;
+    }
+
+    // Vacantes en tu distrito o en los distritos que colindan con el (BFS a 1 salto en el grafo).
+    // Se mantienen en el orden de cercania de vacantesPorDistancia.
+    // BFS: O(V + E). Luego se revisa el distrito de cada vacante: O(n * V).
+    Lista<Vacante> vacantesCercanas(int idUsuario) const {
+        Lista<Vacante> cercanas;
+        const Usuario* usuario = buscarUsuario(idUsuario);
+        if (usuario == nullptr) return cercanas;
+        int origen = mapaDistritos.indiceDistrito(usuario->getUbicacion());
+        if (origen == -1) return cercanas;
+
+        Lista<int> zona = mapaDistritos.distritosASaltos(origen, 1);
+        vacantesPorDistancia(idUsuario).paraCada([&](const Vacante& v) {
+            const Empresa* empresa = obtenerEmpresa(v.getIdEmpresa());
+            if (empresa == nullptr) return;
+            int distrito = mapaDistritos.indiceDistrito(empresa->getUbicacion());
+            if (zona.existe([distrito](const int& d) { return d == distrito; }))
+                cercanas.agregaFinal(v);
+            });
+        return cercanas;
     }
 
     // Vacantes activas de la mas reciente a la mas antigua.
@@ -1462,7 +1508,7 @@ public:
         return heapSort(resultados, criterio);
     }
 
-    // RF16: busqueda exacta por habilidad y nivel declarado (1 Basico,
+    // RF15: busqueda exacta por habilidad y nivel declarado (1 Basico,
     // 2 Intermedio, 3 Avanzado, 4 Experto). El AVL localiza los usuarios
     // asociados a la habilidad y luego se verifica el nivel en cada perfil.
     Lista<Coincidencia> buscarProfesionales(std::string habilidad, int nivelRequerido,
@@ -1505,7 +1551,7 @@ public:
         return heapSort(resultados, porId);
     }
 
-    // RF17: las vacantes salen directamente en orden alfabetico mediante
+    // RF16: las vacantes salen directamente en orden alfabetico mediante
     // el recorrido inorden del AVL; no se vuelve a ordenar con HeapSort.
     // Devuelve vacantes activas y canceladas, igual que la version anterior.
     Lista<Vacante> vacantesOrdenadasDe(int idEmpresa) {

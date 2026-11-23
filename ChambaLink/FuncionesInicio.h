@@ -29,17 +29,37 @@ using std::string;
 
 // ======================= Colores =======================
 // Codigos ANSI de color de fondo: \x1b[48;2;R;G;Bm (cada valor de 0 a 255).
-// COLOR_NORMAL vuelve a los colores de siempre (sirve para borrar una celda pintada).
 #define COLOR_TERRACOTA "\x1b[48;2;196;98;62m"
 #define COLOR_ARENA     "\x1b[48;2;232;220;196m"
 #define COLOR_MARRON    "\x1b[48;2;84;76;68m"
+
+// Cajas de los campos de texto: mas clara la que se esta escribiendo.
+#define FONDO_CAMPO     "\x1b[48;2;78;66;56m"
+#define FONDO_LLENO     "\x1b[48;2;50;42;36m"
+
+// COLOR_NORMAL vuelve a los colores de siempre (sirve para borrar una celda pintada).
 #define COLOR_NORMAL    "\x1b[0m"
 
 // Codigos ANSI de color de LETRA: \x1b[38;2;R;G;Bm (el fondo no cambia).
 #define TEXTO_TERRACOTA "\x1b[38;2;196;98;62m"
 #define TEXTO_ARENA     "\x1b[38;2;232;220;196m"
-#define TEXTO_GRIS      "\x1b[38;2;140;140;140m"
+#define TEXTO_GRIS      "\x1b[38;2;158;147;135m"
 #define TEXTO_OSCURO    "\x1b[38;2;30;26;22m"
+#define TEXTO_CLARO     "\x1b[38;2;250;244;234m"
+#define TEXTO_VERDE     "\x1b[38;2;141;190;126m"
+#define TEXTO_AMBAR     "\x1b[38;2;227;181;99m"
+#define TEXTO_ERROR     "\x1b[38;2;232;122;100m"
+#define TEXTO_LINEA     "\x1b[38;2;92;80;70m"
+
+// Mostrar u ocultar el cursor parpadeante.
+#define CURSOR_OCULTO   "\x1b[?25l"
+#define CURSOR_VISIBLE  "\x1b[?25h"
+
+// Dibujo de lineas: "\x1b(0" cambia las letras por trazos y "\x1b(B" vuelve a las letras.
+//   l = esquina sup. izq.  k = sup. der.  m = inf. izq.  j = inf. der.
+//   q = linea horizontal   x = vertical   t = union izq.  u = union der.
+#define LINEAS_ON       "\x1b(0"
+#define LINEAS_OFF      "\x1b(B"
 
 // ======================= Consola =======================
 
@@ -51,15 +71,17 @@ void ubicar(int x, int y) {
 }
 
 void colorBlanco() {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+    cout << COLOR_NORMAL;
 }
 
 void colorRojo() {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 12);
+    cout << TEXTO_ERROR;
 }
 
+// Borra toda la pantalla con un codigo ANSI: es instantaneo;
+// system("cls") abria otro proceso y hacia parpadear la pantalla.
 void limpiarPantalla() {
-    system("cls");
+    cout << COLOR_NORMAL << "\x1b[2J\x1b[H";
 }
 
 // Alto de la letra en pixeles (el normal es 16). La consola sigue teniendo
@@ -86,8 +108,13 @@ void configurarConsola() {
     DWORD modo;
     GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), &modo);
     SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), modo | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-    colorBlanco();
+    cout << CURSOR_OCULTO;   // el cursor solo aparece al escribir en un campo
     limpiarPantalla();
+}
+
+// Al salir del programa: colores originales y cursor visible otra vez.
+void restaurarConsola() {
+    cout << "\x1b[0m" << CURSOR_VISIBLE << "\x1b[2J\x1b[H";
 }
 
 // Espera una tecla y devuelve su codigo.
@@ -381,24 +408,74 @@ bool elegirAccion(bool esEmpresa, int& opcion) {
 // Parte comun de los formularios: titulo arriba (filas 1 a 5) y ayudas abajo.
 // El subtitulo pintado (filas 7 a 10) lo pone cada formulario.
 // Los mensajes de error y de exito van en las filas 25 y 26.
+// Borra un rectangulo de la pantalla escribiendo espacios.
+void borrarZona(int x, int y, int ancho, int alto) {
+    cout << COLOR_NORMAL;
+    for (int fila = 0; fila < alto; fila++) {
+        ubicar(x, y + fila);
+        cout << string(ancho, ' ');
+    }
+}
+
+// Tecla de ayuda: [ENTER] en arena con letra oscura y su descripcion en gris.
+void teclaPie(string tecla, string accion) {
+    cout << COLOR_ARENA << TEXTO_OSCURO << " " << tecla << " " << COLOR_NORMAL;
+    cout << TEXTO_GRIS << " " << accion << "    " << COLOR_NORMAL;
+}
+
 void dibujarFormulario(bool esEmpresa) {
     limpiarPantalla();
     pintarTitulo(esEmpresa);
-    ubicar(38, 27); cout << "Presione ENTER para pasar al siguiente campo";
-    ubicar(46, 28); cout << "Presione ESC para retroceder";
+    ubicar(36, 28);
+    teclaPie("ENTER", "siguiente campo");
+    teclaPie("ESC", "retroceder");
+}
+
+// Escribe un texto centrado en la fila y (la pantalla tiene 120 columnas).
+void escribirCentrado(int y, string texto, string color) {
+    ubicar((120 - (int)texto.length()) / 2, y);
+    cout << COLOR_NORMAL << color << texto << COLOR_NORMAL;
 }
 
 // Lee un campo tecla por tecla en la columna x de la fila y.
 // No deja escribir mas de maximo caracteres.
 // Devuelve true con ENTER y false con ESC.
-bool leerCampoEn(int x, int y, int maximo, string& valor) {
+// El campo se dibuja como una caja: mas clara mientras se escribe en ella.
+// Si oculto es true (contrasenas) se muestra * en lugar de cada letra.
+void dibujarCaja(int x, int y, int ancho, string fondo, string texto) {
+    ubicar(x - 1, y);
+    cout << fondo << TEXTO_CLARO << ' ' << texto << string(ancho - (int)texto.length(), ' ');
+}
+
+// Ancho de la caja: lo que se puede escribir mas 1, sin pasar la columna 119.
+int anchoCampo(int x, int maximo) {
+    int ancho = maximo + 1;
+    if (x + ancho > 119) ancho = 119 - x;
+    return ancho;
+}
+
+// Caja vacia de un campo que todavia no se llena (asi se ven todos desde el inicio).
+void prepararCampo(int x, int y, int maximo) {
+    dibujarCaja(x, y, anchoCampo(x, maximo), FONDO_LLENO, "");
+    cout << COLOR_NORMAL;
+}
+
+bool leerCampoEn(int x, int y, int maximo, string& valor, bool oculto = false) {
+    int ancho = anchoCampo(x, maximo);
     valor = "";
+    dibujarCaja(x, y, ancho, FONDO_CAMPO, "");
+    cout << CURSOR_VISIBLE;
     while (true) {
         ubicar(x + (int)valor.length(), y);
         int tecla = leerTecla();
 
-        if (tecla == TECLA_ENTER) return true;
-        if (tecla == TECLA_ESC) return false;
+        if (tecla == TECLA_ENTER || tecla == TECLA_ESC) {
+            cout << CURSOR_OCULTO;
+            string visible = oculto ? string(valor.length(), '*') : valor;
+            dibujarCaja(x, y, ancho, FONDO_LLENO, visible);
+            cout << COLOR_NORMAL;
+            return tecla == TECLA_ENTER;
+        }
 
         if (tecla == TECLA_RETROCESO && valor != "") {
             valor.pop_back();
@@ -407,24 +484,20 @@ bool leerCampoEn(int x, int y, int maximo, string& valor) {
         }
         // Solo letras, numeros y signos comunes (sin tildes ni enie).
         else if (tecla >= 32 && tecla <= 126 && (int)valor.length() < maximo) {
-            cout << (char)tecla;
+            if (oculto) cout << '*';
+            else cout << (char)tecla;
             valor += (char)tecla;
         }
     }
 }
 
-// Version del login: los campos del login siempre van en la columna 53.
-bool leerCampo(int y, int maximo, string& valor) {
-    return leerCampoEn(53, y, maximo, valor);
-}
+
 
 // Muestra el error en rojo debajo del formulario y vuelve a blanco.
 // Devuelve true con ENTER (intentar de nuevo) y false con ESC (retroceder).
-bool mostrarError(string mensaje) {
-    colorRojo();
-    ubicar(22, 25); cout << mensaje;
-    colorBlanco();
-    ubicar(22, 26); cout << "Presione ENTER para intentar de nuevo";
+// El mensaje va centrado debajo de la tarjeta, en la fila indicada.
+bool mostrarError(string mensaje, int fila) {
+    escribirCentrado(fila, mensaje + "   (ENTER: intentar de nuevo)", TEXTO_ERROR);
     while (true) {
         int tecla = leerTecla();
         if (tecla == TECLA_ENTER) return true;
@@ -433,9 +506,8 @@ bool mostrarError(string mensaje) {
 }
 
 // Aviso de cuenta creada. Espera ENTER o ESC.
-void mostrarExito(int id) {
-    ubicar(22, 25); cout << "Cuenta creada con exito. Tu codigo es " << id;
-    ubicar(22, 26); cout << "Presione ENTER para continuar";
+void mostrarExito(int id, int fila) {
+    escribirCentrado(fila, "Cuenta creada con exito. Tu codigo es " + std::to_string(id) + "   (ENTER: continuar)", TEXTO_VERDE);
     while (true) {
         int tecla = leerTecla();
         if (tecla == TECLA_ENTER || tecla == TECLA_ESC) return;
@@ -451,11 +523,12 @@ bool formularioInicioSesion(RedProfesional& red, bool esEmpresa, int& idSesion) 
     while (true) {
         dibujarFormulario(esEmpresa);
         pintarPalabra(palabraIniciarSesion, 28, 7, COLOR_ARENA);
-        ubicar(22, 14); cout << "Correo:";
-        ubicar(22, 16); cout << "Contrasena:";
+        // Formulario centrado: etiquetas en la columna 27 y campos en la 42.
+        ubicar(27, 15); cout << "Correo:"; prepararCampo(42, 15, RedProfesional::MAX_CORREO);
+        ubicar(27, 17); cout << "Contrasena:"; prepararCampo(42, 17, RedProfesional::MAX_CONTRASENA);
 
-        if (!leerCampo(14, RedProfesional::MAX_CORREO, correo)) return false;
-        if (!leerCampo(16, RedProfesional::MAX_CONTRASENA, contrasena)) return false;
+        if (!leerCampoEn(42, 15, RedProfesional::MAX_CORREO, correo)) return false;
+        if (!leerCampoEn(42, 17, RedProfesional::MAX_CONTRASENA, contrasena, true)) return false;
 
         int id;
         if (esEmpresa) id = red.iniciarSesionEmpresa(correo, contrasena);
@@ -465,7 +538,7 @@ bool formularioInicioSesion(RedProfesional& red, bool esEmpresa, int& idSesion) 
             idSesion = id;
             return true;
         }
-        if (!mostrarError(red.getUltimoError())) return false;
+        if (!mostrarError(red.getUltimoError(), 22)) return false;
     }
 }
 
@@ -475,28 +548,29 @@ void formularioRegistroPersona(RedProfesional& red) {
     while (true) {
         dibujarFormulario(false);
         pintarPalabra(palabraRegistro, 40, 7, COLOR_ARENA);
-        ubicar(40, 12); cout << "El titular y el distrito son opcionales";
-        ubicar(22, 14); cout << "Nombre:";
-        ubicar(22, 16); cout << "Apellido:";
-        ubicar(22, 18); cout << "Titular:";
-        ubicar(22, 20); cout << "Distrito de residencia:";
-        ubicar(22, 22); cout << "Correo:";
-        ubicar(22, 24); cout << "Contrasena:";
+        escribirCentrado(12, "El titular y el distrito son opcionales", TEXTO_GRIS);
+        // Formulario centrado: etiquetas en la columna 21 y campos en la 48.
+        ubicar(21, 14); cout << "Nombre:"; prepararCampo(48, 14, RedProfesional::MAX_NOMBRE);
+        ubicar(21, 16); cout << "Apellido:"; prepararCampo(48, 16, RedProfesional::MAX_APELLIDO);
+        ubicar(21, 18); cout << "Titular:"; prepararCampo(48, 18, RedProfesional::MAX_TITULAR);
+        ubicar(21, 20); cout << "Distrito de residencia:"; prepararCampo(48, 20, RedProfesional::MAX_UBICACION);
+        ubicar(21, 22); cout << "Correo:"; prepararCampo(48, 22, RedProfesional::MAX_CORREO);
+        ubicar(21, 24); cout << "Contrasena:"; prepararCampo(48, 24, RedProfesional::MAX_CONTRASENA);
 
-        if (!leerCampo(14, RedProfesional::MAX_NOMBRE, nombre)) return;
-        if (!leerCampo(16, RedProfesional::MAX_APELLIDO, apellido)) return;
-        if (!leerCampo(18, RedProfesional::MAX_TITULAR, titular)) return;
-        if (!leerCampo(20, RedProfesional::MAX_UBICACION, distrito)) return;
-        if (!leerCampo(22, RedProfesional::MAX_CORREO, correo)) return;
-        if (!leerCampo(24, RedProfesional::MAX_CONTRASENA, contrasena)) return;
+        if (!leerCampoEn(48, 14, RedProfesional::MAX_NOMBRE, nombre)) return;
+        if (!leerCampoEn(48, 16, RedProfesional::MAX_APELLIDO, apellido)) return;
+        if (!leerCampoEn(48, 18, RedProfesional::MAX_TITULAR, titular)) return;
+        if (!leerCampoEn(48, 20, RedProfesional::MAX_UBICACION, distrito)) return;
+        if (!leerCampoEn(48, 22, RedProfesional::MAX_CORREO, correo)) return;
+        if (!leerCampoEn(48, 24, RedProfesional::MAX_CONTRASENA, contrasena, true)) return;
 
         int id = red.registrarUsuario(nombre, apellido, titular, distrito, correo, contrasena);
         if (id != -1) {
             GestorArchivos::guardarTodo(red);   // se guarda enseguida
-            mostrarExito(id);
+            mostrarExito(id, 26);
             return;
         }
-        if (!mostrarError(red.getUltimoError())) return;
+        if (!mostrarError(red.getUltimoError(), 26)) return;
     }
 }
 
@@ -505,26 +579,27 @@ void formularioRegistroEmpresa(RedProfesional& red) {
     while (true) {
         dibujarFormulario(true);
         pintarPalabra(palabraRegistro, 40, 7, COLOR_ARENA);
-        ubicar(41, 12); cout << "El sector y el distrito son opcionales";
-        ubicar(22, 14); cout << "Nombre de la empresa:";
-        ubicar(22, 16); cout << "Sector:";
-        ubicar(22, 18); cout << "Distrito del establecimiento:";
-        ubicar(22, 20); cout << "Correo:";
-        ubicar(22, 22); cout << "Contrasena:";
+        escribirCentrado(12, "El sector y el distrito son opcionales", TEXTO_GRIS);
+        // Formulario centrado: etiquetas en la columna 18 y campos en la 51.
+        ubicar(18, 14); cout << "Nombre de la empresa:"; prepararCampo(51, 14, RedProfesional::MAX_NOMBRE_EMPRESA);
+        ubicar(18, 16); cout << "Sector:"; prepararCampo(51, 16, RedProfesional::MAX_SECTOR);
+        ubicar(18, 18); cout << "Distrito del establecimiento:"; prepararCampo(51, 18, RedProfesional::MAX_UBICACION);
+        ubicar(18, 20); cout << "Correo:"; prepararCampo(51, 20, RedProfesional::MAX_CORREO);
+        ubicar(18, 22); cout << "Contrasena:"; prepararCampo(51, 22, RedProfesional::MAX_CONTRASENA);
 
-        if (!leerCampo(14, RedProfesional::MAX_NOMBRE_EMPRESA, nombre)) return;
-        if (!leerCampo(16, RedProfesional::MAX_SECTOR, sector)) return;
-        if (!leerCampo(18, RedProfesional::MAX_UBICACION, distrito)) return;
-        if (!leerCampo(20, RedProfesional::MAX_CORREO, correo)) return;
-        if (!leerCampo(22, RedProfesional::MAX_CONTRASENA, contrasena)) return;
+        if (!leerCampoEn(51, 14, RedProfesional::MAX_NOMBRE_EMPRESA, nombre)) return;
+        if (!leerCampoEn(51, 16, RedProfesional::MAX_SECTOR, sector)) return;
+        if (!leerCampoEn(51, 18, RedProfesional::MAX_UBICACION, distrito)) return;
+        if (!leerCampoEn(51, 20, RedProfesional::MAX_CORREO, correo)) return;
+        if (!leerCampoEn(51, 22, RedProfesional::MAX_CONTRASENA, contrasena, true)) return;
 
         int id = red.registrarEmpresa(nombre, sector, distrito, correo, contrasena);
         if (id != -1) {
             GestorArchivos::guardarTodo(red);
-            mostrarExito(id);
+            mostrarExito(id, 26);
             return;
         }
-        if (!mostrarError(red.getUltimoError())) return;
+        if (!mostrarError(red.getUltimoError(), 26)) return;
     }
 }
 

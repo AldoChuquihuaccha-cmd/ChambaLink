@@ -234,7 +234,7 @@ void shellSortArreglo(T* a, int n, std::function<bool(const T&, const T&)> antes
 }
 
 // Devuelve una lista nueva ordenada con ShellSort; la original no cambia.
-// Con la secuencia n/2, n/4, ..., 1: peor caso O(n^2), en la practica cerca de O(n^1.5).
+// Con la secuencia n/2, n/4, ..., 1: mejor caso O(n log n) y peor caso O(n^2).
 // No usa memoria extra aparte del arreglo de copia. No es estable.
 template <class T>
 Lista<T> shellSort(const Lista<T>& lista, std::function<bool(const T&, const T&)> antesQue) {

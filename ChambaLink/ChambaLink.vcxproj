@@ -139,6 +139,7 @@
     <ClInclude Include="FuncionesMenu.h" />
     <ClInclude Include="GeneradorDataset.h" />
     <ClInclude Include="GestorArchivos.h" />
+    <ClInclude Include="Grafo.h" />
     <ClInclude Include="GrafoDistritos.h" />
     <ClInclude Include="GrupoProfesional.h" />
     <ClInclude Include="Habilidad.h" />

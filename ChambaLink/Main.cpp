@@ -77,5 +77,6 @@ int main(int argc, char* argv[]) {
     }
 
     GestorArchivos::guardarTodo(red);
+    restaurarConsola();
     return 0;
 }

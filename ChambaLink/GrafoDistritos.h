@@ -1,31 +1,25 @@
 #pragma once
 #include <string>
 #include "Lista.h"
-#include "Cola.h"
+#include "Grafo.h"
 
-// Grafo de distritos de Lima y Callao (TB2).
+// Mapa de distritos de Lima y Callao (TB2). Usa el grafo generico Grafo<std::string>.
 //   Vertices: los 50 distritos (43 de Lima y 7 del Callao), cada uno con un indice de 0 a 49.
 //   Aristas: distritos que colindan. Peso = distancia aproximada en km entre sus centros.
-//   Es un grafo ponderado y no dirigido: distancias[a][b] = distancias[b][a].
-//
-// Representacion: matriz de adyacencia de 50 x 50.
-//   distancias[a][b] = km si a y b colindan, 0 si no.
-//   Memoria O(V^2) = 2500 celdas. Ver si dos distritos colindan es O(1).
+//   Es un grafo ponderado y no dirigido.
 //
 // Para distritos que no colindan, Dijkstra calcula el camino mas corto
 // pasando por los distritos intermedios.
 
-#define TOTAL_DISTRITOS 50
+const int TOTAL_DISTRITOS = 50;
 
 class GrafoDistritos {
 private:
-    std::string distritos[TOTAL_DISTRITOS];
-    double distancias[TOTAL_DISTRITOS][TOTAL_DISTRITOS];
+    Grafo<std::string> mapa;
 
-    // Grafo no dirigido: se guarda en las dos direcciones. O(1)
+    // Grafo no dirigido: el Grafo la guarda en las dos direcciones.
     void agregarArista(int a, int b, double km) {
-        distancias[a][b] = km;
-        distancias[b][a] = km;
+        mapa.agregarArista(a, b, km);
     }
 
     std::string aMinusculas(std::string texto) const {
@@ -35,7 +29,8 @@ private:
     }
 
 public:
-    GrafoDistritos() {
+    GrafoDistritos() : mapa(TOTAL_DISTRITOS) {
+        std::string distritos[TOTAL_DISTRITOS];
         distritos[0] = "Ancon";
         distritos[1] = "Ate";
         distritos[2] = "Barranco";
@@ -87,9 +82,9 @@ public:
         distritos[48] = "Mi Peru";
         distritos[49] = "Ventanilla";
 
+        // Cada distrito es un vertice; su indice en el grafo es el mismo de este arreglo.
         for (int i = 0; i < TOTAL_DISTRITOS; i++)
-            for (int j = 0; j < TOTAL_DISTRITOS; j++)
-                distancias[i][j] = 0;
+            mapa.agregarVertice(distritos[i]);
 
         agregarArista(43, 49, 19.5);   // Callao - Ventanilla
         agregarArista(43, 44, 2.6);   // Callao - Bellavista
@@ -200,11 +195,11 @@ public:
         agregarArista(37, 22, 8.1);   // Santa Maria del Mar - Pucusana
     }
 
-    int cantidad() const { return TOTAL_DISTRITOS; }
+    int cantidad() const { return mapa.cantidadVertices(); }
 
     std::string nombre(int indice) const {
-        if (indice < 0 || indice >= TOTAL_DISTRITOS) return "";
-        return distritos[indice];
+        if (indice < 0 || indice >= mapa.cantidadVertices()) return "";
+        return mapa.obtenerVertice(indice);
     }
 
     // Devuelve el indice del distrito escrito por el usuario, o -1 si no existe.
@@ -222,77 +217,34 @@ public:
         else if (texto == "cercado" || texto == "cercado de lima" || texto == "lima cercado") texto = "lima";
         else if (texto == "carmen de la legua reynoso") texto = "carmen de la legua";
 
-        for (int i = 0; i < TOTAL_DISTRITOS; i++)
-            if (aMinusculas(distritos[i]) == texto) return i;
+        for (int i = 0; i < mapa.cantidadVertices(); i++)
+            if (aMinusculas(mapa.obtenerVertice(i)) == texto) return i;
         return -1;
     }
 
-    // O(1): basta con mirar la celda de la matriz.
+    // O(grado de a): revisa la lista de adyacencia de a.
     bool colindan(int a, int b) const {
-        return distancias[a][b] != 0;
+        return mapa.existeArista(a, b);
     }
 
-    // Distritos que colindan con el indicado. O(V): recorre su fila.
+    // Distritos que colindan con el indicado. O(grado)
     Lista<int> vecinos(int indice) const {
         Lista<int> resultado;
-        for (int j = 0; j < TOTAL_DISTRITOS; j++)
-            if (distancias[indice][j] != 0) resultado.agregaFinal(j);
+        mapa.paraCadaVecino(indice, [&resultado](int vecino, double) {
+            resultado.agregaFinal(vecino);
+            });
         return resultado;
     }
 
-    // BFS (recorrido en anchura con una Cola): distritos a lo mas maxSaltos aristas
-    // del origen, empezando por el mismo origen. O(V^2) con matriz de adyacencia.
+    // BFS: distritos a lo mas maxSaltos aristas del origen, empezando por el mismo origen.
+    // O(V + E)
     Lista<int> distritosASaltos(int origen, int maxSaltos) const {
-        Lista<int> resultado;
-        int saltos[TOTAL_DISTRITOS];
-        for (int i = 0; i < TOTAL_DISTRITOS; i++) saltos[i] = -1;   // -1 = no visitado
-
-        Cola<int> cola;
-        saltos[origen] = 0;
-        cola.encolar(origen);
-        while (!cola.esVacia()) {
-            int actual = cola.desencolar();
-            resultado.agregaFinal(actual);
-            if (saltos[actual] == maxSaltos) continue;
-            for (int j = 0; j < TOTAL_DISTRITOS; j++) {
-                if (distancias[actual][j] != 0 && saltos[j] == -1) {
-                    saltos[j] = saltos[actual] + 1;
-                    cola.encolar(j);
-                }
-            }
-        }
-        return resultado;
+        return mapa.verticesASaltos(origen, maxSaltos);
     }
 
     // Dijkstra: distancia minima en km desde el origen a cada distrito.
-    // Deja el resultado en distanciaMinima[0..49].
-    //   1. Todas las distancias empiezan en "infinito" y la del origen en 0.
-    //   2. Se elige el distrito no visitado con menor distancia y se marca como visitado.
-    //   3. Se revisan sus vecinos: si pasando por el se llega mas corto, se actualiza.
-    //   4. Se repite hasta visitar todos.
-    // O(V^2) con matriz de adyacencia (V = 50).
+    // Deja el resultado en distanciaMinima[0..49]. O(V^2 + E), V = 50.
     void dijkstra(int origen, double distanciaMinima[]) const {
-        bool visitado[TOTAL_DISTRITOS];
-        for (int i = 0; i < TOTAL_DISTRITOS; i++) {
-            distanciaMinima[i] = 1000000;   // "infinito"
-            visitado[i] = false;
-        }
-        distanciaMinima[origen] = 0;
-
-        for (int paso = 0; paso < TOTAL_DISTRITOS; paso++) {
-            int actual = -1;
-            for (int i = 0; i < TOTAL_DISTRITOS; i++)
-                if (!visitado[i] && (actual == -1 || distanciaMinima[i] < distanciaMinima[actual]))
-                    actual = i;
-            if (actual == -1) return;
-            visitado[actual] = true;
-
-            for (int j = 0; j < TOTAL_DISTRITOS; j++) {
-                if (distancias[actual][j] != 0 && !visitado[j]) {
-                    double nueva = distanciaMinima[actual] + distancias[actual][j];
-                    if (nueva < distanciaMinima[j]) distanciaMinima[j] = nueva;
-                }
-            }
-        }
+        mapa.dijkstra(origen, distanciaMinima);
     }
 };
