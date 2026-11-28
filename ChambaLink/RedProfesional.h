@@ -1448,7 +1448,7 @@ public:
     // Busca por palabras clave utilizando el indice AVL de habilidades.
     // El titular se sigue revisando en los perfiles; las habilidades se consultan
     // desde el indice, evitando recorrer la lista de habilidades de cada usuario.
-    // Se conserva la busqueda parcial y el orden por coincidencias con HeapSort.
+    // Se conserva la busqueda parcial y el orden por coincidencias con TreeSort sobre AVL.
     Lista<Coincidencia> buscarProfesionales(std::string palabrasClave, int& totalPalabras) {
         asegurarIndices();
         Lista<std::string> palabras = separarRequisitos(palabrasClave);
@@ -1505,7 +1505,7 @@ public:
             if (a.cantidad != b.cantidad) return a.cantidad > b.cantidad;
             return a.idUsuario < b.idUsuario;
             };
-        return heapSort(resultados, criterio);
+        return treeSort(resultados, criterio);
     }
 
     // RF15: busqueda exacta por habilidad y nivel declarado (1 Basico,

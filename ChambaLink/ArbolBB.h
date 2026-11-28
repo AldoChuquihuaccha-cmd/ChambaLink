@@ -26,7 +26,7 @@ private:
         Nodo* izquierdo;
         Nodo* derecho;
 
-        explicit Nodo(const T& valor)
+        Nodo(const T& valor)
             : dato(valor), izquierdo(nullptr), derecho(nullptr) {
         }
     };
@@ -45,14 +45,8 @@ private:
     static Nodo* copiar(const Nodo* origen) {
         if (origen == nullptr) return nullptr;
         Nodo* nuevo = new Nodo(origen->dato);
-        try {
-            nuevo->izquierdo = copiar(origen->izquierdo);
-            nuevo->derecho = copiar(origen->derecho);
-        }
-        catch (...) {
-            destruir(nuevo);
-            throw;
-        }
+        nuevo->izquierdo = copiar(origen->izquierdo);
+        nuevo->derecho = copiar(origen->derecho);
         return nuevo;
     }
 
@@ -154,19 +148,9 @@ private:
         return 1 + contarRec(actual->izquierdo) + contarRec(actual->derecho);
     }
 
-    bool validarRec(const Nodo* actual, const T* minimoPermitido,
-        const T* maximoPermitido) const {
-        if (actual == nullptr) return true;
-        if (minimoPermitido != nullptr && comparar(actual->dato, *minimoPermitido) <= 0)
-            return false;
-        if (maximoPermitido != nullptr && comparar(actual->dato, *maximoPermitido) >= 0)
-            return false;
-        return validarRec(actual->izquierdo, minimoPermitido, &actual->dato) &&
-            validarRec(actual->derecho, &actual->dato, maximoPermitido);
-    }
 
 public:
-    explicit ArbolBB(std::function<int(const T&, const T&)> criterio)
+    ArbolBB(std::function<int(const T&, const T&)> criterio)
         : raiz(nullptr), cantidad(0), comparar(criterio) {
         if (!comparar) throw std::invalid_argument("ArbolBB requiere un comparador valido");
     }
@@ -229,10 +213,6 @@ public:
     int altura() const { return alturaRec(raiz); }
     std::size_t longitud() const { return cantidad; }
     bool esVacio() const { return raiz == nullptr; }
-
-    bool validarPropiedadBST() const {
-        return validarRec(raiz, nullptr, nullptr);
-    }
 
     void vaciar() {
         destruir(raiz);

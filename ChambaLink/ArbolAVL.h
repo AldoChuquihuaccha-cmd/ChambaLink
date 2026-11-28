@@ -28,7 +28,7 @@ private:
         Nodo* derecho;
         int altura;
 
-        explicit Nodo(const T& valor)
+        Nodo(const T& valor)
             : dato(valor), izquierdo(nullptr), derecho(nullptr), altura(1) {
         }
     };
@@ -178,15 +178,9 @@ private:
         if (origen == nullptr) return nullptr;
 
         Nodo* nuevo = new Nodo(origen->dato);
-        try {
-            nuevo->izquierdo = copiar(origen->izquierdo);
-            nuevo->derecho = copiar(origen->derecho);
-            nuevo->altura = origen->altura;
-        }
-        catch (...) {
-            destruir(nuevo);
-            throw;
-        }
+        nuevo->izquierdo = copiar(origen->izquierdo);
+        nuevo->derecho = copiar(origen->derecho);
+        nuevo->altura = origen->altura;
         return nuevo;
     }
 
@@ -214,37 +208,9 @@ private:
         accion(actual->dato);
     }
 
-    bool validarRec(const Nodo* actual, const T* minimoPermitido,
-        const T* maximoPermitido, int& alturaCalculada) const {
-        if (actual == nullptr) {
-            alturaCalculada = 0;
-            return true;
-        }
-
-        if (minimoPermitido != nullptr && comparar(actual->dato, *minimoPermitido) <= 0)
-            return false;
-        if (maximoPermitido != nullptr && comparar(actual->dato, *maximoPermitido) >= 0)
-            return false;
-
-        int alturaIzquierda = 0;
-        int alturaDerecha = 0;
-        bool izquierdaValida = validarRec(actual->izquierdo, minimoPermitido,
-            &actual->dato, alturaIzquierda);
-        if (!izquierdaValida) return false;
-
-        bool derechaValida = validarRec(actual->derecho, &actual->dato,
-            maximoPermitido, alturaDerecha);
-        if (!derechaValida) return false;
-
-        alturaCalculada = 1 + mayor(alturaIzquierda, alturaDerecha);
-        int diferencia = alturaIzquierda - alturaDerecha;
-        if (diferencia < 0) diferencia = -diferencia;
-
-        return diferencia <= 1 && actual->altura == alturaCalculada;
-    }
 
 public:
-    explicit ArbolAVL(std::function<int(const T&, const T&)> criterio)
+    ArbolAVL(std::function<int(const T&, const T&)> criterio)
         : raiz(nullptr), cantidad(0), comparar(criterio) {
         if (!comparar)
             throw std::invalid_argument("ArbolAVL requiere un comparador valido");
@@ -322,13 +288,6 @@ public:
 
     bool esVacio() const {
         return raiz == nullptr;
-    }
-
-    // Comprueba simultaneamente el orden BST, las alturas almacenadas
-    // y el factor de balance de todos los nodos.
-    bool validarBalanceAVL() const {
-        int alturaCalculada = 0;
-        return validarRec(raiz, nullptr, nullptr, alturaCalculada);
     }
 
     void vaciar() {

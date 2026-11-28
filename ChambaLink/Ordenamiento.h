@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include "Lista.h"
+#include "ArbolAVL.h"
 
 // Algoritmos de ordenamiento para Lista<T>.
 //
@@ -15,7 +16,7 @@
 // a debe quedar antes que b. Asi la misma funcion sirve para ordenar
 // contactos por nombre, publicaciones por fecha o vacantes por titulo.
 //
-// Reparto: QuickSort (Joao), MergeSort y ShellSort (Aldo), HeapSort (Piero).
+// Reparto: QuickSort (Joao), MergeSort y ShellSort (Aldo), HeapSort y TreeSort (Piero).
 
 // ---------- Funciones de apoyo ----------
 
@@ -149,6 +150,49 @@ Lista<T> heapSort(const Lista<T>& lista, std::function<bool(const T&, const T&)>
 
     Lista<T> resultado = arregloALista(arreglo, cantidad);
     delete[] arreglo;
+    return resultado;
+}
+
+// ---------- TreeSort con AVL (Piero) ----------
+
+// El AVL no admite claves duplicadas. Por eso cada elemento lleva su posicion
+// original: si dos valores son equivalentes segun el criterio, se ordenan por
+// esa posicion y ninguno se pierde. Esto tambien conserva la estabilidad.
+template <class T>
+struct ElementoTreeSort {
+    T valor;
+    uint posicionOriginal;
+
+    ElementoTreeSort(const T& dato, uint posicion)
+        : valor(dato), posicionOriginal(posicion) {
+    }
+};
+
+// Inserta los elementos en un AVL y los recupera mediante recorrido inorden.
+// Complejidad: O(n log n) en inserciones + O(n) en recorrido; memoria O(n).
+template <class T>
+Lista<T> treeSort(const Lista<T>& lista,
+    std::function<bool(const T&, const T&)> antesQue) {
+
+    ArbolAVL<ElementoTreeSort<T>> arbol(
+        [antesQue](const ElementoTreeSort<T>& a, const ElementoTreeSort<T>& b) {
+            if (antesQue(a.valor, b.valor)) return -1;
+            if (antesQue(b.valor, a.valor)) return 1;
+            if (a.posicionOriginal < b.posicionOriginal) return -1;
+            if (a.posicionOriginal > b.posicionOriginal) return 1;
+            return 0;
+        });
+
+    uint posicion = 0;
+    lista.paraCada([&arbol, &posicion](const T& elemento) {
+        arbol.insertar(ElementoTreeSort<T>(elemento, posicion));
+        posicion++;
+    });
+
+    Lista<T> resultado;
+    arbol.enOrden([&resultado](const ElementoTreeSort<T>& elemento) {
+        resultado.agregaFinal(elemento.valor);
+    });
     return resultado;
 }
 
